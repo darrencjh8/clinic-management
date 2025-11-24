@@ -64,6 +64,7 @@ function App() {
         onLoginSuccess={handleLoginSuccess}
         onSpreadsheetIdSubmit={setSheetId}
         initialToken={accessToken}
+        userRole={useStore().userRole}
       />
     );
   }

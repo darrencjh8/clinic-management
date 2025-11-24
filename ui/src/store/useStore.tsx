@@ -243,14 +243,25 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         setUserRole(role);
         GoogleSheetsService.setAccessToken(token);
         localStorage.setItem('user_role', role);
+
+        // Restore spreadsheet ID if available (for staff who persisted it)
+        const savedSheetId = localStorage.getItem('spreadsheet_id');
+        if (savedSheetId) {
+            setSpreadsheetId(savedSheetId);
+        }
     };
 
     const logout = () => {
         GoogleSheetsService.logout();
         setAccessToken(null);
         setSpreadsheetId(null);
+
+        // Only clear spreadsheet ID if admin
+        if (userRole === 'admin') {
+            localStorage.removeItem('spreadsheet_id');
+        }
+
         setUserRole(null);
-        localStorage.removeItem('spreadsheet_id');
         localStorage.removeItem('user_role');
     };
 

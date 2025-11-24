@@ -9,9 +9,10 @@ interface LoginScreenProps {
     onLoginSuccess: (token: string, role: 'admin' | 'staff') => void;
     onSpreadsheetIdSubmit?: (id: string) => void;
     initialToken?: string | null;
+    userRole?: 'admin' | 'staff' | null;
 }
 
-export const LoginScreen = ({ onLoginSuccess, onSpreadsheetIdSubmit, initialToken }: LoginScreenProps) => {
+export const LoginScreen = ({ onLoginSuccess, onSpreadsheetIdSubmit, initialToken, userRole }: LoginScreenProps) => {
     // Login Method State
     const [loginMethod, setLoginMethod] = useState<'firebase' | 'google'>('firebase');
 
@@ -274,38 +275,44 @@ export const LoginScreen = ({ onLoginSuccess, onSpreadsheetIdSubmit, initialToke
                 <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-8 border-2 border-secondary-light">
                     <h2 className="text-xl font-bold text-center mb-4 text-secondary-dark">Setup Database</h2>
                     <p className="text-sm text-gray-500 text-center mb-6">
-                        Select an existing spreadsheet or create a new one.
+                        {userRole === 'admin'
+                            ? 'Select an existing spreadsheet or create a new one.'
+                            : 'Select an existing spreadsheet.'}
                     </p>
 
                     <div className="flex flex-col gap-4">
-                        <button
-                            onClick={async () => {
-                                setIsLoading(true);
-                                try {
-                                    const title = `Dental Clinic Data - ${new Date().getFullYear()}`;
-                                    const sheet = await GoogleSheetsService.createSpreadsheet(title);
-                                    if (onSpreadsheetIdSubmit) {
-                                        onSpreadsheetIdSubmit(sheet.spreadsheetId);
-                                    }
-                                } catch (e: any) {
-                                    setError('Failed to create sheet: ' + e.message);
-                                    setIsLoading(false);
-                                }
-                            }}
-                            disabled={isLoading}
-                            className="w-full bg-primary text-white py-3 rounded-xl font-medium hover:bg-opacity-90 disabled:opacity-50 transition-colors"
-                        >
-                            {isLoading ? 'Creating...' : 'Create New Spreadsheet'}
-                        </button>
+                        {userRole === 'admin' && (
+                            <>
+                                <button
+                                    onClick={async () => {
+                                        setIsLoading(true);
+                                        try {
+                                            const title = `Dental Clinic Data - ${new Date().getFullYear()}`;
+                                            const sheet = await GoogleSheetsService.createSpreadsheet(title);
+                                            if (onSpreadsheetIdSubmit) {
+                                                onSpreadsheetIdSubmit(sheet.spreadsheetId);
+                                            }
+                                        } catch (e: any) {
+                                            setError('Failed to create sheet: ' + e.message);
+                                            setIsLoading(false);
+                                        }
+                                    }}
+                                    disabled={isLoading}
+                                    className="w-full bg-primary text-white py-3 rounded-xl font-medium hover:bg-opacity-90 disabled:opacity-50 transition-colors"
+                                >
+                                    {isLoading ? 'Creating...' : 'Create New Spreadsheet'}
+                                </button>
 
-                        <div className="relative">
-                            <div className="absolute inset-0 flex items-center">
-                                <div className="w-full border-t border-gray-200"></div>
-                            </div>
-                            <div className="relative flex justify-center text-sm">
-                                <span className="px-2 bg-white text-gray-500">Or select existing</span>
-                            </div>
-                        </div>
+                                <div className="relative">
+                                    <div className="absolute inset-0 flex items-center">
+                                        <div className="w-full border-t border-gray-200"></div>
+                                    </div>
+                                    <div className="relative flex justify-center text-sm">
+                                        <span className="px-2 bg-white text-gray-500">Or select existing</span>
+                                    </div>
+                                </div>
+                            </>
+                        )}
 
                         {isLoadingSheets ? (
                             <div className="text-center py-4 text-gray-500">Loading your spreadsheets...</div>
@@ -328,22 +335,6 @@ export const LoginScreen = ({ onLoginSuccess, onSpreadsheetIdSubmit, initialToke
                         ) : (
                             <div className="text-center py-4 text-gray-400 text-sm">No spreadsheets found.</div>
                         )}
-
-                        <form onSubmit={(e) => {
-                            e.preventDefault();
-                            const formData = new FormData(e.currentTarget);
-                            const id = formData.get('sheetId') as string;
-                            if (id && onSpreadsheetIdSubmit) {
-                                onSpreadsheetIdSubmit(id);
-                            }
-                        }}>
-                            <input
-                                name="sheetId"
-                                type="text"
-                                placeholder="Or enter ID manually"
-                                className="w-full px-4 py-3 rounded-xl border border-secondary-light focus:ring-2 focus:ring-primary outline-none text-sm"
-                            />
-                        </form>
 
                         <button onClick={handleSignOut} className="mt-2 text-xs text-slate-400 hover:text-red-500 w-full text-center">
                             Sign Out
