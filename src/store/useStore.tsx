@@ -3,6 +3,7 @@ import type { Patient, Treatment } from '../types';
 import { GoogleSheetsService } from '../services/GoogleSheetsService';
 
 const PATIENTS_SHEET = 'Patients';
+const TREATMENT_TYPES_SHEET = 'TreatmentTypes';
 
 interface StoreContextType {
     isLoading: boolean;
@@ -12,6 +13,7 @@ interface StoreContextType {
     accessToken: string | null;
     patients: Patient[];
     treatments: Treatment[];
+    treatmentTypes: string[];
     currentMonth: string; // YYYY-MM
     setSheetId: (id: string) => void;
     handleLoginSuccess: (token: string) => void;
@@ -38,6 +40,10 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
     const [patients, setPatients] = useState<Patient[]>([]);
     const [treatments, setTreatments] = useState<Treatment[]>([]);
+    const [treatmentTypes, setTreatmentTypes] = useState<string[]>(() => {
+        const saved = localStorage.getItem('treatment_types');
+        return saved ? JSON.parse(saved) : ['Cleaning', 'Filling', 'Root Canal', 'Extraction', 'Crown', 'Whitening', 'Checkup'];
+    });
     const [currentMonth, setCurrentMonth] = useState<string>(() => {
         const now = new Date();
         return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
@@ -46,7 +52,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     const [isDarkMode, setIsDarkMode] = useState(() => {
         const saved = localStorage.getItem('dark_mode');
         if (saved) return JSON.parse(saved);
-        return window.matchMedia('(prefers-color-scheme: dark)').matches;
+        return false;
     });
 
     const loadData = useCallback(async (sheetId: string, month: string, silent: boolean = false) => {
@@ -56,18 +62,39 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         try {
             const treatmentsSheet = `Treatments_${month.replace('-', '_')}`;
 
-            // Check if treatments sheet exists, if not create it
+            // Check spreadsheet and create missing sheets
             const spreadsheet = await GoogleSheetsService.getSpreadsheet(sheetId);
             const existingSheets = new Set(spreadsheet.sheets?.map((s: any) => s.properties.title) || []);
 
+            // Create TreatmentTypes sheet if missing
+            if (!existingSheets.has(TREATMENT_TYPES_SHEET)) {
+                try {
+                    await GoogleSheetsService.addSheet(sheetId, TREATMENT_TYPES_SHEET);
+                    await GoogleSheetsService.updateValues(sheetId, `${TREATMENT_TYPES_SHEET}!A1:A8`, [
+                        ['Type'], ['Cleaning'], ['Filling'], ['Root Canal'], ['Extraction'], ['Crown'], ['Whitening'], ['Checkup']
+                    ]);
+                    existingSheets.add(TREATMENT_TYPES_SHEET);
+                } catch (e: any) {
+                    if (!e.message?.includes('already exists')) console.error('Failed to create TreatmentTypes sheet', e);
+                }
+            }
+
+            // Create monthly treatments sheet if missing
             if (!existingSheets.has(treatmentsSheet)) {
-                await GoogleSheetsService.addSheet(sheetId, treatmentsSheet);
-                await GoogleSheetsService.updateValues(sheetId, `${treatmentsSheet}!A1:G1`, [['ID', 'PatientID', 'Dentist', 'Admin', 'Amount', 'Treatment', 'Date']]);
+                try {
+                    await GoogleSheetsService.addSheet(sheetId, treatmentsSheet);
+                    await GoogleSheetsService.updateValues(sheetId, `${treatmentsSheet}!A1:G1`, [
+                        ['ID', 'PatientID', 'Dentist', 'Admin', 'Amount', 'Treatment', 'Date']
+                    ]);
+                } catch (e: any) {
+                    if (!e.message?.includes('already exists')) throw e;
+                }
             }
 
             const rangesToFetch = [
                 `${PATIENTS_SHEET}!A:D`,
-                `${treatmentsSheet}!A:G`
+                `${treatmentsSheet}!A:G`,
+                `${TREATMENT_TYPES_SHEET}!A:A`
             ];
 
             const response = await GoogleSheetsService.batchGetValues(sheetId, rangesToFetch);
@@ -82,7 +109,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             const patientRows = getValuesForSheet(PATIENTS_SHEET) || [];
             const parsedPatients: Patient[] = [];
             patientRows.forEach((row: string[], index: number) => {
-                if (index === 0) return; // Skip header
+                if (index === 0) return;
                 if (row[0]) {
                     parsedPatients.push({
                         id: row[0],
@@ -114,6 +141,18 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 }
             });
             setTreatments(parsedTreatments);
+
+            // Parse Treatment Types
+            const treatmentTypeRows = getValuesForSheet(TREATMENT_TYPES_SHEET) || [];
+            const parsedTypes: string[] = [];
+            treatmentTypeRows.forEach((row: string[], index: number) => {
+                if (index === 0) return;
+                if (row[0]) parsedTypes.push(row[0]);
+            });
+            if (parsedTypes.length > 0) {
+                setTreatmentTypes(parsedTypes);
+                localStorage.setItem('treatment_types', JSON.stringify(parsedTypes));
+            }
 
             setIsError(false);
         } catch (e: any) {
@@ -147,7 +186,6 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         }
     }, [accessToken, spreadsheetId, currentMonth, loadData]);
 
-    // Dark Mode Effect
     useEffect(() => {
         localStorage.setItem('dark_mode', JSON.stringify(isDarkMode));
         if (isDarkMode) {
@@ -219,6 +257,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         accessToken,
         patients,
         treatments,
+        treatmentTypes,
         currentMonth,
         setSheetId,
         handleLoginSuccess,

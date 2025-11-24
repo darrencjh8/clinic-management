@@ -103,12 +103,8 @@ export const LoginScreen = ({ onLoginSuccess, onSpreadsheetIdSubmit, initialToke
             const res = await GoogleSheetsService.createSpreadsheet('Dental Clinic Data');
             setSheetId(res.spreadsheetId);
 
-            // After create, check config (it will be empty but created)
-            const config = await GoogleSheetsService.checkAppConfig(res.spreadsheetId);
-            if (config.status === 'setup_needed') {
-                setError('⚠️ Setup Required. A new spreadsheet was created. Please check the AppConfig sheet for instructions.');
-                setAuthStep('sheet_select');
-            }
+            // Proceed to PIN setup - user can configure AppConfig later
+            setAuthStep('pin_setup');
         } catch (e: any) {
             setError(e.message || 'Failed to create spreadsheet');
         } finally {
