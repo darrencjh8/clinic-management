@@ -1,0 +1,88 @@
+{
+    "login": {
+        "title": "Login to Wisata Dental Care",
+        "adminTitle": "Admin Login",
+        "email": "Email",
+        "password": "Password",
+        "signIn": "Sign In",
+        "googleSignIn": "Sign in with Google",
+        "googleSignInDescription": "Sign in with your Google Account for administrative access.",
+        "switchToAdmin": "Switch to Admin (Google) Login",
+        "switchToStaff": "Switch to Staff (Email) Login",
+        "invalidCredentials": "Invalid email or password",
+        "googleLoginFailed": "Google Login Failed"
+    },
+    "pin": {
+        "setupTitle": "Set your Security PIN",
+        "setupDescription": "This PIN will be used to encrypt your access on this device.",
+        "enterPIN": "Enter PIN",
+        "forgotPIN": "Forgot PIN? / Reset",
+        "signOut": "Sign Out",
+        "incorrectPIN": "Incorrect PIN"
+    },
+    "spreadsheet": {
+        "setupTitle": "Setup Database",
+        "selectOrCreate": "Select an existing spreadsheet or create a new one.",
+        "selectExisting": "Select an existing spreadsheet.",
+        "createNew": "Create New Spreadsheet",
+        "creating": "Creating...",
+        "orSelectExisting": "Or select existing",
+        "loading": "Loading your spreadsheets...",
+        "noSpreadsheetsFound": "No spreadsheets found.",
+        "failedToCreate": "Failed to create sheet"
+    },
+    "sidebar": {
+        "treatments": "New Treatment",
+        "patients": "Patients",
+        "history": "History",
+        "logout": "Logout"
+    },
+    "sync": {
+        "synced": "Synced with Google Sheets",
+        "syncing": "Syncing...",
+        "connectionError": "Connection Error",
+        "sync": "Sync",
+        "openSheet": "Open Sheet"
+    },
+    "treatment": {
+        "title": "New Treatment Entry",
+        "patient": "Patient",
+        "selectPatient": "Select patient",
+        "dentist": "Dentist",
+        "admin": "Admin",
+        "amount": "Amount",
+        "treatmentType": "Treatment Type",
+        "selectType": "Select treatment type",
+        "date": "Date",
+        "addTreatment": "Add Treatment",
+        "loading": "Loading...",
+        "success": "Treatment added successfully!"
+    },
+    "patient": {
+        "title": "Patient Management",
+        "addNew": "Add New Patient",
+        "name": "Name",
+        "age": "Age",
+        "notes": "Notes",
+        "addPatient": "Add Patient",
+        "cancel": "Cancel",
+        "save": "Save",
+        "edit": "Edit",
+        "optional": "optional",
+        "noPatients": "No patients found. Add your first patient to get started."
+    },
+    "history": {
+        "title": "Treatment History",
+        "selectMonth": "Select Month",
+        "noTreatments": "No treatments found for this month."
+    },
+    "common": {
+        "loading": "Loading your data from Google Sheets...",
+        "authFailed": "Authentication Failed",
+        "authFailedDescription": "Your session has expired. Please sign in again.",
+        "connectionError": "Connection Error",
+        "connectionErrorDescription": "We couldn't connect to Google Sheets. Please check your internet connection.",
+        "signInAgain": "Sign In Again",
+        "retryConnection": "Retry Connection"
+    }
+}

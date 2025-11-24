@@ -1,6 +1,7 @@
 import React from 'react';
-import { FileText, Users, Calendar, LogOut } from 'lucide-react';
+import { FileText, Users, Calendar, LogOut, Languages } from 'lucide-react';
 import { useStore } from '../store/useStore';
+import { useTranslation } from 'react-i18next';
 
 interface SidebarProps {
     currentView: string;
@@ -11,11 +12,19 @@ interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate }) => {
     const { logout } = useStore();
+    const { t, i18n } = useTranslation();
+
     const navItems = [
-        { id: 'treatments', label: 'New Treatment', icon: FileText },
-        { id: 'patients', label: 'Patients', icon: Users },
-        { id: 'history', label: 'History', icon: Calendar },
+        { id: 'treatments', label: t('sidebar.treatments'), icon: FileText },
+        { id: 'patients', label: t('sidebar.patients'), icon: Users },
+        { id: 'history', label: t('sidebar.history'), icon: Calendar },
     ];
+
+    const toggleLanguage = () => {
+        const newLang = i18n.language === 'en' ? 'id' : 'en';
+        i18n.changeLanguage(newLang);
+        localStorage.setItem('language', newLang);
+    };
 
     return (
         <aside className="hidden md:block fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-secondary-light shadow-sm">
@@ -47,11 +56,19 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate }) => 
 
             <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-secondary-light">
                 <button
+                    onClick={toggleLanguage}
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all font-medium mb-2"
+                    title={i18n.language === 'en' ? 'Switch to Indonesian' : 'Beralih ke Bahasa Inggris'}
+                >
+                    <Languages className="w-5 h-5" />
+                    {i18n.language === 'en' ? 'Indonesian' : 'English'}
+                </button>
+                <button
                     onClick={logout}
                     className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-red-50 hover:text-red-600 transition-all font-medium mb-2"
                 >
                     <LogOut className="w-5 h-5" />
-                    Logout
+                    {t('sidebar.logout')}
                 </button>
                 <div className="flex items-center gap-3 px-4 py-3 text-gray-400 text-sm">
                     <span>v1.0.0</span>

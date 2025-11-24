@@ -7,6 +7,7 @@ import { SyncStatus } from './components/SyncStatus';
 import { LoginScreen } from './components/LoginScreen';
 import { useStore } from './store/useStore';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 function App() {
   const [currentView, setCurrentView] = useState('treatments');
@@ -19,6 +20,7 @@ function App() {
     setSheetId,
     handleLoginSuccess
   } = useStore();
+  const { t } = useTranslation();
 
   // Auto-retry logic for connection errors
   useEffect(() => {
@@ -75,7 +77,7 @@ function App() {
       <div className="min-h-screen flex items-center justify-center bg-white transition-colors">
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 border-4 border-secondary-light border-t-primary rounded-full animate-spin"></div>
-          <p className="text-secondary-dark font-medium">Loading your data from Google Sheets...</p>
+          <p className="text-secondary-dark font-medium">{t('common.loading')}</p>
         </div>
       </div>
     );
@@ -90,19 +92,19 @@ function App() {
             <AlertTriangle className="w-8 h-8 text-red-600" />
           </div>
           <h2 className="text-2xl font-bold text-secondary-dark mb-2">
-            {errorType === 'AUTH' ? 'Authentication Failed' : 'Connection Error'}
+            {errorType === 'AUTH' ? t('common.authFailed') : t('common.connectionError')}
           </h2>
           <p className="text-gray-600 mb-8">
             {errorType === 'AUTH'
-              ? 'Your session has expired. Please sign in again.'
-              : 'We couldn\'t connect to Google Sheets. Please check your internet connection.'}
+              ? t('common.authFailedDescription')
+              : t('common.connectionErrorDescription')}
           </p>
           <button
             onClick={() => window.location.reload()}
             className="w-full bg-primary text-white py-3 rounded-xl font-medium hover:bg-opacity-90 transition-colors flex items-center justify-center gap-2"
           >
             <RefreshCw className="w-4 h-4" />
-            {errorType === 'AUTH' ? 'Sign In Again' : 'Retry Connection'}
+            {errorType === 'AUTH' ? t('common.signInAgain') : t('common.retryConnection')}
           </button>
         </div>
       </div>

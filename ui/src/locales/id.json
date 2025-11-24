@@ -1,0 +1,88 @@
+{
+    "login": {
+        "title": "Login Wisata Dental Care",
+        "adminTitle": "Login Admin",
+        "email": "Email",
+        "password": "Kata Sandi",
+        "signIn": "Masuk",
+        "googleSignIn": "Masuk dengan Google",
+        "googleSignInDescription": "Masuk dengan Akun Google Anda untuk akses administratif.",
+        "switchToAdmin": "Beralih ke Login Admin (Google)",
+        "switchToStaff": "Beralih ke Login Staf (Email)",
+        "invalidCredentials": "Email atau kata sandi tidak valid",
+        "googleLoginFailed": "Login Google Gagal"
+    },
+    "pin": {
+        "setupTitle": "Atur PIN Keamanan Anda",
+        "setupDescription": "PIN ini akan digunakan untuk mengenkripsi akses Anda di perangkat ini.",
+        "enterPIN": "Masukkan PIN",
+        "forgotPIN": "Lupa PIN? / Reset",
+        "signOut": "Keluar",
+        "incorrectPIN": "PIN Salah"
+    },
+    "spreadsheet": {
+        "setupTitle": "Pengaturan Database",
+        "selectOrCreate": "Pilih spreadsheet yang ada atau buat yang baru.",
+        "selectExisting": "Pilih spreadsheet yang ada.",
+        "createNew": "Buat Spreadsheet Baru",
+        "creating": "Membuat...",
+        "orSelectExisting": "Atau pilih yang ada",
+        "loading": "Memuat spreadsheet Anda...",
+        "noSpreadsheetsFound": "Tidak ada spreadsheet ditemukan.",
+        "failedToCreate": "Gagal membuat sheet"
+    },
+    "sidebar": {
+        "treatments": "Perawatan Baru",
+        "patients": "Pasien",
+        "history": "Riwayat",
+        "logout": "Keluar"
+    },
+    "sync": {
+        "synced": "Tersinkronisasi dengan Google Sheets",
+        "syncing": "Menyinkronkan...",
+        "connectionError": "Kesalahan Koneksi",
+        "sync": "Sinkronkan",
+        "openSheet": "Buka Sheet"
+    },
+    "treatment": {
+        "title": "Entri Perawatan Baru",
+        "patient": "Pasien",
+        "selectPatient": "Pilih pasien",
+        "dentist": "Dokter Gigi",
+        "admin": "Admin",
+        "amount": "Jumlah",
+        "treatmentType": "Jenis Perawatan",
+        "selectType": "Pilih jenis perawatan",
+        "date": "Tanggal",
+        "addTreatment": "Tambah Perawatan",
+        "loading": "Memuat...",
+        "success": "Perawatan berhasil ditambahkan!"
+    },
+    "patient": {
+        "title": "Manajemen Pasien",
+        "addNew": "Tambah Pasien Baru",
+        "name": "Nama",
+        "age": "Usia",
+        "notes": "Catatan",
+        "addPatient": "Tambah Pasien",
+        "cancel": "Batal",
+        "save": "Simpan",
+        "edit": "Edit",
+        "optional": "opsional",
+        "noPatients": "Tidak ada pasien ditemukan. Tambahkan pasien pertama Anda untuk memulai."
+    },
+    "history": {
+        "title": "Riwayat Perawatan",
+        "selectMonth": "Pilih Bulan",
+        "noTreatments": "Tidak ada perawatan ditemukan untuk bulan ini."
+    },
+    "common": {
+        "loading": "Memuat data Anda dari Google Sheets...",
+        "authFailed": "Autentikasi Gagal",
+        "authFailedDescription": "Sesi Anda telah berakhir. Silakan masuk lagi.",
+        "connectionError": "Kesalahan Koneksi",
+        "connectionErrorDescription": "Kami tidak dapat terhubung ke Google Sheets. Silakan periksa koneksi internet Anda.",
+        "signInAgain": "Masuk Lagi",
+        "retryConnection": "Coba Lagi Koneksi"
+    }
+}

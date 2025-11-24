@@ -1,6 +1,7 @@
 import React from 'react';
 import { Cloud, CloudOff, ExternalLink, RefreshCw } from 'lucide-react';
 import { useStore } from '../store/useStore';
+import { useTranslation } from 'react-i18next';
 
 export const SyncStatus: React.FC = () => {
     const {
@@ -11,6 +12,7 @@ export const SyncStatus: React.FC = () => {
         syncData,
         userRole
     } = useStore();
+    const { t } = useTranslation();
 
     if (!accessToken || !spreadsheetId) return null;
 
@@ -28,7 +30,7 @@ export const SyncStatus: React.FC = () => {
                 <div className={`flex items-center gap-2 ${isError ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
                     {isError ? <CloudOff className="w-4 h-4" /> : <Cloud className="w-4 h-4" />}
                     <span className="font-medium">
-                        {isError ? 'Connection Error' : isSyncing ? 'Syncing...' : 'Synced with Google Sheets'}
+                        {isError ? t('sync.connectionError') : isSyncing ? t('sync.syncing') : t('sync.synced')}
                     </span>
                 </div>
             </div>
@@ -41,7 +43,7 @@ export const SyncStatus: React.FC = () => {
                     title="Sync Now"
                 >
                     <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
-                    <span className="hidden sm:inline">{isSyncing ? 'Syncing' : 'Sync'}</span>
+                    <span className="hidden sm:inline">{isSyncing ? t('sync.syncing') : t('sync.sync')}</span>
                 </button>
                 {userRole === 'admin' && (
                     <button
@@ -50,7 +52,7 @@ export const SyncStatus: React.FC = () => {
                         title="Open in Google Sheets"
                     >
                         <ExternalLink className="w-4 h-4" />
-                        <span className="hidden sm:inline">Open Sheet</span>
+                        <span className="hidden sm:inline">{t('sync.openSheet')}</span>
                     </button>
                 )}
             </div>
