@@ -294,10 +294,29 @@ export class GoogleSheetsService {
                     title
                 },
                 sheets: [
-                    { properties: { title: 'Patients' } },
+                    { properties: { title: 'Patients', gridProperties: { rowCount: 1000, columnCount: 4 } } },
+                    { properties: { title: 'TreatmentTypes', gridProperties: { rowCount: 100, columnCount: 1 } } },
                     { properties: { title: 'AppConfig' } }
                 ]
             })
+        }).then(async (data) => {
+            const spreadsheetId = data.spreadsheetId;
+
+            // Initialize sheets with headers and default data
+            await this.updateValues(spreadsheetId, 'Patients!A1:D1', [['ID', 'Name', 'Age', 'Notes']]);
+            await this.updateValues(spreadsheetId, 'TreatmentTypes!A1:A8', [
+                ['Type'],
+                ['Cleaning'],
+                ['Filling'],
+                ['Root Canal'],
+                ['Extraction'],
+                ['Crown'],
+                ['Whitening'],
+                ['Checkup']
+            ]);
+            await this.updateValues(spreadsheetId, 'AppConfig!A1:B1', [['Key', 'Value']]);
+
+            return data;
         });
     }
 
