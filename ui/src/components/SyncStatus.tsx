@@ -8,7 +8,8 @@ export const SyncStatus: React.FC = () => {
         accessToken,
         isError,
         isSyncing,
-        syncData
+        syncData,
+        userRole
     } = useStore();
 
     if (!accessToken || !spreadsheetId) return null;
@@ -42,14 +43,16 @@ export const SyncStatus: React.FC = () => {
                     <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
                     <span className="hidden sm:inline">{isSyncing ? 'Syncing' : 'Sync'}</span>
                 </button>
-                <button
-                    onClick={openSheet}
-                    className="flex items-center gap-1.5 text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 transition-colors"
-                    title="Open in Google Sheets"
-                >
-                    <ExternalLink className="w-4 h-4" />
-                    <span className="hidden sm:inline">Open Sheet</span>
-                </button>
+                {userRole === 'admin' && (
+                    <button
+                        onClick={openSheet}
+                        className="flex items-center gap-1.5 text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 transition-colors"
+                        title="Open in Google Sheets"
+                    >
+                        <ExternalLink className="w-4 h-4" />
+                        <span className="hidden sm:inline">Open Sheet</span>
+                    </button>
+                )}
             </div>
         </div>
     );

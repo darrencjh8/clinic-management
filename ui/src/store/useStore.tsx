@@ -11,12 +11,13 @@ interface StoreContextType {
     errorType: 'API' | 'AUTH' | null;
     spreadsheetId: string | null;
     accessToken: string | null;
+    userRole: 'admin' | 'staff' | null;
     patients: Patient[];
     treatments: Treatment[];
     treatmentTypes: string[];
     currentMonth: string; // YYYY-MM
     setSheetId: (id: string) => void;
-    handleLoginSuccess: (token: string) => void;
+    handleLoginSuccess: (token: string, role?: 'admin' | 'staff') => void;
     addPatient: (patient: Omit<Patient, 'id' | 'rowIndex'>) => Promise<void>;
     updatePatient: (patient: Patient) => Promise<void>;
     addTreatment: (treatment: Omit<Treatment, 'id' | 'rowIndex'>) => Promise<void>;
@@ -233,16 +234,24 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         localStorage.setItem('spreadsheet_id', id);
     };
 
-    const handleLoginSuccess = (token: string) => {
+    const [userRole, setUserRole] = useState<'admin' | 'staff' | null>(() => {
+        return localStorage.getItem('user_role') as 'admin' | 'staff' | null;
+    });
+
+    const handleLoginSuccess = (token: string, role: 'admin' | 'staff' = 'staff') => {
         setAccessToken(token);
+        setUserRole(role);
         GoogleSheetsService.setAccessToken(token);
+        localStorage.setItem('user_role', role);
     };
 
     const logout = () => {
         GoogleSheetsService.logout();
         setAccessToken(null);
         setSpreadsheetId(null);
+        setUserRole(null);
         localStorage.removeItem('spreadsheet_id');
+        localStorage.removeItem('user_role');
     };
 
     const loadMonth = async (month: string) => {
@@ -255,6 +264,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         errorType,
         spreadsheetId,
         accessToken,
+        userRole,
         patients,
         treatments,
         treatmentTypes,

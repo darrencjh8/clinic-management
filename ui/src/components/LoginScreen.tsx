@@ -6,7 +6,7 @@ import { LogIn, Lock, AlertTriangle, ShieldCheck } from 'lucide-react';
 import { PinEntry } from './PinEntry';
 
 interface LoginScreenProps {
-    onLoginSuccess: (token: string) => void;
+    onLoginSuccess: (token: string, role: 'admin' | 'staff') => void;
     onSpreadsheetIdSubmit?: (id: string) => void;
     initialToken?: string | null;
 }
@@ -77,7 +77,7 @@ export const LoginScreen = ({ onLoginSuccess, onSpreadsheetIdSubmit, initialToke
         onSuccess: (tokenResponse) => {
             // DIRECT OAUTH ACCESS: Use the user's token, skip PIN/Service Account
             GoogleSheetsService.setAccessToken(tokenResponse.access_token);
-            onLoginSuccess(tokenResponse.access_token);
+            onLoginSuccess(tokenResponse.access_token, 'admin');
         },
         onError: () => setError('Google Login Failed'),
         scope: 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.readonly',
@@ -145,7 +145,7 @@ export const LoginScreen = ({ onLoginSuccess, onSpreadsheetIdSubmit, initialToke
 
             if (token) {
                 console.log('Calling onLoginSuccess...');
-                onLoginSuccess(token);
+                onLoginSuccess(token, 'staff');
                 console.log('onLoginSuccess called');
             } else {
                 throw new Error('Failed to retrieve access token');
@@ -173,7 +173,7 @@ export const LoginScreen = ({ onLoginSuccess, onSpreadsheetIdSubmit, initialToke
 
             const token = GoogleSheetsService.getAccessToken();
             if (token) {
-                onLoginSuccess(token);
+                onLoginSuccess(token, 'staff');
             } else {
                 throw new Error('Failed to retrieve access token');
             }
