@@ -323,6 +323,7 @@ export class GoogleSheetsService {
     static async listSpreadsheets() {
         // Requires https://www.googleapis.com/auth/drive.readonly scope
         const q = "mimeType='application/vnd.google-apps.spreadsheet' and trashed=false";
-        return this.fetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id,name)`);
+        const response = await this.fetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id,name)`);
+        return response.files || [];
     }
 }

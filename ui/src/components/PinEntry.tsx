@@ -14,15 +14,23 @@ export const PinEntry = ({ mode, onSubmit, error }: PinEntryProps) => {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        console.log('PinEntry: handleSubmit called', { mode, step, pinLength: pin.length, confirmPinLength: confirmPin.length });
+
         if (mode === 'set') {
             if (step === 'initial') {
                 if (pin.length >= 6) {
+                    console.log('PinEntry: Moving to confirm step');
                     setStep('confirm');
+                } else {
+                    console.warn('PinEntry: PIN too short');
                 }
             } else {
+                console.log('PinEntry: Checking match', { pin, confirmPin });
                 if (pin === confirmPin) {
+                    console.log('PinEntry: PINs match, calling onSubmit');
                     onSubmit(pin);
                 } else {
+                    console.warn('PinEntry: PINs do not match');
                     setConfirmPin('');
                     setStep('initial');
                     setPin('');
@@ -30,6 +38,7 @@ export const PinEntry = ({ mode, onSubmit, error }: PinEntryProps) => {
                 }
             }
         } else {
+            console.log('PinEntry: Calling onSubmit in enter mode');
             onSubmit(pin);
         }
     };
