@@ -1,9 +1,11 @@
 import { useStore } from '../store/useStore';
 import { Calendar, DollarSign, User, Stethoscope } from 'lucide-react';
 import { format } from 'date-fns';
+import { useTranslation } from 'react-i18next';
 
 export const TreatmentHistory = () => {
     const { treatments, patients, currentMonth, loadMonth } = useStore();
+    const { t } = useTranslation();
 
     const getPatientName = (patientId: string) => {
         const patient = patients.find(p => p.id === patientId);
@@ -15,7 +17,7 @@ export const TreatmentHistory = () => {
     return (
         <div className="max-w-6xl mx-auto p-6">
             <div className="flex items-center justify-between mb-8">
-                <h1 className="text-3xl font-bold text-secondary-dark">Treatment History</h1>
+                <h1 className="text-3xl font-bold text-secondary-dark">{t('history.title')}</h1>
                 <div className="flex items-center gap-2">
                     <Calendar className="w-5 h-5 text-primary" />
                     <input
@@ -29,7 +31,7 @@ export const TreatmentHistory = () => {
 
             <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
                 <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold text-secondary-dark">Total Revenue</h2>
+                    <h2 className="text-xl font-semibold text-secondary-dark">{t('history.totalRevenue')}</h2>
                     <span className="text-3xl font-bold text-primary">
                         Rp {totalRevenue.toLocaleString('id-ID')}
                     </span>
@@ -48,18 +50,18 @@ export const TreatmentHistory = () => {
                                     </span>
                                 </div>
                                 <div className="ml-7 space-y-1 text-gray-600">
-                                    <p><strong>Treatment:</strong> {treatment.treatmentType}</p>
-                                    <p><strong>Date:</strong> {format(new Date(treatment.date), 'dd MMM yyyy, HH:mm')}</p>
+                                    <p><strong>{t('treatment.treatmentType')}:</strong> {treatment.treatmentType}</p>
+                                    <p><strong>{t('treatment.date')}:</strong> {format(new Date(treatment.date), 'dd MMM yyyy, HH:mm')}</p>
                                 </div>
                             </div>
                             <div className="space-y-2">
                                 <div className="flex items-center gap-2">
                                     <Stethoscope className="w-5 h-5 text-gray-400" />
-                                    <span className="text-gray-600"><strong>Dentist:</strong> {treatment.dentist}</span>
+                                    <span className="text-gray-600"><strong>{t('treatment.dentist')}:</strong> {treatment.dentist}</span>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <User className="w-5 h-5 text-gray-400" />
-                                    <span className="text-gray-600"><strong>Admin:</strong> {treatment.admin}</span>
+                                    <span className="text-gray-600"><strong>{t('treatment.admin')}:</strong> {treatment.admin}</span>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <DollarSign className="w-5 h-5 text-primary" />
@@ -76,7 +78,7 @@ export const TreatmentHistory = () => {
             {treatments.length === 0 && (
                 <div className="text-center py-12 text-gray-500">
                     <Calendar className="w-16 h-16 mx-auto mb-4 opacity-30" />
-                    <p className="text-xl">No treatments recorded for this month.</p>
+                    <p className="text-xl">{t('history.noTreatments')}</p>
                 </div>
             )}
         </div>

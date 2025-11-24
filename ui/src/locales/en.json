@@ -1,6 +1,6 @@
 {
     "login": {
-        "title": "Login to Wisata Dental Care",
+        "title": "Login",
         "adminTitle": "Admin Login",
         "email": "Email",
         "password": "Password",
@@ -16,9 +16,20 @@
         "setupTitle": "Set your Security PIN",
         "setupDescription": "This PIN will be used to encrypt your access on this device.",
         "enterPIN": "Enter PIN",
-        "forgotPIN": "Forgot PIN? / Reset",
+        "forgot PIN": "Forgot PIN? / Reset",
         "signOut": "Sign Out",
-        "incorrectPIN": "Incorrect PIN"
+        "incorrectPIN": "Incorrect PIN",
+        "setTitle": "Set a PIN",
+        "confirmTitle": "Confirm PIN",
+        "enterTitle": "Enter PIN",
+        "setDescription": "Create a PIN (min 6 digits) to secure your login.",
+        "confirmDescription": "Re-enter your PIN to confirm.",
+        "enterDescription": "Enter your PIN to unlock the app.",
+        "placeholder": "Enter 6+ digits",
+        "pinsDoNotMatch": "PINs do not match. Please try again.",
+        "next": "Next",
+        "savePin": "Save PIN",
+        "unlock": "Unlock"
     },
     "spreadsheet": {
         "setupTitle": "Setup Database",
@@ -38,7 +49,8 @@
         "logout": "Logout"
     },
     "sync": {
-        "synced": "Synced with Google Sheets",
+        "synced": "Synced",
+        "syncedWithSheets": "Synced with Google Sheets",
         "syncing": "Syncing...",
         "connectionError": "Connection Error",
         "sync": "Sync",
@@ -74,10 +86,12 @@
     "history": {
         "title": "Treatment History",
         "selectMonth": "Select Month",
-        "noTreatments": "No treatments found for this month."
+        "noTreatments": "No treatments found for this month.",
+        "totalRevenue": "Total Revenue"
     },
     "common": {
-        "loading": "Loading your data from Google Sheets...",
+        "loading": "Loading your data...",
+        "loadingFromSheets": "Loading your data from Google Sheets...",
         "authFailed": "Authentication Failed",
         "authFailedDescription": "Your session has expired. Please sign in again.",
         "connectionError": "Connection Error",

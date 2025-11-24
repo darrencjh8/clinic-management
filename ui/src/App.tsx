@@ -77,7 +77,7 @@ function App() {
       <div className="min-h-screen flex items-center justify-center bg-white transition-colors">
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 border-4 border-secondary-light border-t-primary rounded-full animate-spin"></div>
-          <p className="text-secondary-dark font-medium">{t('common.loading')}</p>
+          <p className="text-secondary-dark font-medium">{t('common.loadingFromSheets')}</p>
         </div>
       </div>
     );

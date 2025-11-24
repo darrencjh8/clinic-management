@@ -26,7 +26,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigat
             <main className="flex-1 flex flex-col min-w-0 overflow-hidden pb-20 md:pb-0 md:pl-64">
                 {/* Mobile Header */}
                 <header className="md:hidden bg-white border-b border-secondary-light p-4 flex items-center justify-between sticky top-0 z-30 shadow-sm">
-                    <h1 className="text-xl font-bold text-primary">Dental Clinic</h1>
+                    <h1 className="text-xl font-bold text-primary">{import.meta.env.VITE_CLINIC_NAME || 'Dental Clinic'}</h1>
                 </header>
 
                 <div className="flex-1 overflow-y-auto p-4 md:p-8 bg-secondary-light">

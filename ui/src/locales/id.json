@@ -1,6 +1,5 @@
 {
     "login": {
-        "title": "Login Wisata Dental Care",
         "adminTitle": "Login Admin",
         "email": "Email",
         "password": "Kata Sandi",
@@ -18,7 +17,18 @@
         "enterPIN": "Masukkan PIN",
         "forgotPIN": "Lupa PIN? / Reset",
         "signOut": "Keluar",
-        "incorrectPIN": "PIN Salah"
+        "incorrectPIN": "PIN Salah",
+        "setTitle": "Atur PIN",
+        "confirmTitle": "Konfirmasi PIN",
+        "enterTitle": "Masukkan PIN",
+        "setDescription": "Buat PIN (min 6 digit) untuk mengamankan login Anda.",
+        "confirmDescription": "Masukkan kembali PIN Anda untuk konfirmasi.",
+        "enterDescription": "Masukkan PIN Anda untuk membuka aplikasi.",
+        "placeholder": "Masukkan 6+ digit",
+        "pinsDoNotMatch": "PIN tidak cocok. Silakan coba lagi.",
+        "next": "Lanjut",
+        "savePin": "Simpan PIN",
+        "unlock": "Buka Kunci"
     },
     "spreadsheet": {
         "setupTitle": "Pengaturan Database",
@@ -38,7 +48,8 @@
         "logout": "Keluar"
     },
     "sync": {
-        "synced": "Tersinkronisasi dengan Google Sheets",
+        "synced": "Tersinkronisasi",
+        "syncedWithSheets": "Tersinkronisasi dengan Google Sheets",
         "syncing": "Menyinkronkan...",
         "connectionError": "Kesalahan Koneksi",
         "sync": "Sinkronkan",
@@ -74,10 +85,12 @@
     "history": {
         "title": "Riwayat Perawatan",
         "selectMonth": "Pilih Bulan",
-        "noTreatments": "Tidak ada perawatan ditemukan untuk bulan ini."
+        "noTreatments": "Tidak ada perawatan ditemukan untuk bulan ini.",
+        "totalRevenue": "Total Pendapatan"
     },
     "common": {
-        "loading": "Memuat data Anda dari Google Sheets...",
+        "loading": "Memuat data Anda...",
+        "loadingFromSheets": "Memuat data Anda dari Google Sheets...",
         "authFailed": "Autentikasi Gagal",
         "authFailedDescription": "Sesi Anda telah berakhir. Silakan masuk lagi.",
         "connectionError": "Kesalahan Koneksi",

@@ -30,7 +30,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate }) => 
         <aside className="hidden md:block fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-secondary-light shadow-sm">
             <div className="p-6 border-b border-secondary-light flex items-center justify-between">
                 <h1 className="text-2xl font-bold text-primary">
-                    Dental Clinic
+                    {import.meta.env.VITE_CLINIC_NAME || 'Dental Clinic'}
                 </h1>
             </div>
 

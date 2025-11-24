@@ -1,5 +1,6 @@
 import React from 'react';
 import { FileText, Users, Calendar } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface BottomTabsProps {
     currentView: string;
@@ -7,10 +8,12 @@ interface BottomTabsProps {
 }
 
 export const BottomTabs: React.FC<BottomTabsProps> = ({ currentView, onNavigate }) => {
+    const { t } = useTranslation();
+
     const navItems = [
-        { id: 'treatments', label: 'Treatment', icon: FileText },
-        { id: 'patients', label: 'Patients', icon: Users },
-        { id: 'history', label: 'History', icon: Calendar },
+        { id: 'treatments', label: t('sidebar.treatments'), icon: FileText },
+        { id: 'patients', label: t('sidebar.patients'), icon: Users },
+        { id: 'history', label: t('sidebar.history'), icon: Calendar },
     ];
 
     return (

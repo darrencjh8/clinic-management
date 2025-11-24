@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import { useGoogleLogin } from '@react-oauth/google';
 import { FirebaseAuthService } from '../services/FirebaseAuthService';
 import { GoogleSheetsService } from '../services/GoogleSheetsService';
-import { LogIn, Lock, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { LogIn, Lock, AlertTriangle, ShieldCheck, Languages } from 'lucide-react';
 import { PinEntry } from './PinEntry';
+import { useTranslation } from 'react-i18next';
 
 interface LoginScreenProps {
     onLoginSuccess: (token: string, role: 'admin' | 'staff') => void;
@@ -15,6 +16,7 @@ interface LoginScreenProps {
 export const LoginScreen = ({ onLoginSuccess, onSpreadsheetIdSubmit, initialToken, userRole }: LoginScreenProps) => {
     // Login Method State
     const [loginMethod, setLoginMethod] = useState<'firebase' | 'google'>('firebase');
+    const { t, i18n } = useTranslation();
 
     // Firebase State
     const [email, setEmail] = useState('');
@@ -31,6 +33,12 @@ export const LoginScreen = ({ onLoginSuccess, onSpreadsheetIdSubmit, initialToke
     // Spreadsheet Selection State
     const [availableSheets, setAvailableSheets] = useState<any[]>([]);
     const [isLoadingSheets, setIsLoadingSheets] = useState(false);
+
+    const toggleLanguage = () => {
+        const newLang = i18n.language === 'en' ? 'id' : 'en';
+        i18n.changeLanguage(newLang);
+        localStorage.setItem('language', newLang);
+    };
 
     useEffect(() => {
         console.log('LoginScreen: Effect running', { initialToken: !!initialToken });
@@ -359,7 +367,9 @@ export const LoginScreen = ({ onLoginSuccess, onSpreadsheetIdSubmit, initialToke
                 </div>
 
                 <h2 className="text-2xl font-bold text-center text-secondary-dark mb-2">
-                    {loginMethod === 'firebase' ? 'Dental Clinic Login' : 'Admin Login'}
+                    {loginMethod === 'firebase'
+                        ? `${import.meta.env.VITE_CLINIC_NAME || 'Dental Clinic'}`
+                        : t('login.adminTitle')}
                 </h2>
 
                 {error && (
@@ -372,7 +382,7 @@ export const LoginScreen = ({ onLoginSuccess, onSpreadsheetIdSubmit, initialToke
                 {loginMethod === 'firebase' ? (
                     <form onSubmit={handleFirebaseLogin} className="flex flex-col gap-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">{t('login.email')}</label>
                             <input
                                 type="email"
                                 value={email}
@@ -382,7 +392,7 @@ export const LoginScreen = ({ onLoginSuccess, onSpreadsheetIdSubmit, initialToke
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">{t('login.password')}</label>
                             <input
                                 type="password"
                                 value={password}
@@ -401,7 +411,7 @@ export const LoginScreen = ({ onLoginSuccess, onSpreadsheetIdSubmit, initialToke
                             ) : (
                                 <>
                                     <LogIn className="w-4 h-4" />
-                                    Sign In
+                                    {t('login.signIn')}
                                 </>
                             )}
                         </button>
@@ -409,19 +419,26 @@ export const LoginScreen = ({ onLoginSuccess, onSpreadsheetIdSubmit, initialToke
                 ) : (
                     <div className="flex flex-col gap-4">
                         <p className="text-gray-600 text-center mb-4">
-                            Sign in with your Google Account for administrative access.
+                            {t('login.googleSignInDescription')}
                         </p>
                         <button
                             onClick={() => googleLogin()}
                             className="w-full bg-white border border-gray-300 text-gray-700 py-3 rounded-xl font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
                         >
                             <img src="https://www.google.com/favicon.ico" alt="Google" className="w-4 h-4" />
-                            Sign in with Google
+                            {t('login.googleSignIn')}
                         </button>
                     </div>
                 )}
 
-                <div className="mt-6 pt-6 border-t border-gray-100">
+                <div className="mt-6 pt-6 border-t border-gray-100 space-y-3">
+                    <button
+                        onClick={toggleLanguage}
+                        className="w-full flex items-center justify-center gap-2 text-sm text-gray-600 hover:text-blue-600 transition-colors"
+                    >
+                        <Languages className="w-4 h-4" />
+                        {i18n.language === 'en' ? 'Bahasa Indonesia' : 'English'}
+                    </button>
                     <button
                         onClick={() => {
                             setLoginMethod(prev => prev === 'firebase' ? 'google' : 'firebase');
@@ -430,8 +447,8 @@ export const LoginScreen = ({ onLoginSuccess, onSpreadsheetIdSubmit, initialToke
                         className="w-full text-sm text-gray-500 hover:text-primary transition-colors"
                     >
                         {loginMethod === 'firebase'
-                            ? 'Switch to Admin (Google) Login'
-                            : 'Switch to Staff (Email) Login'}
+                            ? t('login.switchToAdmin')
+                            : t('login.switchToStaff')}
                     </button>
                 </div>
             </div>

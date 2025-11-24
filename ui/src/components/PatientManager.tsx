@@ -2,9 +2,11 @@ import { useState } from 'react';
 import { useStore } from '../store/useStore';
 import { User, Plus, Edit2, Save, X } from 'lucide-react';
 import type { Patient } from '../types';
+import { useTranslation } from 'react-i18next';
 
 export const PatientManager = () => {
     const { patients, addPatient, updatePatient } = useStore();
+    const { t } = useTranslation();
     const [showAddForm, setShowAddForm] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
     const [formData, setFormData] = useState({
@@ -47,13 +49,13 @@ export const PatientManager = () => {
     return (
         <div className="max-w-4xl mx-auto p-6">
             <div className="flex items-center justify-between mb-8">
-                <h1 className="text-3xl font-bold text-secondary-dark">Patient Management</h1>
+                <h1 className="text-3xl font-bold text-secondary-dark">{t('patient.title')}</h1>
                 <button
                     onClick={() => setShowAddForm(!showAddForm)}
                     className="flex items-center gap-2 bg-primary text-white px-6 py-3 rounded-xl font-semibold hover:bg-opacity-90 transition-all shadow-md"
                 >
                     {showAddForm ? <X className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
-                    {showAddForm ? 'Cancel' : 'Add Patient'}
+                    {showAddForm ? t('patient.cancel') : t('patient.addNew')}
                 </button>
             </div>
 
@@ -63,7 +65,7 @@ export const PatientManager = () => {
                         type="text"
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        placeholder="Patient Name *"
+                        placeholder={t('patient.name')}
                         className="w-full px-4 py-3 border-2 border-secondary-light rounded-xl focus:outline-none focus:border-primary transition-colors text-lg"
                         required
                     />
@@ -71,14 +73,14 @@ export const PatientManager = () => {
                         type="number"
                         value={formData.age}
                         onChange={(e) => setFormData({ ...formData, age: e.target.value })}
-                        placeholder="Age (optional)"
+                        placeholder={`${t('patient.age')} (${t('patient.optional')})`}
                         className="w-full px-4 py-3 border-2 border-secondary-light rounded-xl focus:outline-none focus:border-primary transition-colors text-lg"
                         min="0"
                     />
                     <textarea
                         value={formData.notes}
                         onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                        placeholder="Notes for dentist (optional)"
+                        placeholder={`${t('patient.notes')} (${t('patient.optional')})`}
                         className="w-full px-4 py-3 border-2 border-secondary-light rounded-xl focus:outline-none focus:border-primary transition-colors text-lg resize-none"
                         rows={3}
                     />
@@ -86,7 +88,7 @@ export const PatientManager = () => {
                         type="submit"
                         className="w-full bg-primary text-white py-3 rounded-xl font-semibold hover:bg-opacity-90 transition-all"
                     >
-                        Add Patient
+                        {t('patient.addPatient')}
                     </button>
                 </form>
             )}
@@ -106,14 +108,14 @@ export const PatientManager = () => {
                                     type="number"
                                     value={formData.age}
                                     onChange={(e) => setFormData({ ...formData, age: e.target.value })}
-                                    placeholder="Age"
+                                    placeholder={t('patient.age')}
                                     className="w-full px-4 py-2 border-2 border-secondary-light rounded-xl focus:outline-none focus:border-primary"
                                     min="0"
                                 />
                                 <textarea
                                     value={formData.notes}
                                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                                    placeholder="Notes"
+                                    placeholder={t('patient.notes')}
                                     className="w-full px-4 py-2 border-2 border-secondary-light rounded-xl focus:outline-none focus:border-primary resize-none"
                                     rows={2}
                                 />
@@ -123,14 +125,14 @@ export const PatientManager = () => {
                                         className="flex-1 flex items-center justify-center gap-2 bg-primary text-white px-4 py-2 rounded-xl font-semibold hover:bg-opacity-90"
                                     >
                                         <Save className="w-4 h-4" />
-                                        Save
+                                        {t('patient.save')}
                                     </button>
                                     <button
                                         onClick={() => setEditingId(null)}
                                         className="flex-1 flex items-center justify-center gap-2 bg-gray-200 text-gray-700 px-4 py-2 rounded-xl font-semibold hover:bg-gray-300"
                                     >
                                         <X className="w-4 h-4" />
-                                        Cancel
+                                        {t('patient.cancel')}
                                     </button>
                                 </div>
                             </div>
@@ -140,7 +142,7 @@ export const PatientManager = () => {
                                     <div className="flex items-center gap-3 mb-2">
                                         <User className="w-6 h-6 text-primary" />
                                         <h3 className="text-xl font-bold text-secondary-dark">{patient.name}</h3>
-                                        {patient.age && <span className="text-gray-500 text-sm">({patient.age} years old)</span>}
+                                        {patient.age && <span className="text-gray-500 text-sm">({patient.age} {t('patient.age')})</span>}
                                     </div>
                                     {patient.notes && (
                                         <p className="text-gray-600 ml-9 mt-2">{patient.notes}</p>
@@ -151,7 +153,7 @@ export const PatientManager = () => {
                                     className="flex items-center gap-2 text-primary hover:text-opacity-80 font-semibold"
                                 >
                                     <Edit2 className="w-4 h-4" />
-                                    Edit
+                                    {t('patient.edit')}
                                 </button>
                             </div>
                         )}
@@ -162,7 +164,7 @@ export const PatientManager = () => {
             {patients.length === 0 && (
                 <div className="text-center py-12 text-gray-500">
                     <User className="w-16 h-16 mx-auto mb-4 opacity-30" />
-                    <p className="text-xl">No patients yet. Add your first patient!</p>
+                    <p className="text-xl">{t('patient.noPatients')}</p>
                 </div>
             )}
         </div>
