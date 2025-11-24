@@ -1,0 +1,22 @@
+app = "utility-splitter"
+primary_region = "sin"
+
+[build]
+  dockerfile = "Dockerfile.fly"
+
+[env]
+  PORT = "3000"
+
+[http_service]
+  internal_port = 80
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ["app"]
+
+[[vm]]
+  size = "shared-cpu-1x"
+  cpu_kind = "shared"
+  memory_mb = 256
+  cpus = 1
