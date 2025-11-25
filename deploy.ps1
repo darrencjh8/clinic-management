@@ -12,12 +12,9 @@ function Check-Error {
     }
 }
 
-# Navigate to project root (one level up from ui/)
-Write-Output "Navigating to project root..."
-Set-Location ..
-
 # 1. Execute the docker build command
 Write-Output "Building Docker Image..."
+# Builds using the Dockerfile in the current directory, which includes both UI and Server
 docker build -t wisata-dental:latest .
 Check-Error "Docker build failed"
 
@@ -35,6 +32,3 @@ fly deploy --image chongjinheng/wisata-dental:latest --ha=false
 Check-Error "Fly deploy failed"
 
 Write-Output "Deployment Successful!"
-
-# Return to original directory
-Set-Location ui

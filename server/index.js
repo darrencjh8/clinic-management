@@ -8,21 +8,21 @@ const PORT = process.env.PORT || 3001;
 
 // Initialize Firebase Admin
 // Expects FIREBASE_SERVICE_ACCOUNT_BASE64 to be the base64 encoded JSON string of the service account
+let firebaseInitialized = false;
 if (!process.env.FIREBASE_SERVICE_ACCOUNT_BASE64) {
-    console.error('ERROR: FIREBASE_SERVICE_ACCOUNT_BASE64 is missing in .env');
-    process.exit(1);
-}
-
-try {
-    const decoded = Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT_BASE64, 'base64').toString('utf-8');
-    const serviceAccount = JSON.parse(decoded);
-    admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount)
-    });
-    console.log('Firebase Admin Initialized');
-} catch (error) {
-    console.error('Failed to parse FIREBASE_SERVICE_ACCOUNT_BASE64', error);
-    process.exit(1);
+    console.error('WARNING: FIREBASE_SERVICE_ACCOUNT_BASE64 is missing in .env. API endpoints requiring auth will fail.');
+} else {
+    try {
+        const decoded = Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT_BASE64, 'base64').toString('utf-8');
+        const serviceAccount = JSON.parse(decoded);
+        admin.initializeApp({
+            credential: admin.credential.cert(serviceAccount)
+        });
+        firebaseInitialized = true;
+        console.log('Firebase Admin Initialized');
+    } catch (error) {
+        console.error('Failed to parse FIREBASE_SERVICE_ACCOUNT_BASE64', error);
+    }
 }
 
 app.use(cors());
@@ -30,6 +30,10 @@ app.use(express.json());
 
 // Middleware to verify Firebase ID Token
 const verifyToken = async (req, res, next) => {
+    if (!firebaseInitialized) {
+        return res.status(500).json({ error: 'Server misconfigured: Firebase not initialized' });
+    }
+
     const idToken = req.headers.authorization?.split('Bearer ')[1];
 
     if (!idToken) {
@@ -74,10 +78,10 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // The "catchall" handler: for any request that doesn't
 // match one above, send back React's index.html file.
-app.get('*', (req, res) => {
+app.get(/(.*)/, (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on port ${PORT}`);
 });

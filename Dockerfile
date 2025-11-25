@@ -4,6 +4,8 @@ WORKDIR /app/ui
 COPY ui/package*.json ./
 RUN npm ci
 COPY ui/ ./
+# Copy production env file to .env so Vite uses it
+COPY ui/.env-prod ./.env
 RUN npm run build
 
 # Stage 2: Setup the Server and Run

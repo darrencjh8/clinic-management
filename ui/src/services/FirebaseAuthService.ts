@@ -1,7 +1,7 @@
 import { auth } from '../config/firebase';
 import { signInWithEmailAndPassword, signOut as firebaseSignOut, type User } from 'firebase/auth';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const API_URL = import.meta.env.VITE_API_URL || '';
 
 export const FirebaseAuthService = {
     signIn: async (email: string, pass: string) => {
