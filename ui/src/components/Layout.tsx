@@ -3,6 +3,8 @@ import { useStore } from '../store/useStore';
 import { Sidebar } from './Sidebar';
 import { BottomTabs } from './BottomTabs';
 
+import { SyncStatus } from './SyncStatus';
+
 interface LayoutProps {
     children: React.ReactNode;
     currentView: string;
@@ -13,7 +15,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigat
     const { isDarkMode, toggleDarkMode } = useStore();
 
     return (
-        <div className="min-h-screen bg-white flex transition-colors duration-200">
+        <div className="h-[100dvh] bg-white flex transition-colors duration-200 overflow-hidden">
             {/* Sidebar (Desktop Only) */}
             <Sidebar
                 currentView={currentView}
@@ -23,14 +25,16 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigat
             />
 
             {/* Main Content */}
-            <main className="flex-1 flex flex-col min-w-0 overflow-hidden pb-20 md:pb-0 md:pl-64">
+            <main className="flex-1 flex flex-col min-w-0 h-full md:pl-64 relative">
                 {/* Mobile Header */}
                 <header className="md:hidden bg-white border-b border-secondary-light p-4 flex items-center justify-between sticky top-0 z-30 shadow-sm">
                     <h1 className="text-xl font-bold text-primary">{import.meta.env.VITE_CLINIC_NAME || 'Dental Clinic'}</h1>
                 </header>
 
-                <div className="flex-1 overflow-y-auto p-4 md:p-8 bg-secondary-light">
-                    <div className="max-w-full mx-auto">
+                <SyncStatus />
+
+                <div className="flex-1 overflow-y-auto bg-secondary-light p-4">
+                    <div className="max-w-full mx-auto pb-20 md:pb-0">
                         {children}
                     </div>
                 </div>

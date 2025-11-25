@@ -25,7 +25,7 @@ export const SyncStatus: React.FC = () => {
     };
 
     return (
-        <div className="bg-white dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700 px-6 py-2 flex items-center justify-between text-sm transition-colors relative z-50 md:ml-64">
+        <div className="bg-white dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700 px-6 py-2 flex items-center justify-between text-sm transition-colors relative z-40">
             <div className="flex items-center gap-4">
                 <div className={`flex items-center gap-2 ${isError ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
                     {isError ? <CloudOff className="w-4 h-4" /> : <Cloud className="w-4 h-4" />}

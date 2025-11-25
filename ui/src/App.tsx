@@ -4,7 +4,6 @@ import { TreatmentEntry } from './components/TreatmentEntry';
 import { PatientManager } from './components/PatientManager';
 import { TreatmentHistory } from './components/TreatmentHistory';
 import { Reporting } from './components/Reporting';
-import { SyncStatus } from './components/SyncStatus';
 import { LoginScreen } from './components/LoginScreen';
 import { useStore, StoreProvider } from './store/useStore';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
@@ -118,8 +117,7 @@ function AppContent() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-secondary-light transition-colors">
-      <SyncStatus />
+    <div className="flex flex-col h-screen bg-secondary-light transition-colors overflow-hidden">
       <Layout currentView={currentView} onNavigate={setCurrentView}>
         {renderView()}
       </Layout>
