@@ -3,7 +3,7 @@
 
 $ErrorActionPreference = "Stop"
 
-# Helper function to check exit codes to keep code clean
+# Helper function to check exit codes
 function Check-Error {
     param([string]$Message)
     if ($LASTEXITCODE -ne 0) {
@@ -12,22 +12,29 @@ function Check-Error {
     }
 }
 
+# Navigate to project root (one level up from ui/)
+Write-Output "Navigating to project root..."
+Set-Location ..
+
 # 1. Execute the docker build command
 Write-Output "Building Docker Image..."
-docker build -t utility-splitter:latest -f Dockerfile .
+docker build -t wisata-dental:latest .
 Check-Error "Docker build failed"
 
 # 2. Tag and Push
 Write-Output "Pushing to Registry..."
-docker tag utility-splitter:latest chongjinheng/utility-splitter:latest
+docker tag wisata-dental:latest chongjinheng/wisata-dental:latest
 Check-Error "Docker tag failed"
 
-docker push chongjinheng/utility-splitter:latest
+docker push chongjinheng/wisata-dental:latest
 Check-Error "Docker push failed"
 
 # 3. Deploy
 Write-Output "Deploying to Fly.io..."
-fly deploy --image chongjinheng/utility-splitter:latest --ha=false
+fly deploy --image chongjinheng/wisata-dental:latest --ha=false
 Check-Error "Fly deploy failed"
 
 Write-Output "Deployment Successful!"
+
+# Return to original directory
+Set-Location ui

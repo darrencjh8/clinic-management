@@ -68,6 +68,16 @@ app.get('/health', (req, res) => {
     res.send('OK');
 });
 
+// Serve static files from the React app
+const path = require('path');
+app.use(express.static(path.join(__dirname, 'public')));
+
+// The "catchall" handler: for any request that doesn't
+// match one above, send back React's index.html file.
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
