@@ -91,6 +91,15 @@
         "noTreatments": "No treatments found for this month.",
         "totalRevenue": "Total Revenue"
     },
+    "reporting": {
+        "title": "Financial Report",
+        "dentistRevenue": "Dentist Revenue",
+        "totalRevenue": "Total Revenue",
+        "calculator": "Commission Calculator",
+        "percentage": "Percentage (%)",
+        "payable": "Payable Amount",
+        "back": "Back to Summary"
+    },
     "common": {
         "loading": "Loading your data...",
         "loadingFromSheets": "Loading your data from Google Sheets...",

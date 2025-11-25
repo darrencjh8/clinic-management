@@ -90,6 +90,15 @@
         "noTreatments": "Tidak ada perawatan ditemukan untuk bulan ini.",
         "totalRevenue": "Total Pendapatan"
     },
+    "reporting": {
+        "title": "Laporan Keuangan",
+        "dentistRevenue": "Pendapatan Dokter Gigi",
+        "totalRevenue": "Total Pendapatan",
+        "calculator": "Kalkulator Komisi",
+        "percentage": "Persentase (%)",
+        "payable": "Jumlah yang Harus Dibayar",
+        "back": "Kembali ke Ringkasan"
+    },
     "common": {
         "loading": "Memuat data Anda...",
         "loadingFromSheets": "Memuat data Anda dari Google Sheets...",

@@ -3,6 +3,7 @@ import { Layout } from './components/Layout';
 import { TreatmentEntry } from './components/TreatmentEntry';
 import { PatientManager } from './components/PatientManager';
 import { TreatmentHistory } from './components/TreatmentHistory';
+import { Reporting } from './components/Reporting';
 import { SyncStatus } from './components/SyncStatus';
 import { LoginScreen } from './components/LoginScreen';
 import { useStore, StoreProvider } from './store/useStore';
@@ -46,6 +47,8 @@ function AppContent() {
         return <PatientManager />;
       case 'history':
         return <TreatmentHistory />;
+      case 'reporting':
+        return userRole === 'admin' ? <Reporting /> : <TreatmentEntry />;
       default:
         return <TreatmentEntry />;
     }

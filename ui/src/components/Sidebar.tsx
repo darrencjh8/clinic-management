@@ -1,5 +1,5 @@
 import React from 'react';
-import { FileText, Users, Calendar, LogOut, Languages } from 'lucide-react';
+import { FileText, Users, Calendar, LogOut, Languages, BarChart3 } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { useTranslation } from 'react-i18next';
 
@@ -11,7 +11,7 @@ interface SidebarProps {
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate }) => {
-    const { logout } = useStore();
+    const { logout, userRole } = useStore();
     const { t, i18n } = useTranslation();
 
     const navItems = [
@@ -19,6 +19,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate }) => 
         { id: 'patients', label: t('sidebar.patients'), icon: Users },
         { id: 'history', label: t('sidebar.history'), icon: Calendar },
     ];
+
+    if (userRole === 'admin') {
+        navItems.push({ id: 'reporting', label: t('reporting.title'), icon: BarChart3 });
+    }
 
     const toggleLanguage = () => {
         const newLang = i18n.language === 'en' ? 'id' : 'en';

@@ -1,8 +1,8 @@
-app = "utility-splitter"
-primary_region = "sin"
+app = "wisata-dental"
+primary_region = "jkt"
 
 [build]
-  dockerfile = "Dockerfile.fly"
+  dockerfile = "Dockerfile"
 
 [env]
   PORT = "3000"
