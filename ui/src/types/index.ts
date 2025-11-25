@@ -18,16 +18,10 @@ export interface Treatment {
     rowIndex?: number; // For Google Sheets sync
 }
 
-export const DENTISTS = [
-    'Dr. Smith',
-    'Dr. Jones',
-    'Dr. Brown'
-] as const;
+export interface Staff {
+    name: string;
+    role: 'Dentist' | 'Admin';
+}
 
-export const ADMINS = [
-    'Admin Alice',
-    'Admin Bob'
-] as const;
-
-export type Dentist = typeof DENTISTS[number];
-export type Admin = typeof ADMINS[number];
+export type Dentist = string;
+export type Admin = string;

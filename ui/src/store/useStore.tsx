@@ -1,8 +1,9 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
-import type { Patient, Treatment } from '../types';
+import type { Patient, Treatment, Staff } from '../types';
 import { GoogleSheetsService } from '../services/GoogleSheetsService';
 
 const PATIENTS_SHEET = 'Patients';
+const STAFF_SHEET = 'Staff';
 const TREATMENT_TYPES_SHEET = 'TreatmentTypes';
 
 interface StoreContextType {
@@ -11,14 +12,17 @@ interface StoreContextType {
     errorType: 'API' | 'AUTH' | null;
     spreadsheetId: string | null;
     accessToken: string | null;
-    userRole: 'admin' | 'staff' | null;
     patients: Patient[];
+    userRole: 'admin' | 'staff' | null;
     treatments: Treatment[];
+    staff: Staff[];
+    dentists: string[];
+    admins: string[];
     treatmentTypes: string[];
     currentMonth: string; // YYYY-MM
     setSheetId: (id: string) => void;
     handleLoginSuccess: (token: string, role?: 'admin' | 'staff') => void;
-    addPatient: (patient: Omit<Patient, 'id' | 'rowIndex'>) => Promise<void>;
+    addPatient: (patient: Omit<Patient, 'id' | 'rowIndex'>) => Promise<string | undefined>;
     updatePatient: (patient: Patient) => Promise<void>;
     addTreatment: (treatment: Omit<Treatment, 'id' | 'rowIndex'>) => Promise<void>;
     loadMonth: (month: string) => Promise<void>;
@@ -41,6 +45,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
     const [patients, setPatients] = useState<Patient[]>([]);
     const [treatments, setTreatments] = useState<Treatment[]>([]);
+    const [staff, setStaff] = useState<Staff[]>([]);
     const [treatmentTypes, setTreatmentTypes] = useState<string[]>(() => {
         const saved = localStorage.getItem('treatment_types');
         return saved ? JSON.parse(saved) : ['Cleaning', 'Filling', 'Root Canal', 'Extraction', 'Crown', 'Whitening', 'Checkup'];
@@ -95,6 +100,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             const rangesToFetch = [
                 `${PATIENTS_SHEET}!A:D`,
                 `${treatmentsSheet}!A:G`,
+                `${STAFF_SHEET}!A:B`,
                 `${TREATMENT_TYPES_SHEET}!A:A`
             ];
 
@@ -142,6 +148,20 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 }
             });
             setTreatments(parsedTreatments);
+
+            // Parse Staff
+            const staffRows = getValuesForSheet(STAFF_SHEET) || [];
+            const parsedStaff: Staff[] = [];
+            staffRows.forEach((row: string[], index: number) => {
+                if (index === 0) return;
+                if (row[0] && row[1]) {
+                    parsedStaff.push({
+                        name: row[0],
+                        role: row[1] as 'Dentist' | 'Admin'
+                    });
+                }
+            });
+            setStaff(parsedStaff);
 
             // Parse Treatment Types
             const treatmentTypeRows = getValuesForSheet(TREATMENT_TYPES_SHEET) || [];
@@ -200,12 +220,28 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         if (!spreadsheetId) return;
         const newId = crypto.randomUUID();
         const row = [newId, patientData.name, patientData.age || '', patientData.notes || ''];
+
+        // Optimistic update
+        const newPatient: Patient = {
+            id: newId,
+            name: patientData.name,
+            age: patientData.age,
+            notes: patientData.notes,
+            rowIndex: -1 // Temporary
+        };
+        setPatients(prev => [...prev, newPatient]);
+
         await GoogleSheetsService.appendValues(spreadsheetId, PATIENTS_SHEET, [row]);
         await syncData();
+        return newId;
     };
 
     const updatePatient = async (patient: Patient) => {
         if (!spreadsheetId || !patient.rowIndex) return;
+
+        // Optimistic update
+        setPatients(prev => prev.map(p => p.id === patient.id ? patient : p));
+
         const range = `${PATIENTS_SHEET}!B${patient.rowIndex}:D${patient.rowIndex}`;
         const row = [patient.name, patient.age || '', patient.notes || ''];
         await GoogleSheetsService.updateValues(spreadsheetId, range, [row]);
@@ -215,6 +251,18 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     const addTreatment = async (treatmentData: Omit<Treatment, 'id' | 'rowIndex'>) => {
         if (!spreadsheetId) return;
         const newId = crypto.randomUUID();
+
+        // Save new treatment type if it doesn't exist
+        if (treatmentData.treatmentType && !treatmentTypes.includes(treatmentData.treatmentType)) {
+            const newType = treatmentData.treatmentType;
+            // Optimistic update for types
+            setTreatmentTypes(prev => [...prev, newType]);
+            localStorage.setItem('treatment_types', JSON.stringify([...treatmentTypes, newType]));
+
+            // Async save to sheet (don't block)
+            GoogleSheetsService.appendValues(spreadsheetId, TREATMENT_TYPES_SHEET, [[newType]]).catch(console.error);
+        }
+
         const treatmentsSheet = `Treatments_${currentMonth.replace('-', '_')}`;
         const row = [
             newId,
@@ -225,6 +273,20 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             treatmentData.treatmentType,
             treatmentData.date
         ];
+
+        // Optimistic update for treatments
+        const newTreatment: Treatment = {
+            id: newId,
+            patientId: treatmentData.patientId,
+            dentist: treatmentData.dentist,
+            admin: treatmentData.admin,
+            amount: treatmentData.amount,
+            treatmentType: treatmentData.treatmentType,
+            date: treatmentData.date,
+            rowIndex: -1 // Temporary
+        };
+        setTreatments(prev => [...prev, newTreatment]);
+
         await GoogleSheetsService.appendValues(spreadsheetId, treatmentsSheet, [row]);
         await syncData();
     };
@@ -278,6 +340,9 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         userRole,
         patients,
         treatments,
+        staff,
+        dentists: staff.filter(s => s.role === 'Dentist').map(s => s.name),
+        admins: staff.filter(s => s.role === 'Admin').map(s => s.name),
         treatmentTypes,
         currentMonth,
         setSheetId,

@@ -16,7 +16,7 @@
         "setupTitle": "Set your Security PIN",
         "setupDescription": "This PIN will be used to encrypt your access on this device.",
         "enterPIN": "Enter PIN",
-        "forgot PIN": "Forgot PIN? / Reset",
+        "forgotPIN": "Forgot PIN? / Reset",
         "signOut": "Sign Out",
         "incorrectPIN": "Incorrect PIN",
         "setTitle": "Set a PIN",
@@ -59,16 +59,18 @@
     "treatment": {
         "title": "New Treatment Entry",
         "patient": "Patient",
-        "selectPatient": "Select patient",
+        "enterPatientName": "Enter patient name",
         "dentist": "Dentist",
+        "selectDentist": "Select dentist",
         "admin": "Admin",
+        "selectAdmin": "Select admin",
         "amount": "Amount",
         "treatmentType": "Treatment Type",
-        "selectType": "Select treatment type",
-        "date": "Date",
+        "typePlaceholder": "e.g., Cleaning, Filling",
         "addTreatment": "Add Treatment",
         "loading": "Loading...",
-        "success": "Treatment added successfully!"
+        "success": "Treatment added successfully!",
+        "date": "Date"
     },
     "patient": {
         "title": "Patient Management",

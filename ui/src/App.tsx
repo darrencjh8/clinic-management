@@ -5,11 +5,12 @@ import { PatientManager } from './components/PatientManager';
 import { TreatmentHistory } from './components/TreatmentHistory';
 import { SyncStatus } from './components/SyncStatus';
 import { LoginScreen } from './components/LoginScreen';
-import { useStore } from './store/useStore';
+import { useStore, StoreProvider } from './store/useStore';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { ToastProvider } from './context/ToastContext';
 
-function App() {
+function AppContent() {
   const [currentView, setCurrentView] = useState('treatments');
   const {
     isLoading,
@@ -18,7 +19,8 @@ function App() {
     accessToken,
     spreadsheetId,
     setSheetId,
-    handleLoginSuccess
+    handleLoginSuccess,
+    userRole
   } = useStore();
   const { t } = useTranslation();
 
@@ -55,6 +57,7 @@ function App() {
       <LoginScreen
         onLoginSuccess={handleLoginSuccess}
         onSpreadsheetIdSubmit={setSheetId}
+        userRole={userRole}
       />
     );
   }
@@ -66,7 +69,7 @@ function App() {
         onLoginSuccess={handleLoginSuccess}
         onSpreadsheetIdSubmit={setSheetId}
         initialToken={accessToken}
-        userRole={useStore().userRole}
+        userRole={userRole}
       />
     );
   }
@@ -118,6 +121,16 @@ function App() {
         {renderView()}
       </Layout>
     </div>
+  );
+}
+
+function App() {
+  return (
+    <StoreProvider>
+      <ToastProvider>
+        <AppContent />
+      </ToastProvider>
+    </StoreProvider>
   );
 }
 

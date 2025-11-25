@@ -58,16 +58,18 @@
     "treatment": {
         "title": "Entri Perawatan Baru",
         "patient": "Pasien",
-        "selectPatient": "Pilih pasien",
+        "enterPatientName": "Masukkan nama pasien",
         "dentist": "Dokter Gigi",
+        "selectDentist": "Pilih dokter gigi",
         "admin": "Admin",
+        "selectAdmin": "Pilih admin",
         "amount": "Jumlah",
         "treatmentType": "Jenis Perawatan",
-        "selectType": "Pilih jenis perawatan",
-        "date": "Tanggal",
+        "typePlaceholder": "cth. Pembersihan, Tambal",
         "addTreatment": "Tambah Perawatan",
         "loading": "Memuat...",
-        "success": "Perawatan berhasil ditambahkan!"
+        "success": "Perawatan berhasil ditambahkan!",
+        "date": "Tanggal"
     },
     "patient": {
         "title": "Manajemen Pasien",
@@ -78,7 +80,7 @@
         "addPatient": "Tambah Pasien",
         "cancel": "Batal",
         "save": "Simpan",
-        "edit": "Edit",
+        "edit": "Ubah",
         "optional": "opsional",
         "noPatients": "Tidak ada pasien ditemukan. Tambahkan pasien pertama Anda untuk memulai."
     },

@@ -252,10 +252,10 @@ export const LoginScreen = ({ onLoginSuccess, onSpreadsheetIdSubmit, initialToke
                             onClick={handleResetPin}
                             className="text-sm text-primary hover:text-primary-dark underline w-full text-center"
                         >
-                            Forgot PIN? / Reset
+                            {t('pin.forgotPIN')}
                         </button>
                         <button onClick={handleSignOut} className="text-xs text-slate-400 hover:text-red-500 w-full text-center">
-                            Sign Out
+                            {t('pin.signOut')}
                         </button>
                     </div>
                 </div>
@@ -267,9 +267,9 @@ export const LoginScreen = ({ onLoginSuccess, onSpreadsheetIdSubmit, initialToke
         return (
             <div className="min-h-screen flex items-center justify-center bg-white p-4">
                 <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-8 border-2 border-secondary-light">
-                    <h2 className="text-xl font-bold text-center mb-4 text-secondary-dark">Set your Security PIN</h2>
+                    <h2 className="text-xl font-bold text-center mb-4 text-secondary-dark">{t('pin.setupTitle')}</h2>
                     <p className="text-sm text-gray-500 text-center mb-6">
-                        This PIN will be used to encrypt your access on this device.
+                        {t('pin.setupDescription')}
                     </p>
                     <PinEntry mode="set" onSubmit={handlePinSetup} error={error} />
                 </div>
@@ -281,11 +281,11 @@ export const LoginScreen = ({ onLoginSuccess, onSpreadsheetIdSubmit, initialToke
         return (
             <div className="min-h-screen flex items-center justify-center bg-white p-4">
                 <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-8 border-2 border-secondary-light">
-                    <h2 className="text-xl font-bold text-center mb-4 text-secondary-dark">Setup Database</h2>
+                    <h2 className="text-xl font-bold text-center mb-4 text-secondary-dark">{t('spreadsheet.setupTitle')}</h2>
                     <p className="text-sm text-gray-500 text-center mb-6">
                         {userRole === 'admin'
-                            ? 'Select an existing spreadsheet or create a new one.'
-                            : 'Select an existing spreadsheet.'}
+                            ? t('spreadsheet.selectOrCreate')
+                            : t('spreadsheet.selectExisting')}
                     </p>
 
                     <div className="flex flex-col gap-4">
@@ -308,7 +308,7 @@ export const LoginScreen = ({ onLoginSuccess, onSpreadsheetIdSubmit, initialToke
                                     disabled={isLoading}
                                     className="w-full bg-primary text-white py-3 rounded-xl font-medium hover:bg-opacity-90 disabled:opacity-50 transition-colors"
                                 >
-                                    {isLoading ? 'Creating...' : 'Create New Spreadsheet'}
+                                    {isLoading ? t('spreadsheet.creating') : t('spreadsheet.createNew')}
                                 </button>
 
                                 <div className="relative">
@@ -316,14 +316,14 @@ export const LoginScreen = ({ onLoginSuccess, onSpreadsheetIdSubmit, initialToke
                                         <div className="w-full border-t border-gray-200"></div>
                                     </div>
                                     <div className="relative flex justify-center text-sm">
-                                        <span className="px-2 bg-white text-gray-500">Or select existing</span>
+                                        <span className="px-2 bg-white text-gray-500">{t('spreadsheet.orSelectExisting')}</span>
                                     </div>
                                 </div>
                             </>
                         )}
 
                         {isLoadingSheets ? (
-                            <div className="text-center py-4 text-gray-500">Loading your spreadsheets...</div>
+                            <div className="text-center py-4 text-gray-500">{t('spreadsheet.loading')}</div>
                         ) : availableSheets.length > 0 ? (
                             <div className="max-h-48 overflow-y-auto border border-gray-200 rounded-xl">
                                 {availableSheets.map(sheet => (
@@ -341,11 +341,11 @@ export const LoginScreen = ({ onLoginSuccess, onSpreadsheetIdSubmit, initialToke
                                 ))}
                             </div>
                         ) : (
-                            <div className="text-center py-4 text-gray-400 text-sm">No spreadsheets found.</div>
+                            <div className="text-center py-4 text-gray-400 text-sm">{t('spreadsheet.noSpreadsheetsFound')}</div>
                         )}
 
                         <button onClick={handleSignOut} className="mt-2 text-xs text-slate-400 hover:text-red-500 w-full text-center">
-                            Sign Out
+                            {t('pin.signOut')}
                         </button>
                     </div>
                 </div>

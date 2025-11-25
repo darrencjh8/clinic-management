@@ -1,55 +1,69 @@
 import { useState } from 'react';
 import { useStore } from '../store/useStore';
 import { User, Calendar, DollarSign, Stethoscope } from 'lucide-react';
-import { DENTISTS, ADMINS, type Dentist, type Admin } from '../types';
+import { type Dentist, type Admin } from '../types';
 import { Autocomplete } from './Autocomplete';
 import { useTranslation } from 'react-i18next';
+import { useToast } from '../context/ToastContext';
+import { Loader2 } from 'lucide-react';
 
 export const TreatmentEntry = () => {
-    const { patients, addTreatment, addPatient, syncData, treatmentTypes } = useStore();
+    const { patients, addTreatment, addPatient, syncData, treatmentTypes, dentists, admins } = useStore();
     const { t } = useTranslation();
+    const { showToast } = useToast();
     const [patientName, setPatientName] = useState('');
     const [dentist, setDentist] = useState<Dentist | ''>('');
     const [admin, setAdmin] = useState<Admin | ''>('');
     const [amount, setAmount] = useState('');
     const [treatmentType, setTreatmentType] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!patientName || !dentist || !admin || !amount || !treatmentType) return;
 
-        // Find existing patient by name (case-insensitive)
-        let existingPatient = patients.find(p => p.name.toLowerCase() === patientName.toLowerCase());
+        setIsSubmitting(true);
+        try {
+            // Find existing patient by name (case-insensitive)
+            const existingPatient = patients.find(p => p.name.toLowerCase() === patientName.toLowerCase());
+            let patientId: string;
 
-        // If patient doesn't exist, create a new one
-        if (!existingPatient) {
-            await addPatient({
-                name: patientName,
-                age: undefined,
-                notes: ''
+            if (existingPatient) {
+                patientId = existingPatient.id;
+            } else {
+                const newId = await addPatient({
+                    name: patientName,
+                    age: undefined,
+                    notes: ''
+                });
+                // Refetch to get the new patient ID
+                await syncData();
+                patientId = newId || patientName;
+            }
+
+            await addTreatment({
+                patientId,
+                dentist,
+                admin,
+                amount: Number(amount),
+                treatmentType,
+                date: new Date().toISOString()
             });
-            // Refetch to get the new patient ID
-            await syncData();
-            existingPatient = patients.find(p => p.name.toLowerCase() === patientName.toLowerCase());
+
+            showToast(t('treatment.success'), 'success');
+
+            // Reset form
+            setPatientName('');
+            setDentist('');
+            setAdmin('');
+            setAmount('');
+            setTreatmentType('');
+        } catch (error) {
+            console.error('Failed to add treatment:', error);
+            showToast('Failed to add treatment', 'error');
+        } finally {
+            setIsSubmitting(false);
         }
-
-        const patientId = existingPatient?.id || patientName;
-
-        await addTreatment({
-            patientId,
-            dentist,
-            admin,
-            amount: Number(amount),
-            treatmentType,
-            date: new Date().toISOString()
-        });
-
-        // Reset form
-        setPatientName('');
-        setDentist('');
-        setAdmin('');
-        setAmount('');
-        setTreatmentType('');
     };
 
     return (
@@ -62,7 +76,7 @@ export const TreatmentEntry = () => {
                     value={patientName}
                     onChange={setPatientName}
                     suggestions={patients.map(p => p.name)}
-                    placeholder={t('treatment.selectPatient')}
+                    placeholder={t('treatment.enterPatientName')}
                     label={t('treatment.patient')}
                     icon={<User className="w-4 h-4" />}
                     required
@@ -80,8 +94,8 @@ export const TreatmentEntry = () => {
                         className="w-full px-4 py-3 border-2 border-secondary-light rounded-xl focus:outline-none focus:border-primary transition-colors text-lg"
                         required
                     >
-                        <option value="">{t('treatment.selectType')}</option>
-                        {DENTISTS.map(d => (
+                        <option value="">{t('treatment.selectDentist')}</option>
+                        {dentists.map(d => (
                             <option key={d} value={d}>{d}</option>
                         ))}
                     </select>
@@ -99,8 +113,8 @@ export const TreatmentEntry = () => {
                         className="w-full px-4 py-3 border-2 border-secondary-light rounded-xl focus:outline-none focus:border-primary transition-colors text-lg"
                         required
                     >
-                        <option value="">{t('treatment.selectType')}</option>
-                        {ADMINS.map(a => (
+                        <option value="">{t('treatment.selectAdmin')}</option>
+                        {admins.map(a => (
                             <option key={a} value={a}>{a}</option>
                         ))}
                     </select>
@@ -128,7 +142,7 @@ export const TreatmentEntry = () => {
                     value={treatmentType}
                     onChange={setTreatmentType}
                     suggestions={treatmentTypes}
-                    placeholder="e.g., Cleaning, Filling"
+                    placeholder={t('treatment.typePlaceholder')}
                     label={t('treatment.treatmentType')}
                     icon={<Calendar className="w-4 h-4" />}
                     required
@@ -136,9 +150,17 @@ export const TreatmentEntry = () => {
 
                 <button
                     type="submit"
-                    className="w-full bg-primary text-white py-4 rounded-xl font-semibold text-lg hover:bg-opacity-90 transition-all transform active:scale-98 shadow-md"
+                    disabled={isSubmitting}
+                    className="w-full bg-primary text-white py-4 rounded-xl font-semibold text-lg hover:bg-opacity-90 transition-all transform active:scale-98 shadow-md disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                    {t('treatment.addTreatment')}
+                    {isSubmitting ? (
+                        <>
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                            {t('treatment.loading')}
+                        </>
+                    ) : (
+                        t('treatment.addTreatment')
+                    )}
                 </button>
             </form>
         </div>

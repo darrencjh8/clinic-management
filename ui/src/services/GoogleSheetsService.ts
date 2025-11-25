@@ -149,6 +149,8 @@ export class GoogleSheetsService {
             const configSheet = spreadsheet.sheets?.find((s: any) => s.properties.title === 'AppConfig');
             const patientsSheet = spreadsheet.sheets?.find((s: any) => s.properties.title === 'Patients');
 
+            const staffSheet = spreadsheet.sheets?.find((s: any) => s.properties.title === 'Staff');
+
             if (!configSheet) {
                 await this.addSheet(spreadsheetId, 'AppConfig');
                 await this.updateValues(spreadsheetId, 'AppConfig!A1', [['Paste your Service Account JSON in cell A2 (This cell)']]);
@@ -157,6 +159,19 @@ export class GoogleSheetsService {
             if (!patientsSheet) {
                 await this.addSheet(spreadsheetId, 'Patients');
                 await this.updateValues(spreadsheetId, 'Patients!A1:D1', [['ID', 'Name', 'Age', 'Notes']]);
+            }
+
+            if (!staffSheet) {
+                await this.addSheet(spreadsheetId, 'Staff');
+                await this.updateValues(spreadsheetId, 'Staff!A1:B1', [['Name', 'Role']]);
+                // Add default staff
+                await this.updateValues(spreadsheetId, 'Staff!A2:B6', [
+                    ['Dr. Smith', 'Dentist'],
+                    ['Dr. Jones', 'Dentist'],
+                    ['Dr. Brown', 'Dentist'],
+                    ['Admin Alice', 'Admin'],
+                    ['Admin Bob', 'Admin']
+                ]);
             }
 
             if (!configSheet) {
@@ -295,6 +310,7 @@ export class GoogleSheetsService {
                 },
                 sheets: [
                     { properties: { title: 'Patients', gridProperties: { rowCount: 1000, columnCount: 4 } } },
+                    { properties: { title: 'Staff', gridProperties: { rowCount: 100, columnCount: 2 } } },
                     { properties: { title: 'TreatmentTypes', gridProperties: { rowCount: 100, columnCount: 1 } } },
                     { properties: { title: 'AppConfig' } }
                 ]
@@ -304,6 +320,14 @@ export class GoogleSheetsService {
 
             // Initialize sheets with headers and default data
             await this.updateValues(spreadsheetId, 'Patients!A1:D1', [['ID', 'Name', 'Age', 'Notes']]);
+            await this.updateValues(spreadsheetId, 'Staff!A1:B6', [
+                ['Name', 'Role'],
+                ['Dr. Smith', 'Dentist'],
+                ['Dr. Jones', 'Dentist'],
+                ['Dr. Brown', 'Dentist'],
+                ['Admin Alice', 'Admin'],
+                ['Admin Bob', 'Admin']
+            ]);
             await this.updateValues(spreadsheetId, 'TreatmentTypes!A1:A8', [
                 ['Type'],
                 ['Cleaning'],
