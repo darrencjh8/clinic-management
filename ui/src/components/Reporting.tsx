@@ -24,7 +24,7 @@ export const Reporting = () => {
     // Group treatments by dentist
     const dentistRevenue = treatments.reduce((acc, treatment) => {
         const dentist = treatment.dentist || 'Unknown';
-        acc[dentist] = (acc[dentist] || 0) + treatment.amount;
+        acc[dentist] = (acc[dentist] || 0) + (treatment.nettTotal ?? treatment.amount);
         return acc;
     }, {} as Record<string, number>);
 
@@ -163,13 +163,11 @@ export const Reporting = () => {
                             </div>
                             <div className="text-right">
                                 <div className="font-bold text-primary text-sm lg:text-xl">
-                                    Rp {treatment.amount.toLocaleString('id-ID')}
+                                    Rp {(treatment.nettTotal ?? treatment.amount).toLocaleString('id-ID')}
                                 </div>
-                                {treatment.nettTotal !== undefined && treatment.nettTotal !== treatment.amount && (
-                                    <div className="text-xs text-gray-400 mt-1">
-                                        Nett: Rp {treatment.nettTotal.toLocaleString('id-ID')}
-                                    </div>
-                                )}
+                                <div className="text-xs text-gray-400 mt-1">
+                                    Gross: Rp {treatment.amount.toLocaleString('id-ID')}
+                                </div>
                             </div>
                         </div>
                     ))}
@@ -218,7 +216,7 @@ export const Reporting = () => {
             </div>
 
             <div className="bg-white rounded-2xl p-4 md:p-4 lg:p-6 mb-4 md:mb-3 lg:mb-8 border border-secondary-light shadow-md">
-                <div className="text-gray-600 mb-1 text-sm lg:text-xl">{t('reporting.totalRevenue')}</div>
+                <div className="text-gray-600 mb-1 text-sm lg:text-xl">{t('reporting.nettRevenue')}</div>
                 <div className="text-4xl lg:text-5xl font-bold text-primary">
                     Rp {totalRevenue.toLocaleString('id-ID')}
                 </div>

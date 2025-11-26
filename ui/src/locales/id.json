@@ -102,6 +102,7 @@
         "title": "Laporan",
         "dentistRevenue": "Pendapatan Dokter Gigi",
         "totalRevenue": "Total Pendapatan",
+        "nettRevenue": "Pendapatan Bersih",
         "calculator": "Kalkulator Komisi",
         "percentage": "Persentase (%)",
         "orthoPercentage": "Ortodontik (%)",

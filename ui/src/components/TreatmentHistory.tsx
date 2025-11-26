@@ -152,9 +152,9 @@ export const TreatmentHistory = () => {
 
                                     {/* Amount (Primary Emphasis for Non-Admin) */}
                                     {userRole !== 'admin' && (
-                                        <div className="flex justify-between items-center text-gray-400 text-xs md:text-sm lg:text-base">
-                                            <span>{t('treatment.amount')}:</span>
-                                            <span>Rp {treatment.amount.toLocaleString('id-ID')}</span>
+                                        <div className="flex justify-between items-center gap-2">
+                                            <span className="text-gray-600 font-bold text-base md:text-lg lg:text-xl">{t('treatment.amount')}:</span>
+                                            <span className="text-xl lg:text-3xl font-bold text-primary">Rp {treatment.amount.toLocaleString('id-ID')}</span>
                                         </div>
                                     )}
 

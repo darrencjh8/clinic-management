@@ -103,6 +103,7 @@
         "title": "Report",
         "dentistRevenue": "Dentist Revenue",
         "totalRevenue": "Total Revenue",
+        "nettRevenue": "Nett Revenue",
         "calculator": "Commission Calculator",
         "percentage": "Percentage (%)",
         "orthoPercentage": "Orthodontic (%)",
