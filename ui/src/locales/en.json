@@ -105,6 +105,8 @@
         "totalRevenue": "Total Revenue",
         "calculator": "Commission Calculator",
         "percentage": "Percentage (%)",
+        "orthoPercentage": "Orthodontic (%)",
+        "normalPercentage": "Normal (%)",
         "payable": "Payable Amount",
         "back": "Back to Summary"
     },

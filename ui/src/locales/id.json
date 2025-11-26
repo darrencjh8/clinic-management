@@ -104,6 +104,8 @@
         "totalRevenue": "Total Pendapatan",
         "calculator": "Kalkulator Komisi",
         "percentage": "Persentase (%)",
+        "orthoPercentage": "Ortodontik (%)",
+        "normalPercentage": "Normal (%)",
         "payable": "Jumlah yang Harus Dibayar",
         "back": "Kembali ke Ringkasan"
     },

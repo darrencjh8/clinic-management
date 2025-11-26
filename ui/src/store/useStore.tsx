@@ -2,6 +2,8 @@ import React, { createContext, useContext, useState, useEffect, useCallback, typ
 import type { Patient, Treatment, Staff } from '../types';
 import { GoogleSheetsService } from '../services/GoogleSheetsService';
 
+import { isOrthodontic, parseIDRCurrency } from '../utils/constants';
+
 const PATIENTS_SHEET = 'Patients';
 const STAFF_SHEET = 'Staff';
 const TREATMENT_TYPES_SHEET = 'TreatmentTypes';
@@ -155,11 +157,11 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                         patientId: row[1],
                         dentist: row[2],
                         admin: row[3],
-                        amount: Number(row[4]),
+                        amount: parseIDRCurrency(row[4]),
                         treatmentType: row[5],
                         date: row[6],
-                        bracesPrice: row[7] ? Number(row[7]) : 0,
-                        nettTotal: row[8] ? Number(row[8]) : Number(row[4]),
+                        bracesPrice: row[7] ? parseIDRCurrency(row[7]) : 0,
+                        nettTotal: row[8] ? parseIDRCurrency(row[8]) : parseIDRCurrency(row[4]),
                         rowIndex: index + 1
                     });
                 }
@@ -280,11 +282,15 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             GoogleSheetsService.appendValues(spreadsheetId, TREATMENT_TYPES_SHEET, [[newType]]).catch(console.error);
         }
 
-        // --- New Logic for Orthodontik ---
+
+
+        // ...
+
+        // --- New Logic for Orthodontic ---
         let bracesPrice = 0;
         let nettTotal = treatmentData.amount;
 
-        if (treatmentData.treatmentType === 'Orthodontik' && bracesIncluded) {
+        if (isOrthodontic(treatmentData.treatmentType) && bracesIncluded) {
             try {
                 // Fetch BracesPrice sheet (Cell A2)
                 const response = await GoogleSheetsService.getValues(spreadsheetId, `${BRACES_PRICE_SHEET}!A2`);

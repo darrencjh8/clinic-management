@@ -7,6 +7,8 @@ import { useTranslation } from 'react-i18next';
 import { useToast } from '../context/ToastContext';
 import { Loader2 } from 'lucide-react';
 
+import { isOrthodontic } from '../utils/constants';
+
 export const TreatmentEntry = () => {
     const { patients, addTreatment, addPatient, syncData, treatmentTypes, dentists, admins } = useStore();
     const { t } = useTranslation();
@@ -22,7 +24,7 @@ export const TreatmentEntry = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!patientName || !dentist || !admin || !amount || !treatmentType) return;
-        if (treatmentType === 'Orthodontik' && bracesIncluded === null) return;
+        if (isOrthodontic(treatmentType) && bracesIncluded === null) return;
 
         setIsSubmitting(true);
         try {
@@ -150,7 +152,7 @@ export const TreatmentEntry = () => {
                 </div>
 
                 {/* Braces Included Radio */}
-                {treatmentType === 'Orthodontik' && (
+                {isOrthodontic(treatmentType) && (
                     <div className="bg-secondary-light/30 p-4 md:p-3 lg:p-4 rounded-xl border border-primary/20 md:col-span-2">
                         <label className="block text-sm md:text-sm lg:text-xl font-semibold text-secondary-dark mb-2 md:mb-1 lg:mb-3">
                             {t('treatment.bracesIncluded')}
@@ -203,7 +205,7 @@ export const TreatmentEntry = () => {
 
                 <button
                     type="submit"
-                    disabled={isSubmitting || (treatmentType === 'Orthodontik' && bracesIncluded === null)}
+                    disabled={isSubmitting || (isOrthodontic(treatmentType) && bracesIncluded === null)}
                     className="w-full bg-primary text-white py-4 md:py-3 lg:py-4 rounded-xl font-semibold text-sm lg:text-xl hover:bg-opacity-90 transition-all transform active:scale-98 shadow-md disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 md:col-span-2"
                 >
                     {isSubmitting ? (

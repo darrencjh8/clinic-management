@@ -4,6 +4,7 @@ import { Calendar, User, Stethoscope } from 'lucide-react';
 import { format, isSameDay, parseISO } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { useTranslation } from 'react-i18next';
+import { isOrthodontic } from '../utils/constants';
 
 export const TreatmentHistory = () => {
     const { treatments, patients, currentMonth, loadMonth, syncData, userRole } = useStore();
@@ -127,7 +128,7 @@ export const TreatmentHistory = () => {
                                 </div>
 
                                 {/* Braces Included Status */}
-                                {treatment.treatmentType === 'Orthodontik' && (
+                                {isOrthodontic(treatment.treatmentType) && (
                                     <div className="flex items-center gap-2">
                                         <span className="text-xs md:text-sm px-2 py-1 rounded-full bg-secondary-light/50 text-secondary-dark font-medium border border-secondary-dark/10">
                                             {t('treatment.bracesIncluded')}: {treatment.bracesPrice && treatment.bracesPrice > 0 ? t('common.yes') : t('common.no')}
@@ -177,30 +178,30 @@ export const TreatmentHistory = () => {
                         </div>
                     </div>
                 ))}
-
-                {/* Pagination Controls */}
-                {totalPages > 1 && (
-                    <div className="flex justify-center items-center gap-4 mt-8 pb-8">
-                        <button
-                            onClick={() => setCurrentPage((p: number) => Math.max(1, p - 1))}
-                            disabled={currentPage === 1}
-                            className="px-4 py-2 rounded-lg bg-white border border-secondary-light text-secondary-dark disabled:opacity-50 disabled:cursor-not-allowed hover:bg-secondary-light/50 transition-colors"
-                        >
-                            {t('common.previous')}
-                        </button>
-                        <span className="text-secondary-dark font-medium">
-                            {currentPage} / {totalPages}
-                        </span>
-                        <button
-                            onClick={() => setCurrentPage((p: number) => Math.min(totalPages, p + 1))}
-                            disabled={currentPage === totalPages}
-                            className="px-4 py-2 rounded-lg bg-white border border-secondary-light text-secondary-dark disabled:opacity-50 disabled:cursor-not-allowed hover:bg-secondary-light/50 transition-colors"
-                        >
-                            {t('common.next')}
-                        </button>
-                    </div>
-                )}
             </div>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+                <div className="flex justify-center items-center gap-4 mt-8 pb-8">
+                    <button
+                        onClick={() => setCurrentPage((p: number) => Math.max(1, p - 1))}
+                        disabled={currentPage === 1}
+                        className="px-4 py-2 rounded-lg bg-white border border-secondary-light text-secondary-dark disabled:opacity-50 disabled:cursor-not-allowed hover:bg-secondary-light/50 transition-colors"
+                    >
+                        {t('common.previous')}
+                    </button>
+                    <span className="text-secondary-dark font-medium">
+                        {currentPage} / {totalPages}
+                    </span>
+                    <button
+                        onClick={() => setCurrentPage((p: number) => Math.min(totalPages, p + 1))}
+                        disabled={currentPage === totalPages}
+                        className="px-4 py-2 rounded-lg bg-white border border-secondary-light text-secondary-dark disabled:opacity-50 disabled:cursor-not-allowed hover:bg-secondary-light/50 transition-colors"
+                    >
+                        {t('common.next')}
+                    </button>
+                </div>
+            )}
 
             {sortedTreatments.length === 0 && (
                 <div className="text-center py-12 text-gray-500">
