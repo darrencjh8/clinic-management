@@ -15,6 +15,8 @@ export interface Treatment {
     amount: number;
     treatmentType: string;
     date: string; // ISO string
+    bracesPrice?: number;
+    nettTotal?: number;
     rowIndex?: number; // For Google Sheets sync
 }
 

@@ -57,7 +57,7 @@ export const Autocomplete = ({
     return (
         <div ref={wrapperRef} className="relative">
             {label && (
-                <label className="block text-sm font-semibold text-secondary-dark mb-2">
+                <label className="block text-sm md:text-sm lg:text-xl font-semibold text-secondary-dark mb-1 md:mb-0.5 lg:mb-2">
                     {icon && <span className="inline-block mr-1">{icon}</span>}
                     {label}
                 </label>

@@ -114,7 +114,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
             const rangesToFetch = [
                 `${PATIENTS_SHEET}!A:D`,
-                `${treatmentsSheet}!A:G`,
+                `${treatmentsSheet}!A:I`,
                 `${STAFF_SHEET}!A:B`,
                 `${TREATMENT_TYPES_SHEET}!A:A`
             ];
@@ -158,6 +158,8 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                         amount: Number(row[4]),
                         treatmentType: row[5],
                         date: row[6],
+                        bracesPrice: row[7] ? Number(row[7]) : 0,
+                        nettTotal: row[8] ? Number(row[8]) : Number(row[4]),
                         rowIndex: index + 1
                     });
                 }
@@ -325,6 +327,8 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             amount: treatmentData.amount,
             treatmentType: treatmentData.treatmentType,
             date: treatmentData.date,
+            bracesPrice: bracesPrice,
+            nettTotal: nettTotal,
             rowIndex: -1 // Temporary
         };
         setTreatments(prev => [...prev, newTreatment]);

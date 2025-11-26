@@ -1,6 +1,6 @@
 import React from 'react';
 import { useStore } from '../store/useStore';
-import { FileText, Users, Calendar, BarChart3 } from 'lucide-react';
+import { FileText, Users, Calendar, BarChart3, Settings } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 interface BottomTabsProps {
@@ -22,6 +22,8 @@ export const BottomTabs: React.FC<BottomTabsProps> = ({ currentView, onNavigate 
         navItems.push({ id: 'reporting', label: t('reporting.title'), icon: BarChart3 });
     }
 
+    navItems.push({ id: 'settings', label: t('sidebar.settings'), icon: Settings });
+
     return (
         <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-secondary-light z-50 pb-safe shadow-lg">
             <nav className="flex justify-around items-center h-16">
@@ -30,14 +32,14 @@ export const BottomTabs: React.FC<BottomTabsProps> = ({ currentView, onNavigate 
                         key={item.id}
                         onClick={() => onNavigate(item.id)}
                         className={`
-                flex flex-col items-center justify-center w-full h-full space-y-1
+                flex flex-col items-center justify-center w-full h-full
                 ${currentView === item.id
                                 ? 'text-primary'
                                 : 'text-gray-400 hover:text-gray-600'}
               `}
+                        title={item.label}
                     >
-                        <item.icon className="w-6 h-6" />
-                        <span className="text-xs font-medium">{item.label}</span>
+                        <item.icon className="w-7 h-7" />
                     </button>
                 ))}
             </nav>

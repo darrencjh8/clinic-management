@@ -4,6 +4,8 @@ import { TreatmentEntry } from './components/TreatmentEntry';
 import { PatientManager } from './components/PatientManager';
 import { TreatmentHistory } from './components/TreatmentHistory';
 import { Reporting } from './components/Reporting';
+import { MobileSettings } from './components/MobileSettings';
+import { OrientationGuard } from './components/OrientationGuard';
 import { LoginScreen } from './components/LoginScreen';
 import { useStore, StoreProvider } from './store/useStore';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
@@ -61,6 +63,8 @@ function AppContent() {
         return <TreatmentHistory />;
       case 'reporting':
         return userRole === 'admin' ? <Reporting /> : <TreatmentEntry />;
+      case 'settings':
+        return <MobileSettings />;
       default:
         return <TreatmentEntry />;
     }
@@ -131,9 +135,11 @@ function AppContent() {
 
   return (
     <div className="flex flex-col h-screen bg-secondary-light transition-colors overflow-hidden">
-      <Layout currentView={currentView} onNavigate={setCurrentView}>
-        {renderView()}
-      </Layout>
+      <OrientationGuard>
+        <Layout currentView={currentView} onNavigate={setCurrentView}>
+          {renderView()}
+        </Layout>
+      </OrientationGuard>
     </div>
   );
 }

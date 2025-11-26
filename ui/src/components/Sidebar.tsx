@@ -1,5 +1,5 @@
 import React from 'react';
-import { FileText, Users, Calendar, LogOut, Languages, BarChart3 } from 'lucide-react';
+import { FileText, Users, Calendar, LogOut, Languages, BarChart3, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { useTranslation } from 'react-i18next';
 
@@ -8,9 +8,11 @@ interface SidebarProps {
     onNavigate: (view: string) => void;
     isDarkMode: boolean;
     toggleDarkMode: () => void;
+    isCollapsed: boolean;
+    onToggle: () => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, isCollapsed, onToggle }) => {
     const { logout, userRole } = useStore();
     const { t, i18n } = useTranslation();
 
@@ -31,52 +33,65 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate }) => 
     };
 
     return (
-        <aside className="hidden md:block fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-secondary-light shadow-sm">
-            <div className="p-6 border-b border-secondary-light flex items-center justify-between">
-                <h1 className="text-2xl font-bold text-primary">
-                    {import.meta.env.VITE_CLINIC_NAME || 'Dental Clinic'}
-                </h1>
+        <aside
+            className={`hidden md:flex flex-col fixed inset-y-0 left-0 z-50 bg-white border-r border-secondary-light shadow-sm transition-all duration-300 ${isCollapsed ? 'w-20' : 'w-64'}`}
+        >
+            <div className={`p-6 border-b border-secondary-light flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'}`}>
+                {!isCollapsed && (
+                    <h1 className="text-xl font-bold text-primary leading-tight">
+                        {import.meta.env.VITE_CLINIC_NAME || 'Dental Clinic'}
+                    </h1>
+                )}
+                <button
+                    onClick={onToggle}
+                    className={`p-1.5 rounded-lg hover:bg-secondary-light text-gray-500 transition-colors ${isCollapsed ? '' : 'ml-2'}`}
+                >
+                    {isCollapsed ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
+                </button>
             </div>
 
-            <nav className="p-4 space-y-1">
+            <nav className="p-4 space-y-1 flex-1">
                 {navItems.map((item) => (
                     <button
                         key={item.id}
-                        onClick={() => {
-                            onNavigate(item.id);
-                        }}
+                        onClick={() => onNavigate(item.id)}
+                        title={isCollapsed ? item.label : ''}
                         className={`
-                w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium
-                ${currentView === item.id
+                            w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-medium
+                            ${currentView === item.id
                                 ? 'bg-primary bg-opacity-10 text-primary shadow-sm'
                                 : 'text-gray-600 hover:bg-secondary-light hover:text-secondary-dark'}
-              `}
+                            ${isCollapsed ? 'justify-center' : ''}
+                        `}
                     >
-                        <item.icon className={`w-5 h-5 ${currentView === item.id ? 'text-primary' : 'text-gray-400'}`} />
-                        {item.label}
+                        <item.icon className={`w-5 h-5 flex-shrink-0 ${currentView === item.id ? 'text-primary' : 'text-gray-400'}`} />
+                        {!isCollapsed && <span className="truncate">{item.label}</span>}
                     </button>
                 ))}
             </nav>
 
-            <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-secondary-light">
+            <div className="p-4 border-t border-secondary-light space-y-2">
                 <button
                     onClick={toggleLanguage}
-                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all font-medium mb-2"
-                    title={i18n.language === 'en' ? 'Switch to Indonesian' : 'Beralih ke Bahasa Inggris'}
+                    title={isCollapsed ? (i18n.language === 'en' ? 'Switch to Indonesian' : 'Beralih ke Bahasa Inggris') : ''}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-all font-medium ${isCollapsed ? 'justify-center' : ''}`}
                 >
-                    <Languages className="w-5 h-5" />
-                    {i18n.language === 'en' ? 'Indonesian' : 'English'}
+                    <Languages className="w-5 h-5 flex-shrink-0" />
+                    {!isCollapsed && <span className="truncate">{i18n.language === 'en' ? 'Indonesian' : 'English'}</span>}
                 </button>
                 <button
                     onClick={logout}
-                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-red-50 hover:text-red-600 transition-all font-medium mb-2"
+                    title={isCollapsed ? t('sidebar.logout') : ''}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-red-50 hover:text-red-600 transition-all font-medium ${isCollapsed ? 'justify-center' : ''}`}
                 >
-                    <LogOut className="w-5 h-5" />
-                    {t('sidebar.logout')}
+                    <LogOut className="w-5 h-5 flex-shrink-0" />
+                    {!isCollapsed && <span className="truncate">{t('sidebar.logout')}</span>}
                 </button>
-                <div className="flex items-center gap-3 px-4 py-3 text-gray-400 text-sm">
-                    <span>v1.0.0</span>
-                </div>
+                {!isCollapsed && (
+                    <div className="flex items-center gap-3 px-4 py-3 text-gray-400 text-sm">
+                        <span>v1.0.0</span>
+                    </div>
+                )}
             </div>
         </aside>
     );

@@ -38,13 +38,15 @@
         "creating": "Membuat...",
         "orSelectExisting": "Atau pilih yang ada",
         "loading": "Memuat spreadsheet Anda...",
-        "noSpreadsheetsFound": "Tidak ada spreadsheet ditemukan.",
-        "failedToCreate": "Gagal membuat sheet"
+        "connectionError": "Kesalahan Koneksi",
+        "sync": "Sinkronkan",
+        "openSheet": "Buka Sheet"
     },
     "sidebar": {
         "treatments": "Perawatan Baru",
         "patients": "Pasien",
         "history": "Riwayat",
+        "settings": "Pengaturan",
         "logout": "Keluar"
     },
     "sync": {
@@ -70,7 +72,7 @@
         "loading": "Memuat...",
         "success": "Perawatan berhasil ditambahkan!",
         "date": "Tanggal",
-        "bracesIncluded": "Termasuk Kawat Gigi?"
+        "bracesIncluded": "Termasuk Behel"
     },
     "patient": {
         "title": "Manajemen Pasien",
@@ -83,16 +85,21 @@
         "save": "Simpan",
         "edit": "Ubah",
         "optional": "opsional",
-        "noPatients": "Tidak ada pasien ditemukan. Tambahkan pasien pertama Anda untuk memulai."
+        "percentage": "Persentase (%)",
+        "payable": "Jumlah yang Harus Dibayar",
+        "back": "Kembali ke Ringkasan"
     },
     "history": {
         "title": "Riwayat Perawatan",
         "selectMonth": "Pilih Bulan",
         "noTreatments": "Tidak ada perawatan ditemukan untuk bulan ini.",
-        "totalRevenue": "Total Pendapatan"
+        "totalRevenue": "Total Pendapatan",
+        "grossTotal": "Total Kotor",
+        "cost": "Biaya",
+        "nettTotal": "Total Bersih"
     },
     "reporting": {
-        "title": "Laporan Keuangan",
+        "title": "Laporan",
         "dentistRevenue": "Pendapatan Dokter Gigi",
         "totalRevenue": "Total Pendapatan",
         "calculator": "Kalkulator Komisi",
@@ -110,6 +117,10 @@
         "signInAgain": "Masuk Lagi",
         "retryConnection": "Coba Lagi Koneksi",
         "yes": "Ya",
-        "no": "Tidak"
+        "no": "Tidak",
+        "rotatePortrait": "Silakan Putar ke Potret",
+        "rotatePortraitDesc": "Aplikasi ini dirancang untuk digunakan dalam mode potret di perangkat seluler.",
+        "rotateLandscape": "Silakan Putar ke Lanskap",
+        "rotateLandscapeDesc": "Aplikasi ini dirancang untuk digunakan dalam mode lanskap di layar yang lebih besar."
     }
 }

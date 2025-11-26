@@ -39,13 +39,15 @@
         "creating": "Creating...",
         "orSelectExisting": "Or select existing",
         "loading": "Loading your spreadsheets...",
-        "noSpreadsheetsFound": "No spreadsheets found.",
-        "failedToCreate": "Failed to create sheet"
+        "connectionError": "Connection Error",
+        "sync": "Sync",
+        "openSheet": "Open Sheet"
     },
     "sidebar": {
         "treatments": "New Treatment",
         "patients": "Patients",
         "history": "History",
+        "settings": "Settings",
         "logout": "Logout"
     },
     "sync": {
@@ -84,16 +86,21 @@
         "save": "Save",
         "edit": "Edit",
         "optional": "optional",
-        "noPatients": "No patients found. Add your first patient to get started."
+        "percentage": "Percentage (%)",
+        "payable": "Payable Amount",
+        "back": "Back to Summary"
     },
     "history": {
         "title": "Treatment History",
         "selectMonth": "Select Month",
         "noTreatments": "No treatments found for this month.",
-        "totalRevenue": "Total Revenue"
+        "totalRevenue": "Total Revenue",
+        "grossTotal": "Gross Total",
+        "cost": "Cost",
+        "nettTotal": "Nett Total"
     },
     "reporting": {
-        "title": "Financial Report",
+        "title": "Report",
         "dentistRevenue": "Dentist Revenue",
         "totalRevenue": "Total Revenue",
         "calculator": "Commission Calculator",
@@ -111,6 +118,10 @@
         "signInAgain": "Sign In Again",
         "retryConnection": "Retry Connection",
         "yes": "Yes",
-        "no": "No"
+        "no": "No",
+        "rotatePortrait": "Please Rotate to Portrait",
+        "rotatePortraitDesc": "This app is designed to be used in portrait mode on mobile devices.",
+        "rotateLandscape": "Please Rotate to Landscape",
+        "rotateLandscapeDesc": "This app is designed to be used in landscape mode on larger screens."
     }
 }

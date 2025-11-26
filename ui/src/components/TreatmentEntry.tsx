@@ -70,31 +70,35 @@ export const TreatmentEntry = () => {
     };
 
     return (
-        <div className="max-w-3xl mx-auto">
-            <h1 className="text-2xl md:text-3xl font-bold text-secondary-dark mb-6">{t('treatment.title')}</h1>
-
-            <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-lg p-4 md:p-8 space-y-5">
+        <div className="max-w-5xl mx-auto p-3 md:p-4 lg:p-6">
+            <div className="flex items-center h-12 mb-4 md:mb-3 lg:mb-6">
+                <h1 className="text-xl md:text-xl lg:text-3xl font-bold text-secondary-dark">{t('treatment.title')}</h1>
+            </div>
+            <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-lg p-4 md:p-4 lg:p-6 grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-5">
                 {/* Patient Input with Autocomplete */}
-                <Autocomplete
-                    value={patientName}
-                    onChange={setPatientName}
-                    suggestions={patients.map(p => p.name)}
-                    placeholder={t('treatment.enterPatientName')}
-                    label={t('treatment.patient')}
-                    icon={<User className="w-4 h-4" />}
-                    required
-                />
+                <div className="md:col-span-2">
+                    <Autocomplete
+                        value={patientName}
+                        onChange={setPatientName}
+                        suggestions={patients.map(p => p.name)}
+                        placeholder={t('treatment.enterPatientName')}
+                        label={t('treatment.patient')}
+                        icon={<User className="w-4 h-4" />}
+                        required
+                        className="w-full px-4 py-3 md:py-1.5 lg:py-3 border-2 border-secondary-light rounded-xl focus:outline-none focus:border-primary transition-colors text-sm lg:text-xl"
+                    />
+                </div>
 
                 {/* Dentist Selection */}
                 <div>
-                    <label className="block text-sm font-semibold text-secondary-dark mb-2">
+                    <label className="block text-sm md:text-sm lg:text-xl font-semibold text-secondary-dark mb-1 md:mb-0.5 lg:mb-2">
                         <Stethoscope className="inline w-4 h-4 mr-1" />
                         {t('treatment.dentist')}
                     </label>
                     <select
                         value={dentist}
                         onChange={(e) => setDentist(e.target.value as Dentist)}
-                        className="w-full px-4 py-3 border-2 border-secondary-light rounded-xl focus:outline-none focus:border-primary transition-colors text-lg"
+                        className="w-full px-4 py-3 md:py-1.5 lg:py-3 border-2 border-secondary-light rounded-xl focus:outline-none focus:border-primary transition-colors text-sm lg:text-xl"
                         required
                     >
                         <option value="">{t('treatment.selectDentist')}</option>
@@ -106,14 +110,14 @@ export const TreatmentEntry = () => {
 
                 {/* Admin Selection */}
                 <div>
-                    <label className="block text-sm font-semibold text-secondary-dark mb-2">
+                    <label className="block text-sm md:text-sm lg:text-xl font-semibold text-secondary-dark mb-1 md:mb-0.5 lg:mb-2">
                         <User className="inline w-4 h-4 mr-1" />
                         {t('treatment.admin')}
                     </label>
                     <select
                         value={admin}
                         onChange={(e) => setAdmin(e.target.value as Admin)}
-                        className="w-full px-4 py-3 border-2 border-secondary-light rounded-xl focus:outline-none focus:border-primary transition-colors text-lg"
+                        className="w-full px-4 py-3 md:py-1.5 lg:py-3 border-2 border-secondary-light rounded-xl focus:outline-none focus:border-primary transition-colors text-sm lg:text-xl"
                         required
                     >
                         <option value="">{t('treatment.selectAdmin')}</option>
@@ -125,7 +129,7 @@ export const TreatmentEntry = () => {
 
                 {/* Amount */}
                 <div>
-                    <label className="block text-sm font-semibold text-secondary-dark mb-2">
+                    <label className="block text-sm md:text-sm lg:text-xl font-semibold text-secondary-dark mb-1 md:mb-0.5 lg:mb-2">
                         <DollarSign className="inline w-4 h-4 mr-1" />
                         {t('treatment.amount')}
                     </label>
@@ -134,7 +138,7 @@ export const TreatmentEntry = () => {
                         value={amount}
                         onChange={(e) => setAmount(e.target.value)}
                         placeholder="0"
-                        className="w-full px-4 py-3 border-2 border-secondary-light rounded-xl focus:outline-none focus:border-primary transition-colors text-lg"
+                        className="w-full px-4 py-3 md:py-1.5 lg:py-3 border-2 border-secondary-light rounded-xl focus:outline-none focus:border-primary transition-colors text-sm lg:text-xl"
                         required
                         min="0"
                     />
@@ -142,7 +146,7 @@ export const TreatmentEntry = () => {
 
                 {/* Treatment Type Dropdown */}
                 <div>
-                    <label className="block text-sm font-semibold text-secondary-dark mb-2">
+                    <label className="block text-sm md:text-sm lg:text-xl font-semibold text-secondary-dark mb-1 md:mb-0.5 lg:mb-2">
                         <Calendar className="inline w-4 h-4 mr-1" />
                         {t('treatment.treatmentType')}
                     </label>
@@ -152,7 +156,7 @@ export const TreatmentEntry = () => {
                             setTreatmentType(e.target.value);
                             setBracesIncluded(null);
                         }}
-                        className="w-full px-4 py-3 border-2 border-secondary-light rounded-xl focus:outline-none focus:border-primary transition-colors text-lg"
+                        className="w-full px-4 py-3 md:py-1.5 lg:py-3 border-2 border-secondary-light rounded-xl focus:outline-none focus:border-primary transition-colors text-sm lg:text-xl"
                         required
                     >
                         <option value="">{t('treatment.typePlaceholder')}</option>
@@ -164,8 +168,8 @@ export const TreatmentEntry = () => {
 
                 {/* Braces Included Radio */}
                 {treatmentType === 'Orthodontik' && (
-                    <div className="bg-secondary-light/30 p-4 rounded-xl border border-primary/20">
-                        <label className="block text-sm font-semibold text-secondary-dark mb-3">
+                    <div className="bg-secondary-light/30 p-4 md:p-3 lg:p-4 rounded-xl border border-primary/20 md:col-span-2">
+                        <label className="block text-sm md:text-sm lg:text-xl font-semibold text-secondary-dark mb-2 md:mb-1 lg:mb-3">
                             {t('treatment.bracesIncluded')}
                         </label>
                         <div className="flex gap-4">
@@ -177,7 +181,7 @@ export const TreatmentEntry = () => {
                                     onChange={() => setBracesIncluded(true)}
                                     className="w-5 h-5 text-primary focus:ring-primary"
                                 />
-                                <span className="text-lg">{t('common.yes')}</span>
+                                <span className="text-sm lg:text-xl">{t('common.yes')}</span>
                             </label>
                             <label className="flex items-center gap-2 cursor-pointer">
                                 <input
@@ -187,7 +191,7 @@ export const TreatmentEntry = () => {
                                     onChange={() => setBracesIncluded(false)}
                                     className="w-5 h-5 text-primary focus:ring-primary"
                                 />
-                                <span className="text-lg">{t('common.no')}</span>
+                                <span className="text-sm lg:text-xl">{t('common.no')}</span>
                             </label>
                         </div>
                     </div>
@@ -196,7 +200,7 @@ export const TreatmentEntry = () => {
                 <button
                     type="submit"
                     disabled={isSubmitting || (treatmentType === 'Orthodontik' && bracesIncluded === null)}
-                    className="w-full bg-primary text-white py-4 rounded-xl font-semibold text-lg hover:bg-opacity-90 transition-all transform active:scale-98 shadow-md disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="w-full bg-primary text-white py-4 md:py-3 lg:py-4 rounded-xl font-semibold text-sm lg:text-xl hover:bg-opacity-90 transition-all transform active:scale-98 shadow-md disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 md:col-span-2"
                 >
                     {isSubmitting ? (
                         <>
