@@ -20,7 +20,8 @@ function AppContent() {
     spreadsheetId,
     setSheetId,
     handleLoginSuccess,
-    userRole
+    userRole,
+    syncData
   } = useStore();
   const { t } = useTranslation();
 
@@ -37,6 +38,18 @@ function AppContent() {
       sessionStorage.removeItem('retry_attempted');
     }
   }, [isError, accessToken, spreadsheetId, isLoading]);
+
+  // Auto-sync every 60 seconds
+  useEffect(() => {
+    if (!accessToken || !spreadsheetId || isError) return;
+
+    const intervalId = setInterval(() => {
+      console.log('Auto-syncing data...');
+      syncData();
+    }, 60000); // 1 minute
+
+    return () => clearInterval(intervalId);
+  }, [accessToken, spreadsheetId, isError, syncData]);
 
   const renderView = () => {
     switch (currentView) {

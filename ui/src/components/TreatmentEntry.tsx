@@ -70,7 +70,7 @@ export const TreatmentEntry = () => {
         <div className="max-w-3xl mx-auto">
             <h1 className="text-2xl md:text-3xl font-bold text-secondary-dark mb-6">{t('treatment.title')}</h1>
 
-            <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-lg p-6 md:p-8 space-y-5">
+            <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-lg p-4 md:p-8 space-y-5">
                 {/* Patient Input with Autocomplete */}
                 <Autocomplete
                     value={patientName}

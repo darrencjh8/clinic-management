@@ -1,5 +1,6 @@
 import React from 'react';
-import { FileText, Users, Calendar } from 'lucide-react';
+import { useStore } from '../store/useStore';
+import { FileText, Users, Calendar, BarChart3 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 interface BottomTabsProps {
@@ -9,12 +10,17 @@ interface BottomTabsProps {
 
 export const BottomTabs: React.FC<BottomTabsProps> = ({ currentView, onNavigate }) => {
     const { t } = useTranslation();
+    const { userRole } = useStore();
 
     const navItems = [
         { id: 'treatments', label: t('sidebar.treatments'), icon: FileText },
         { id: 'patients', label: t('sidebar.patients'), icon: Users },
         { id: 'history', label: t('sidebar.history'), icon: Calendar },
     ];
+
+    if (userRole === 'admin') {
+        navItems.push({ id: 'reporting', label: t('reporting.title'), icon: BarChart3 });
+    }
 
     return (
         <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-secondary-light z-50 pb-safe shadow-lg">

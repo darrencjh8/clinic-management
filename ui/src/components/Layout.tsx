@@ -33,7 +33,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigat
 
                 <SyncStatus />
 
-                <div className="flex-1 overflow-y-auto bg-secondary-light p-4">
+                <div className="flex-1 overflow-y-auto overflow-x-hidden bg-secondary-light p-4">
                     <div className="max-w-full mx-auto pb-20 md:pb-0">
                         {children}
                     </div>

@@ -109,7 +109,7 @@ export const Reporting = () => {
                         type="month"
                         value={currentMonth}
                         onChange={(e) => loadMonth(e.target.value)}
-                        className="px-4 py-2 border-2 border-secondary-light rounded-xl focus:outline-none focus:border-primary text-lg font-semibold"
+                        className="px-2 py-1 md:px-4 md:py-2 border-2 border-secondary-light rounded-xl focus:outline-none focus:border-primary text-sm md:text-lg font-semibold"
                     />
                 </div>
             </div>

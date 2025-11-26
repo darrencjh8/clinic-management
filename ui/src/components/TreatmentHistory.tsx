@@ -1,11 +1,16 @@
+import { useEffect } from 'react';
 import { useStore } from '../store/useStore';
 import { Calendar, DollarSign, User, Stethoscope } from 'lucide-react';
 import { format } from 'date-fns';
 import { useTranslation } from 'react-i18next';
 
 export const TreatmentHistory = () => {
-    const { treatments, patients, currentMonth, loadMonth } = useStore();
+    const { treatments, patients, currentMonth, loadMonth, syncData } = useStore();
     const { t } = useTranslation();
+
+    useEffect(() => {
+        syncData();
+    }, [syncData]);
 
     const getPatientName = (patientId: string) => {
         const patient = patients.find(p => p.id === patientId);
@@ -15,8 +20,8 @@ export const TreatmentHistory = () => {
     const totalRevenue = treatments.reduce((sum, t) => sum + t.amount, 0);
 
     return (
-        <div className="max-w-6xl mx-auto p-6">
-            <div className="flex items-center justify-between mb-8">
+        <div className="max-w-6xl mx-auto p-0 md:p-2">
+            <div className="flex flex-wrap items-center justify-between gap-4 mb-6 md:mb-8">
                 <h1 className="text-3xl font-bold text-secondary-dark">{t('history.title')}</h1>
                 <div className="flex items-center gap-2">
                     <Calendar className="w-5 h-5 text-primary" />
@@ -24,7 +29,7 @@ export const TreatmentHistory = () => {
                         type="month"
                         value={currentMonth}
                         onChange={(e) => loadMonth(e.target.value)}
-                        className="px-4 py-2 border-2 border-secondary-light rounded-xl focus:outline-none focus:border-primary text-lg font-semibold"
+                        className="px-2 py-1 md:px-4 md:py-2 border-2 border-secondary-light rounded-xl focus:outline-none focus:border-primary text-sm md:text-lg font-semibold"
                     />
                 </div>
             </div>
