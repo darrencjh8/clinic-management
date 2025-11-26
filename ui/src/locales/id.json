@@ -121,6 +121,14 @@
         "rotatePortrait": "Silakan Putar ke Potret",
         "rotatePortraitDesc": "Aplikasi ini dirancang untuk digunakan dalam mode potret di perangkat seluler.",
         "rotateLandscape": "Silakan Putar ke Lanskap",
-        "rotateLandscapeDesc": "Aplikasi ini dirancang untuk digunakan dalam mode lanskap di layar yang lebih besar."
+        "rotateLandscapeDesc": "Aplikasi ini dirancang untuk digunakan dalam mode lanskap di layar yang lebih besar.",
+        "today": "Hari Ini",
+        "yesterday": "Kemarin",
+        "previous": "Sebelumnya",
+        "next": "Selanjutnya",
+        "treatments": "Perawatan",
+        "on": "pada",
+        "showing": "Menampilkan",
+        "of": "dari"
     }
 }

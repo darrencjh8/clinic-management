@@ -73,7 +73,7 @@
         "loading": "Loading...",
         "success": "Treatment added successfully!",
         "date": "Date",
-        "bracesIncluded": "Braces Included?"
+        "bracesIncluded": "Braces Included"
     },
     "patient": {
         "title": "Patient Management",
@@ -122,6 +122,14 @@
         "rotatePortrait": "Please Rotate to Portrait",
         "rotatePortraitDesc": "This app is designed to be used in portrait mode on mobile devices.",
         "rotateLandscape": "Please Rotate to Landscape",
-        "rotateLandscapeDesc": "This app is designed to be used in landscape mode on larger screens."
+        "rotateLandscapeDesc": "This app is designed to be used in landscape mode on larger screens.",
+        "today": "Today",
+        "yesterday": "Yesterday",
+        "previous": "Previous",
+        "next": "Next",
+        "treatments": "Treatments",
+        "on": "on",
+        "showing": "Showing",
+        "of": "of"
     }
 }

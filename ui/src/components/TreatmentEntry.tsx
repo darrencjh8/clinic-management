@@ -47,7 +47,7 @@ export const TreatmentEntry = () => {
                 patientId,
                 dentist,
                 admin,
-                amount: Number(amount),
+                amount: Number(amount) * 1000,
                 treatmentType,
                 date: new Date().toISOString()
             }, bracesIncluded || false);
@@ -127,25 +127,8 @@ export const TreatmentEntry = () => {
                     </select>
                 </div>
 
-                {/* Amount */}
-                <div>
-                    <label className="block text-sm md:text-sm lg:text-xl font-semibold text-secondary-dark mb-1 md:mb-0.5 lg:mb-2">
-                        <DollarSign className="inline w-4 h-4 mr-1" />
-                        {t('treatment.amount')}
-                    </label>
-                    <input
-                        type="number"
-                        value={amount}
-                        onChange={(e) => setAmount(e.target.value)}
-                        placeholder="0"
-                        className="w-full px-4 py-3 md:py-1.5 lg:py-3 border-2 border-secondary-light rounded-xl focus:outline-none focus:border-primary transition-colors text-sm lg:text-xl"
-                        required
-                        min="0"
-                    />
-                </div>
-
                 {/* Treatment Type Dropdown */}
-                <div>
+                <div className="md:col-span-2">
                     <label className="block text-sm md:text-sm lg:text-xl font-semibold text-secondary-dark mb-1 md:mb-0.5 lg:mb-2">
                         <Calendar className="inline w-4 h-4 mr-1" />
                         {t('treatment.treatmentType')}
@@ -196,6 +179,27 @@ export const TreatmentEntry = () => {
                         </div>
                     </div>
                 )}
+
+                {/* Amount */}
+                <div className="md:col-span-2">
+                    <label className="block text-sm md:text-sm lg:text-xl font-semibold text-secondary-dark mb-1 md:mb-0.5 lg:mb-2">
+                        <DollarSign className="inline w-4 h-4 mr-1" />
+                        {t('treatment.amount')}
+                    </label>
+                    <div className="flex items-center w-full px-4 py-3 md:py-1.5 lg:py-3 border-2 border-secondary-light rounded-xl focus-within:border-primary transition-colors bg-white">
+                        <span className="text-secondary-dark/50 text-sm lg:text-xl font-medium select-none mr-1">Rp</span>
+                        <input
+                            type="number"
+                            value={amount}
+                            onChange={(e) => setAmount(e.target.value)}
+                            placeholder="0"
+                            className="flex-1 outline-none bg-transparent text-sm lg:text-xl text-right"
+                            required
+                            min="0"
+                        />
+                        <span className="text-secondary-dark/50 text-sm lg:text-xl font-medium select-none">.000</span>
+                    </div>
+                </div>
 
                 <button
                     type="submit"
