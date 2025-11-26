@@ -65,11 +65,12 @@
         "selectAdmin": "Pilih admin",
         "amount": "Jumlah",
         "treatmentType": "Jenis Perawatan",
-        "typePlaceholder": "cth. Pembersihan, Tambal",
+        "typePlaceholder": "Pilih jenis perawatan",
         "addTreatment": "Tambah Perawatan",
         "loading": "Memuat...",
         "success": "Perawatan berhasil ditambahkan!",
-        "date": "Tanggal"
+        "date": "Tanggal",
+        "bracesIncluded": "Termasuk Kawat Gigi?"
     },
     "patient": {
         "title": "Manajemen Pasien",
@@ -107,6 +108,8 @@
         "connectionError": "Kesalahan Koneksi",
         "connectionErrorDescription": "Kami tidak dapat terhubung ke Google Sheets. Silakan periksa koneksi internet Anda.",
         "signInAgain": "Masuk Lagi",
-        "retryConnection": "Coba Lagi Koneksi"
+        "retryConnection": "Coba Lagi Koneksi",
+        "yes": "Ya",
+        "no": "Tidak"
     }
 }

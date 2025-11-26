@@ -6,6 +6,8 @@ const PATIENTS_SHEET = 'Patients';
 const STAFF_SHEET = 'Staff';
 const TREATMENT_TYPES_SHEET = 'TreatmentTypes';
 
+const BRACES_PRICE_SHEET = 'BracesPrice';
+
 interface StoreContextType {
     isLoading: boolean;
     isError: boolean;
@@ -24,7 +26,7 @@ interface StoreContextType {
     handleLoginSuccess: (token: string, role?: 'admin' | 'staff') => void;
     addPatient: (patient: Omit<Patient, 'id' | 'rowIndex'>) => Promise<string | undefined>;
     updatePatient: (patient: Patient) => Promise<void>;
-    addTreatment: (treatment: Omit<Treatment, 'id' | 'rowIndex'>) => Promise<void>;
+    addTreatment: (treatment: Omit<Treatment, 'id' | 'rowIndex'>, bracesIncluded?: boolean) => Promise<void>;
     loadMonth: (month: string) => Promise<void>;
     isDarkMode: boolean;
     toggleDarkMode: () => void;
@@ -85,12 +87,25 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 }
             }
 
+            // Create BracesPrice sheet if missing
+            if (!existingSheets.has(BRACES_PRICE_SHEET)) {
+                try {
+                    await GoogleSheetsService.addSheet(sheetId, BRACES_PRICE_SHEET);
+                    await GoogleSheetsService.updateValues(sheetId, `${BRACES_PRICE_SHEET}!A1:A1`, [
+                        ['Price']
+                    ]);
+                    existingSheets.add(BRACES_PRICE_SHEET);
+                } catch (e: any) {
+                    if (!e.message?.includes('already exists')) console.error('Failed to create BracesPrice sheet', e);
+                }
+            }
+
             // Create monthly treatments sheet if missing
             if (!existingSheets.has(treatmentsSheet)) {
                 try {
                     await GoogleSheetsService.addSheet(sheetId, treatmentsSheet);
-                    await GoogleSheetsService.updateValues(sheetId, `${treatmentsSheet}!A1:G1`, [
-                        ['ID', 'PatientID', 'Dentist', 'Admin', 'Amount', 'Treatment', 'Date']
+                    await GoogleSheetsService.updateValues(sheetId, `${treatmentsSheet}!A1:I1`, [
+                        ['ID', 'PatientID', 'Dentist', 'Admin', 'Amount', 'Treatment', 'Date', 'Braces Price', 'Nett Total']
                     ]);
                 } catch (e: any) {
                     if (!e.message?.includes('already exists')) throw e;
@@ -248,7 +263,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         await syncData();
     };
 
-    const addTreatment = async (treatmentData: Omit<Treatment, 'id' | 'rowIndex'>) => {
+    const addTreatment = async (treatmentData: Omit<Treatment, 'id' | 'rowIndex'>, bracesIncluded?: boolean) => {
         if (!spreadsheetId) return;
         const newId = crypto.randomUUID();
 
@@ -263,6 +278,31 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             GoogleSheetsService.appendValues(spreadsheetId, TREATMENT_TYPES_SHEET, [[newType]]).catch(console.error);
         }
 
+        // --- New Logic for Orthodontik ---
+        let bracesPrice = 0;
+        let nettTotal = treatmentData.amount;
+
+        if (treatmentData.treatmentType === 'Orthodontik' && bracesIncluded) {
+            try {
+                // Fetch BracesPrice sheet (Cell A2)
+                const response = await GoogleSheetsService.getValues(spreadsheetId, `${BRACES_PRICE_SHEET}!A2`);
+                const rows = response.values || [];
+
+                if (rows[0] && rows[0][0]) {
+                    // Remove non-numeric chars
+                    const parsedPrice = Number(rows[0][0].replace(/[^0-9.-]+/g, ""));
+                    if (!isNaN(parsedPrice)) {
+                        bracesPrice = parsedPrice;
+                        nettTotal = treatmentData.amount - bracesPrice;
+                    }
+                }
+            } catch (e) {
+                console.error('Failed to fetch/calculate braces price', e);
+                // Fallback to 0/amount if error, don't block the save
+            }
+        }
+        // ---------------------------------
+
         const treatmentsSheet = `Treatments_${currentMonth.replace('-', '_')}`;
         const row = [
             newId,
@@ -271,7 +311,9 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             treatmentData.admin,
             treatmentData.amount,
             treatmentData.treatmentType,
-            treatmentData.date
+            treatmentData.date,
+            bracesPrice,
+            nettTotal
         ];
 
         // Optimistic update for treatments

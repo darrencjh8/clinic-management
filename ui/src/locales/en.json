@@ -66,11 +66,12 @@
         "selectAdmin": "Select admin",
         "amount": "Amount",
         "treatmentType": "Treatment Type",
-        "typePlaceholder": "e.g., Cleaning, Filling",
+        "typePlaceholder": "Select treatment type",
         "addTreatment": "Add Treatment",
         "loading": "Loading...",
         "success": "Treatment added successfully!",
-        "date": "Date"
+        "date": "Date",
+        "bracesIncluded": "Braces Included?"
     },
     "patient": {
         "title": "Patient Management",
@@ -108,6 +109,8 @@
         "connectionError": "Connection Error",
         "connectionErrorDescription": "We couldn't connect to Google Sheets. Please check your internet connection.",
         "signInAgain": "Sign In Again",
-        "retryConnection": "Retry Connection"
+        "retryConnection": "Retry Connection",
+        "yes": "Yes",
+        "no": "No"
     }
 }

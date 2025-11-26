@@ -16,11 +16,13 @@ export const TreatmentEntry = () => {
     const [admin, setAdmin] = useState<Admin | ''>('');
     const [amount, setAmount] = useState('');
     const [treatmentType, setTreatmentType] = useState('');
+    const [bracesIncluded, setBracesIncluded] = useState<boolean | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!patientName || !dentist || !admin || !amount || !treatmentType) return;
+        if (treatmentType === 'Orthodontik' && bracesIncluded === null) return;
 
         setIsSubmitting(true);
         try {
@@ -48,7 +50,7 @@ export const TreatmentEntry = () => {
                 amount: Number(amount),
                 treatmentType,
                 date: new Date().toISOString()
-            });
+            }, bracesIncluded || false);
 
             showToast(t('treatment.success'), 'success');
 
@@ -58,6 +60,7 @@ export const TreatmentEntry = () => {
             setAdmin('');
             setAmount('');
             setTreatmentType('');
+            setBracesIncluded(null);
         } catch (error) {
             console.error('Failed to add treatment:', error);
             showToast('Failed to add treatment', 'error');
@@ -137,20 +140,62 @@ export const TreatmentEntry = () => {
                     />
                 </div>
 
-                {/* Treatment Type with Autocomplete */}
-                <Autocomplete
-                    value={treatmentType}
-                    onChange={setTreatmentType}
-                    suggestions={treatmentTypes}
-                    placeholder={t('treatment.typePlaceholder')}
-                    label={t('treatment.treatmentType')}
-                    icon={<Calendar className="w-4 h-4" />}
-                    required
-                />
+                {/* Treatment Type Dropdown */}
+                <div>
+                    <label className="block text-sm font-semibold text-secondary-dark mb-2">
+                        <Calendar className="inline w-4 h-4 mr-1" />
+                        {t('treatment.treatmentType')}
+                    </label>
+                    <select
+                        value={treatmentType}
+                        onChange={(e) => {
+                            setTreatmentType(e.target.value);
+                            setBracesIncluded(null);
+                        }}
+                        className="w-full px-4 py-3 border-2 border-secondary-light rounded-xl focus:outline-none focus:border-primary transition-colors text-lg"
+                        required
+                    >
+                        <option value="">{t('treatment.typePlaceholder')}</option>
+                        {treatmentTypes.map(type => (
+                            <option key={type} value={type}>{type}</option>
+                        ))}
+                    </select>
+                </div>
+
+                {/* Braces Included Radio */}
+                {treatmentType === 'Orthodontik' && (
+                    <div className="bg-secondary-light/30 p-4 rounded-xl border border-primary/20">
+                        <label className="block text-sm font-semibold text-secondary-dark mb-3">
+                            {t('treatment.bracesIncluded')}
+                        </label>
+                        <div className="flex gap-4">
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                    type="radio"
+                                    name="bracesIncluded"
+                                    checked={bracesIncluded === true}
+                                    onChange={() => setBracesIncluded(true)}
+                                    className="w-5 h-5 text-primary focus:ring-primary"
+                                />
+                                <span className="text-lg">{t('common.yes')}</span>
+                            </label>
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                    type="radio"
+                                    name="bracesIncluded"
+                                    checked={bracesIncluded === false}
+                                    onChange={() => setBracesIncluded(false)}
+                                    className="w-5 h-5 text-primary focus:ring-primary"
+                                />
+                                <span className="text-lg">{t('common.no')}</span>
+                            </label>
+                        </div>
+                    </div>
+                )}
 
                 <button
                     type="submit"
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || (treatmentType === 'Orthodontik' && bracesIncluded === null)}
                     className="w-full bg-primary text-white py-4 rounded-xl font-semibold text-lg hover:bg-opacity-90 transition-all transform active:scale-98 shadow-md disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                     {isSubmitting ? (
