@@ -73,7 +73,12 @@
         "loading": "Loading...",
         "success": "Treatment added successfully!",
         "date": "Date",
-        "bracesIncluded": "Braces Included"
+        "bracesIncluded": "Braces Included",
+        "bracesType": "Braces Type",
+        "selectBracesType": "Select Braces Type",
+        "controlOnly": "Control Only",
+        "adminFee": "Admin Fee",
+        "discount": "Discount"
     },
     "patient": {
         "title": "Patient Management",
@@ -109,6 +114,7 @@
         "orthoPercentage": "Orthodontic (%)",
         "normalPercentage": "Normal (%)",
         "payable": "Payable Amount",
+        "gross": "Gross",
         "back": "Back to Summary"
     },
     "common": {

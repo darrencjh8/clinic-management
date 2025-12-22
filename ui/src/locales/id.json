@@ -1,5 +1,6 @@
 {
     "login": {
+        "title": "Masuk",
         "adminTitle": "Login Admin",
         "email": "Email",
         "password": "Kata Sandi",
@@ -72,7 +73,12 @@
         "loading": "Memuat...",
         "success": "Perawatan berhasil ditambahkan!",
         "date": "Tanggal",
-        "bracesIncluded": "Termasuk Behel"
+        "bracesIncluded": "Termasuk Behel",
+        "bracesType": "Tipe Behel",
+        "selectBracesType": "Pilih Tipe Behel",
+        "controlOnly": "Hanya Kontrol",
+        "adminFee": "Biaya Admin",
+        "discount": "Diskon"
     },
     "patient": {
         "title": "Manajemen Pasien",
@@ -108,6 +114,7 @@
         "orthoPercentage": "Ortodontik (%)",
         "normalPercentage": "Normal (%)",
         "payable": "Jumlah yang Harus Dibayar",
+        "gross": "Kotor",
         "back": "Kembali ke Ringkasan"
     },
     "common": {

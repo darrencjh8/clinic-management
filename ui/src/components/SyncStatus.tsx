@@ -25,9 +25,9 @@ export const SyncStatus: React.FC = () => {
     };
 
     return (
-        <div className="bg-white dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700 px-6 py-2 flex items-center justify-between text-sm transition-colors relative z-40">
+        <div className="bg-white border-b border-secondary-light px-6 py-2 flex items-center justify-between text-sm transition-colors relative z-40 shadow-sm">
             <div className="flex items-center gap-4">
-                <div className={`flex items-center gap-2 ${isError ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
+                <div className={`flex items-center gap-2 ${isError ? 'text-red-500' : 'text-emerald-600'}`}>
                     {isError ? <CloudOff className="w-4 h-4" /> : <Cloud className="w-4 h-4" />}
                     <span className="font-medium">
                         {isError ? t('sync.connectionError') : isSyncing ? t('sync.syncing') : (userRole === 'admin' ? t('sync.syncedWithSheets') : t('sync.synced'))}
@@ -39,7 +39,7 @@ export const SyncStatus: React.FC = () => {
                 <button
                     onClick={handleSync}
                     disabled={isSyncing}
-                    className="flex items-center gap-1.5 text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex items-center gap-1.5 text-gray-500 hover:text-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     title="Sync Now"
                 >
                     <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
@@ -48,7 +48,7 @@ export const SyncStatus: React.FC = () => {
                 {userRole === 'admin' && (
                     <button
                         onClick={openSheet}
-                        className="flex items-center gap-1.5 text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 transition-colors"
+                        className="flex items-center gap-1.5 text-gray-500 hover:text-primary transition-colors"
                         title="Open in Google Sheets"
                     >
                         <ExternalLink className="w-4 h-4" />

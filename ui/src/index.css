@@ -3,7 +3,10 @@
 @tailwind utilities;
 
 @layer base {
+
+  html,
   body {
     @apply bg-white text-secondary-dark antialiased;
+    touch-action: pan-x pan-y;
   }
 }

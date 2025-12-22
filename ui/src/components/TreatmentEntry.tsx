@@ -10,21 +10,23 @@ import { Loader2 } from 'lucide-react';
 import { isOrthodontic } from '../utils/constants';
 
 export const TreatmentEntry = () => {
-    const { patients, addTreatment, addPatient, syncData, treatmentTypes, dentists, admins } = useStore();
+    const { patients, addTreatment, addPatient, syncData, treatmentTypes, dentists, admins, bracesTypes, userRole } = useStore();
     const { t } = useTranslation();
     const { showToast } = useToast();
     const [patientName, setPatientName] = useState('');
     const [dentist, setDentist] = useState<Dentist | ''>('');
     const [admin, setAdmin] = useState<Admin | ''>('');
     const [amount, setAmount] = useState('');
+    const [adminFee, setAdminFee] = useState('');
+    const [discount, setDiscount] = useState('');
     const [treatmentType, setTreatmentType] = useState('');
-    const [bracesIncluded, setBracesIncluded] = useState<boolean | null>(null);
+    const [bracesType, setBracesType] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!patientName || !dentist || !admin || !amount || !treatmentType) return;
-        if (isOrthodontic(treatmentType) && bracesIncluded === null) return;
+        if (isOrthodontic(treatmentType) && !bracesType) return;
 
         setIsSubmitting(true);
         try {
@@ -49,10 +51,12 @@ export const TreatmentEntry = () => {
                 patientId,
                 dentist,
                 admin,
-                amount: Number(amount) * 1000,
+                amount: Number(amount),
+                adminFee: adminFee ? Number(adminFee) : undefined,
+                discount: discount ? Number(discount) : undefined,
                 treatmentType,
                 date: new Date().toISOString()
-            }, bracesIncluded || false);
+            }, bracesType);
 
             showToast(t('treatment.success'), 'success');
 
@@ -60,9 +64,12 @@ export const TreatmentEntry = () => {
             setPatientName('');
             setDentist('');
             setAdmin('');
+            setAdmin('');
             setAmount('');
+            setAdminFee('');
+            setDiscount('');
             setTreatmentType('');
-            setBracesIncluded(null);
+            setBracesType('');
         } catch (error) {
             console.error('Failed to add treatment:', error);
             showToast('Failed to add treatment', 'error');
@@ -139,7 +146,7 @@ export const TreatmentEntry = () => {
                         value={treatmentType}
                         onChange={(e) => {
                             setTreatmentType(e.target.value);
-                            setBracesIncluded(null);
+                            setBracesType('');
                         }}
                         className="w-full px-4 py-3 md:py-1.5 lg:py-3 border-2 border-secondary-light rounded-xl focus:outline-none focus:border-primary transition-colors text-sm lg:text-xl"
                         required
@@ -151,34 +158,28 @@ export const TreatmentEntry = () => {
                     </select>
                 </div>
 
-                {/* Braces Included Radio */}
+                {/* Braces Type Selection */}
                 {isOrthodontic(treatmentType) && (
-                    <div className="bg-secondary-light/30 p-4 md:p-3 lg:p-4 rounded-xl border border-primary/20 md:col-span-2">
-                        <label className="block text-sm md:text-sm lg:text-xl font-semibold text-secondary-dark mb-2 md:mb-1 lg:mb-3">
-                            {t('treatment.bracesIncluded')}
+                    <div className="md:col-span-2">
+                        <label className="block text-sm md:text-sm lg:text-xl font-semibold text-secondary-dark mb-1 md:mb-0.5 lg:mb-2">
+                            {t('treatment.bracesType')}
                         </label>
-                        <div className="flex gap-4">
-                            <label className="flex items-center gap-2 cursor-pointer">
-                                <input
-                                    type="radio"
-                                    name="bracesIncluded"
-                                    checked={bracesIncluded === true}
-                                    onChange={() => setBracesIncluded(true)}
-                                    className="w-5 h-5 text-primary focus:ring-primary"
-                                />
-                                <span className="text-sm lg:text-xl">{t('common.yes')}</span>
-                            </label>
-                            <label className="flex items-center gap-2 cursor-pointer">
-                                <input
-                                    type="radio"
-                                    name="bracesIncluded"
-                                    checked={bracesIncluded === false}
-                                    onChange={() => setBracesIncluded(false)}
-                                    className="w-5 h-5 text-primary focus:ring-primary"
-                                />
-                                <span className="text-sm lg:text-xl">{t('common.no')}</span>
-                            </label>
-                        </div>
+                        <select
+                            value={bracesType}
+                            onChange={(e) => setBracesType(e.target.value)}
+                            className="w-full px-4 py-3 md:py-1.5 lg:py-3 border-2 border-secondary-light rounded-xl focus:outline-none focus:border-primary transition-colors text-sm lg:text-xl"
+                            required
+                        >
+                            <option value="">{t('treatment.selectBracesType')}</option>
+                            <option value={t('treatment.controlOnly')}>
+                                {t('treatment.controlOnly')} {userRole === 'admin' ? '(Rp 0)' : ''}
+                            </option>
+                            {bracesTypes.map(b => (
+                                <option key={b.type} value={b.type}>
+                                    {b.type} {userRole === 'admin' ? `(Rp ${b.price.toLocaleString('id-ID')})` : ''}
+                                </option>
+                            ))}
+                        </select>
                     </div>
                 )}
 
@@ -199,13 +200,51 @@ export const TreatmentEntry = () => {
                             required
                             min="0"
                         />
-                        <span className="text-secondary-dark/50 text-sm lg:text-xl font-medium select-none">.000</span>
+                    </div>
+                </div>
+
+                {/* Admin Fee and Discount */}
+                <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-5">
+                    {/* Admin Fee */}
+                    <div>
+                        <label className="block text-sm md:text-sm lg:text-xl font-semibold text-secondary-dark mb-1 md:mb-0.5 lg:mb-2">
+                            {t('treatment.adminFee') || 'Admin Fee'}
+                        </label>
+                        <div className="flex items-center w-full px-4 py-3 md:py-1.5 lg:py-3 border-2 border-secondary-light rounded-xl focus-within:border-primary transition-colors bg-white">
+                            <span className="text-secondary-dark/50 text-sm lg:text-xl font-medium select-none mr-1">Rp</span>
+                            <input
+                                type="number"
+                                value={adminFee}
+                                onChange={(e) => setAdminFee(e.target.value)}
+                                placeholder="0"
+                                className="flex-1 outline-none bg-transparent text-sm lg:text-xl text-right"
+                                min="0"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Discount */}
+                    <div>
+                        <label className="block text-sm md:text-sm lg:text-xl font-semibold text-secondary-dark mb-1 md:mb-0.5 lg:mb-2">
+                            {t('treatment.discount') || 'Discount'}
+                        </label>
+                        <div className="flex items-center w-full px-4 py-3 md:py-1.5 lg:py-3 border-2 border-secondary-light rounded-xl focus-within:border-primary transition-colors bg-white">
+                            <span className="text-secondary-dark/50 text-sm lg:text-xl font-medium select-none mr-1">Rp</span>
+                            <input
+                                type="number"
+                                value={discount}
+                                onChange={(e) => setDiscount(e.target.value)}
+                                placeholder="0"
+                                className="flex-1 outline-none bg-transparent text-sm lg:text-xl text-right"
+                                min="0"
+                            />
+                        </div>
                     </div>
                 </div>
 
                 <button
                     type="submit"
-                    disabled={isSubmitting || (isOrthodontic(treatmentType) && bracesIncluded === null)}
+                    disabled={isSubmitting || (isOrthodontic(treatmentType) && !bracesType)}
                     className="w-full bg-primary text-white py-4 md:py-3 lg:py-4 rounded-xl font-semibold text-sm lg:text-xl hover:bg-opacity-90 transition-all transform active:scale-98 shadow-md disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2 md:col-span-2"
                 >
                     {isSubmitting ? (

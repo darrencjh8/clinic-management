@@ -41,6 +41,9 @@ export const LoginScreen = ({ onLoginSuccess, onSpreadsheetIdSubmit, initialToke
     };
 
     useEffect(() => {
+        if (!initialToken) {
+            localStorage.clear();
+        }
         console.log('LoginScreen: Effect running', { initialToken: !!initialToken });
 
         // 1. Priority: If we have an initial token (from App), we are in setup mode.

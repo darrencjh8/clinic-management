@@ -5,7 +5,7 @@
     "scripts": {
         "start": "concurrently \"npm run start:server\" \"npm run start:ui\"",
         "start:server": "cd server && npm start",
-        "start:ui": "cd ui && npm run dev",
+        "start:ui": "cd ui && npm run build && npm run dev",
         "install:all": "npm install && cd server && npm install && cd ui && npm install"
     },
     "devDependencies": {

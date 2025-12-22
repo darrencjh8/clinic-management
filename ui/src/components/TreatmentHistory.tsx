@@ -37,9 +37,34 @@ export const TreatmentHistory = () => {
     const dailyTreatments = treatments.filter(t => isSameDay(parseISO(t.date), parseISO(selectedDate)));
 
     // Sort by date descending (newest first)
-    const sortedTreatments = [...dailyTreatments].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    // Sort by date descending (newest first), then by rowIndex descending (newest added first)
+    const sortedTreatments = [...dailyTreatments].sort((a, b) => {
+        const timeA = parseISO(a.date).getTime();
+        const timeB = parseISO(b.date).getTime();
+        if (timeA !== timeB) {
+            return timeB - timeA;
+        }
+        // If times are equal, use rowIndex (descending)
+        // Handle -1 (optimistic) as "infinity" (newest)
+        const rowA = a.rowIndex === -1 ? Infinity : (a.rowIndex || 0);
+        const rowB = b.rowIndex === -1 ? Infinity : (b.rowIndex || 0);
+        return rowB - rowA;
+    });
 
-    const totalRevenue = sortedTreatments.reduce((sum, t) => sum + t.amount, 0);
+    // Total Revenue is sum of NettTotall (which includes fees/discounts logic)
+    // OR should it be the sum of what was paid?
+    // Based on implementation plan: Total Revenue = Sum(Amount + Admin Fee - Discount)
+    // Which matches the 'nettTotal' in store logic IF braces are not involved.
+    // If braces involved: nettTotal = (Amount + Fee - Disc) - BracesPrice.
+    // So 'Total Revenue' (Gross) usually means what the patient pays total. 
+    // Let's use the internal logic: 
+    // The store calculates nettTotal. 
+    // Let's sum up (amount + adminFee - discount).
+    const totalRevenue = sortedTreatments.reduce((sum, t) => {
+        const fee = t.adminFee || 0;
+        const disc = t.discount || 0;
+        return sum + (t.amount + fee - disc);
+    }, 0);
 
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 25;
@@ -111,6 +136,12 @@ export const TreatmentHistory = () => {
                                         <strong>{t('treatment.treatmentType')}:</strong>
                                         <span>{treatment.treatmentType}</span>
                                     </p>
+                                    {isOrthodontic(treatment.treatmentType) && treatment.bracesType && (
+                                        <p className="flex flex-col md:flex-row md:gap-1 text-sm md:text-sm lg:text-base text-primary font-medium mt-1">
+                                            <strong>{t('treatment.bracesType')}:</strong>
+                                            <span>{treatment.bracesType}</span>
+                                        </p>
+                                    )}
                                     <p className="flex items-center gap-2 text-xs md:text-xs lg:text-sm text-gray-400">
                                         <Calendar className="w-3 h-3 flex-shrink-0" />
                                         <span>{format(new Date(treatment.date), 'dd MMM yyyy HH:mm')}</span>
@@ -127,14 +158,22 @@ export const TreatmentHistory = () => {
                                     <span className="text-gray-600">{treatment.admin}</span>
                                 </div>
 
-                                {/* Braces Included Status */}
-                                {isOrthodontic(treatment.treatmentType) && (
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-xs md:text-sm px-2 py-1 rounded-full bg-secondary-light/50 text-secondary-dark font-medium border border-secondary-dark/10">
-                                            {t('treatment.bracesIncluded')}: {treatment.bracesPrice && treatment.bracesPrice > 0 ? t('common.yes') : t('common.no')}
-                                        </span>
+                                {/* Fee & Discount Details */}
+                                {(treatment.adminFee || 0) > 0 && (
+                                    <div className="flex justify-between items-center text-xs md:text-sm text-gray-500">
+                                        <span>{t('treatment.adminFee') || 'Admin Fee'}:</span>
+                                        <span>+ Rp {(treatment.adminFee || 0).toLocaleString('id-ID')}</span>
                                     </div>
                                 )}
+                                {(treatment.discount || 0) > 0 && (
+                                    <div className="flex justify-between items-center text-xs md:text-sm text-green-600">
+                                        <span>{t('treatment.discount') || 'Discount'}:</span>
+                                        <span>- Rp {(treatment.discount || 0).toLocaleString('id-ID')}</span>
+                                    </div>
+                                )}
+
+                                {/* Braces Included Status */}
+
 
                                 {/* Financial Details */}
                                 <div className="mt-2 pt-2 border-t border-gray-100 space-y-1">
@@ -145,7 +184,7 @@ export const TreatmentHistory = () => {
                                                 {t('history.grossTotal')}:
                                             </span>
                                             <span className="text-xl lg:text-3xl font-bold text-primary">
-                                                Rp {treatment.amount.toLocaleString('id-ID')}
+                                                Rp {(treatment.amount + (treatment.adminFee || 0) - (treatment.discount || 0)).toLocaleString('id-ID')}
                                             </span>
                                         </div>
                                     )}
@@ -154,7 +193,9 @@ export const TreatmentHistory = () => {
                                     {userRole !== 'admin' && (
                                         <div className="flex justify-between items-center gap-2">
                                             <span className="text-gray-600 font-bold text-base md:text-lg lg:text-xl">{t('treatment.amount')}:</span>
-                                            <span className="text-xl lg:text-3xl font-bold text-primary">Rp {treatment.amount.toLocaleString('id-ID')}</span>
+                                            <span className="text-xl lg:text-3xl font-bold text-primary">
+                                                Rp {(treatment.amount + (treatment.adminFee || 0) - (treatment.discount || 0)).toLocaleString('id-ID')}
+                                            </span>
                                         </div>
                                     )}
 

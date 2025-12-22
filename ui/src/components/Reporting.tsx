@@ -156,18 +156,33 @@ export const Reporting = () => {
                                 <div className="font-semibold text-secondary-dark text-sm lg:text-lg text-gray-600">
                                     {treatment.treatmentType}
                                 </div>
+                                {isOrthodontic(treatment.treatmentType) && treatment.bracesType && (
+                                    <div className="text-xs lg:text-sm text-primary font-medium mt-0.5">
+                                        {treatment.bracesType}
+                                    </div>
+                                )}
                                 <div className="text-xs lg:text-sm text-gray-400 flex items-center gap-2 mt-1">
                                     <Calendar className="w-3 h-3" />
                                     {format(new Date(treatment.date), 'dd MMM yyyy, HH:mm')}
                                 </div>
                             </div>
                             <div className="text-right">
-                                <div className="font-bold text-primary text-sm lg:text-xl">
+                                <div className="text-primary font-bold text-sm lg:text-xl">
                                     Rp {(treatment.nettTotal ?? treatment.amount).toLocaleString('id-ID')}
                                 </div>
                                 <div className="text-xs text-gray-400 mt-1">
-                                    Gross: Rp {treatment.amount.toLocaleString('id-ID')}
+                                    {t('reporting.gross')}: Rp {treatment.amount.toLocaleString('id-ID')}
                                 </div>
+                                {(treatment.adminFee || 0) > 0 && (
+                                    <div className="text-xs text-gray-500">
+                                        {t('treatment.adminFee')}: +Rp {(treatment.adminFee || 0).toLocaleString('id-ID')}
+                                    </div>
+                                )}
+                                {(treatment.discount || 0) > 0 && (
+                                    <div className="text-xs text-green-600">
+                                        {t('treatment.discount')}: -Rp {(treatment.discount || 0).toLocaleString('id-ID')}
+                                    </div>
+                                )}
                             </div>
                         </div>
                     ))}
@@ -217,7 +232,7 @@ export const Reporting = () => {
 
             <div className="bg-white rounded-2xl p-4 md:p-4 lg:p-6 mb-4 md:mb-3 lg:mb-8 border border-secondary-light shadow-md">
                 <div className="text-gray-600 mb-1 text-sm lg:text-xl">{t('reporting.nettRevenue')}</div>
-                <div className="text-4xl lg:text-5xl font-bold text-primary">
+                <div className="text-xl md:text-3xl lg:text-5xl font-bold text-primary break-words">
                     Rp {totalRevenue.toLocaleString('id-ID')}
                 </div>
             </div>

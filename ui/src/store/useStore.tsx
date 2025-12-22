@@ -1,14 +1,28 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
-import type { Patient, Treatment, Staff } from '../types';
+import type { Patient, Treatment, Staff, BracesType } from '../types';
 import { GoogleSheetsService } from '../services/GoogleSheetsService';
 
 import { isOrthodontic, parseIDRCurrency } from '../utils/constants';
+import { addDays } from 'date-fns';
+
+const excelDateToJSDate = (serial: number) => {
+    // Excel base date is Dec 30, 1899
+    const baseDate = new Date(1899, 11, 30);
+    const days = Math.floor(serial);
+    const time = serial - days;
+
+    const date = addDays(baseDate, days);
+    const totalSeconds = Math.round(time * 86400);
+    date.setSeconds(totalSeconds);
+
+    return date.toISOString();
+};
 
 const PATIENTS_SHEET = 'Patients';
 const STAFF_SHEET = 'Staff';
 const TREATMENT_TYPES_SHEET = 'TreatmentTypes';
 
-const BRACES_PRICE_SHEET = 'BracesPrice';
+const BRACES_TYPE_SHEET = 'BracesType';
 
 interface StoreContextType {
     isLoading: boolean;
@@ -23,18 +37,19 @@ interface StoreContextType {
     dentists: string[];
     admins: string[];
     treatmentTypes: string[];
+    bracesTypes: BracesType[];
     currentMonth: string; // YYYY-MM
     setSheetId: (id: string) => void;
     handleLoginSuccess: (token: string, role?: 'admin' | 'staff') => void;
     addPatient: (patient: Omit<Patient, 'id' | 'rowIndex'>) => Promise<string | undefined>;
     updatePatient: (patient: Patient) => Promise<void>;
-    addTreatment: (treatment: Omit<Treatment, 'id' | 'rowIndex'>, bracesIncluded?: boolean) => Promise<void>;
+    addTreatment: (treatment: Omit<Treatment, 'id' | 'rowIndex'>, bracesType?: string) => Promise<void>;
     loadMonth: (month: string) => Promise<void>;
     isDarkMode: boolean;
     toggleDarkMode: () => void;
     isSyncing: boolean;
     syncData: () => Promise<void>;
-    logout: () => void;
+    logout: () => Promise<void>;
 }
 
 const StoreContext = createContext<StoreContextType | null>(null);
@@ -54,6 +69,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         const saved = localStorage.getItem('treatment_types');
         return saved ? JSON.parse(saved) : ['Cleaning', 'Filling', 'Root Canal', 'Extraction', 'Crown', 'Whitening', 'Checkup'];
     });
+    const [bracesTypes, setBracesTypes] = useState<BracesType[]>([]);
     const [currentMonth, setCurrentMonth] = useState<string>(() => {
         const now = new Date();
         return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
@@ -89,36 +105,60 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 }
             }
 
-            // Create BracesPrice sheet if missing
-            if (!existingSheets.has(BRACES_PRICE_SHEET)) {
+            // Create BracesType sheet if missing
+            if (!existingSheets.has(BRACES_TYPE_SHEET)) {
                 try {
-                    await GoogleSheetsService.addSheet(sheetId, BRACES_PRICE_SHEET);
-                    await GoogleSheetsService.updateValues(sheetId, `${BRACES_PRICE_SHEET}!A1:A1`, [
-                        ['Price']
+                    await GoogleSheetsService.addSheet(sheetId, BRACES_TYPE_SHEET);
+                    await GoogleSheetsService.updateValues(sheetId, `${BRACES_TYPE_SHEET}!A1:B3`, [
+                        ['Type', 'Price'],
+                        ['Metal', '5000000'],
+                        ['Ceramic', '8000000']
                     ]);
-                    existingSheets.add(BRACES_PRICE_SHEET);
+                    existingSheets.add(BRACES_TYPE_SHEET);
                 } catch (e: any) {
-                    if (!e.message?.includes('already exists')) console.error('Failed to create BracesPrice sheet', e);
+                    if (!e.message?.includes('already exists')) console.error('Failed to create BracesType sheet', e);
                 }
             }
 
             // Create monthly treatments sheet if missing
-            if (!existingSheets.has(treatmentsSheet)) {
+            const currentTreatmentSheetObj = spreadsheet.sheets?.find((s: any) => s.properties.title === treatmentsSheet);
+            if (!currentTreatmentSheetObj) {
                 try {
                     await GoogleSheetsService.addSheet(sheetId, treatmentsSheet);
-                    await GoogleSheetsService.updateValues(sheetId, `${treatmentsSheet}!A1:I1`, [
-                        ['ID', 'PatientID', 'Dentist', 'Admin', 'Amount', 'Treatment', 'Date', 'Braces Price', 'Nett Total']
+                    await GoogleSheetsService.updateValues(sheetId, `${treatmentsSheet}!A1:L1`, [
+                        ['ID', 'PatientID', 'Dentist', 'Admin', 'Amount', 'Treatment', 'Date', 'Braces Price', 'Nett Total', 'Braces Type', 'Admin Fee', 'Discount']
                     ]);
                 } catch (e: any) {
                     if (!e.message?.includes('already exists')) throw e;
+                }
+            } else {
+                // Check if we need to migrate schema (add columns)
+                const gridProps = currentTreatmentSheetObj.properties.gridProperties;
+                const sheetIdNum = currentTreatmentSheetObj.properties.sheetId; // Note: numeric ID
+
+                // If columns < 12, we need to expand and update headers
+                if (gridProps && gridProps.columnCount < 12) {
+                    console.log('Migrating schema: Expanding columns for', treatmentsSheet);
+                    try {
+                        // Explicitly resize the sheet to at least 12 columns
+                        await GoogleSheetsService.resizeSheet(sheetId, sheetIdNum, undefined, 12);
+
+                        // Update headers
+                        await GoogleSheetsService.updateValues(sheetId, `${treatmentsSheet}!A1:L1`, [
+                            ['ID', 'PatientID', 'Dentist', 'Admin', 'Amount', 'Treatment', 'Date', 'Braces Price', 'Nett Total', 'Braces Type', 'Admin Fee', 'Discount']
+                        ]);
+                    } catch (e) {
+                        console.error('Failed to migrate schema', e);
+                    }
                 }
             }
 
             const rangesToFetch = [
                 `${PATIENTS_SHEET}!A:D`,
-                `${treatmentsSheet}!A:I`,
+                `${treatmentsSheet}!A:L`,
                 `${STAFF_SHEET}!A:B`,
-                `${TREATMENT_TYPES_SHEET}!A:A`
+                `${TREATMENT_TYPES_SHEET}!A:A`,
+                `${BRACES_TYPE_SHEET}!A:B`
             ];
 
             const response = await GoogleSheetsService.batchGetValues(sheetId, rangesToFetch);
@@ -159,9 +199,12 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                         admin: row[3],
                         amount: parseIDRCurrency(row[4]),
                         treatmentType: row[5],
-                        date: row[6],
+                        date: typeof row[6] === 'number' ? excelDateToJSDate(row[6]) : row[6],
                         bracesPrice: row[7] ? parseIDRCurrency(row[7]) : 0,
                         nettTotal: row[8] ? parseIDRCurrency(row[8]) : parseIDRCurrency(row[4]),
+                        bracesType: row[9] || undefined,
+                        adminFee: row[10] ? parseIDRCurrency(row[10]) : 0,
+                        discount: row[11] ? parseIDRCurrency(row[11]) : 0,
                         rowIndex: index + 1
                     });
                 }
@@ -193,6 +236,20 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 setTreatmentTypes(parsedTypes);
                 localStorage.setItem('treatment_types', JSON.stringify(parsedTypes));
             }
+
+            // Parse Braces Types
+            const bracesTypeRows = getValuesForSheet(BRACES_TYPE_SHEET) || [];
+            const parsedBracesTypes: BracesType[] = [];
+            bracesTypeRows.forEach((row: string[], index: number) => {
+                if (index === 0) return;
+                if (row[0] && row[1]) {
+                    parsedBracesTypes.push({
+                        type: row[0],
+                        price: parseIDRCurrency(row[1])
+                    });
+                }
+            });
+            setBracesTypes(parsedBracesTypes);
 
             setIsError(false);
         } catch (e: any) {
@@ -267,7 +324,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         await syncData();
     };
 
-    const addTreatment = async (treatmentData: Omit<Treatment, 'id' | 'rowIndex'>, bracesIncluded?: boolean) => {
+    const addTreatment = async (treatmentData: Omit<Treatment, 'id' | 'rowIndex'>, bracesType?: string) => {
         if (!spreadsheetId) return;
         const newId = crypto.randomUUID();
 
@@ -282,31 +339,19 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             GoogleSheetsService.appendValues(spreadsheetId, TREATMENT_TYPES_SHEET, [[newType]]).catch(console.error);
         }
 
+        // --- New Logic for Orthodontic and Fees ---
+        const amount = treatmentData.amount;
+        const adminFee = treatmentData.adminFee || 0;
+        const discount = treatmentData.discount || 0;
 
-
-        // ...
-
-        // --- New Logic for Orthodontic ---
         let bracesPrice = 0;
-        let nettTotal = treatmentData.amount;
+        let nettTotal = amount + adminFee - discount;
 
-        if (isOrthodontic(treatmentData.treatmentType) && bracesIncluded) {
-            try {
-                // Fetch BracesPrice sheet (Cell A2)
-                const response = await GoogleSheetsService.getValues(spreadsheetId, `${BRACES_PRICE_SHEET}!A2`);
-                const rows = response.values || [];
-
-                if (rows[0] && rows[0][0]) {
-                    // Remove non-numeric chars
-                    const parsedPrice = Number(rows[0][0].replace(/[^0-9.-]+/g, ""));
-                    if (!isNaN(parsedPrice)) {
-                        bracesPrice = parsedPrice;
-                        nettTotal = treatmentData.amount - bracesPrice;
-                    }
-                }
-            } catch (e) {
-                console.error('Failed to fetch/calculate braces price', e);
-                // Fallback to 0/amount if error, don't block the save
+        if (isOrthodontic(treatmentData.treatmentType) && bracesType) {
+            const selectedBraces = bracesTypes.find(b => b.type === bracesType);
+            if (selectedBraces) {
+                bracesPrice = selectedBraces.price;
+                nettTotal = (amount + adminFee - discount) - bracesPrice;
             }
         }
         // ---------------------------------
@@ -317,11 +362,14 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             treatmentData.patientId,
             treatmentData.dentist,
             treatmentData.admin,
-            treatmentData.amount,
+            amount,
             treatmentData.treatmentType,
             treatmentData.date,
             bracesPrice,
-            nettTotal
+            nettTotal,
+            bracesType || '',
+            adminFee,
+            discount
         ];
 
         // Optimistic update for treatments
@@ -330,11 +378,14 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             patientId: treatmentData.patientId,
             dentist: treatmentData.dentist,
             admin: treatmentData.admin,
-            amount: treatmentData.amount,
+            amount: amount,
             treatmentType: treatmentData.treatmentType,
             date: treatmentData.date,
             bracesPrice: bracesPrice,
             nettTotal: nettTotal,
+            bracesType: bracesType,
+            adminFee: adminFee,
+            discount: discount,
             rowIndex: -1 // Temporary
         };
         setTreatments(prev => [...prev, newTreatment]);
@@ -365,7 +416,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         }
     };
 
-    const logout = () => {
+    const logout = async () => {
         GoogleSheetsService.logout();
         setAccessToken(null);
         setSpreadsheetId(null);
@@ -377,6 +428,31 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
         setUserRole(null);
         localStorage.removeItem('user_role');
+
+        // Clear all caches for OTA updates
+        if ('caches' in window) {
+            try {
+                const keys = await caches.keys();
+                await Promise.all(keys.map(key => caches.delete(key)));
+            } catch (e) {
+                console.error('Failed to clear cache', e);
+            }
+        }
+
+        // Unregister service workers
+        if ('serviceWorker' in navigator) {
+            try {
+                const registrations = await navigator.serviceWorker.getRegistrations();
+                for (const registration of registrations) {
+                    await registration.unregister();
+                }
+            } catch (e) {
+                console.error('Failed to unregister SW', e);
+            }
+        }
+
+        // Force reload to pick up new version
+        window.location.href = '/';
     };
 
     const loadMonth = async (month: string) => {
@@ -396,6 +472,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         dentists: staff.filter(s => s.role === 'Dentist').map(s => s.name),
         admins: staff.filter(s => s.role === 'Admin').map(s => s.name),
         treatmentTypes,
+        bracesTypes,
         currentMonth,
         setSheetId,
         handleLoginSuccess,

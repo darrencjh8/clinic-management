@@ -16,8 +16,16 @@ export interface Treatment {
     treatmentType: string;
     date: string; // ISO string
     bracesPrice?: number;
+    bracesType?: string;
     nettTotal?: number;
+    adminFee?: number;
+    discount?: number;
     rowIndex?: number; // For Google Sheets sync
+}
+
+export interface BracesType {
+    type: string;
+    price: number;
 }
 
 export interface Staff {

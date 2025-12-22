@@ -8,6 +8,20 @@ import { StoreProvider } from './store/useStore';
 
 const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 
+
+
+// Disable pinch zoom on Safari
+document.addEventListener('gesturestart', (e) => {
+  e.preventDefault();
+});
+
+// Disable pinch zoom on Chromium (touchmove with >1 touches)
+document.addEventListener('touchmove', (e) => {
+  if (e.touches.length > 1) {
+    e.preventDefault();
+  }
+}, { passive: false });
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <GoogleOAuthProvider clientId={CLIENT_ID}>

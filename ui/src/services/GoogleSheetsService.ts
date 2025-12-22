@@ -204,6 +204,26 @@ export class GoogleSheetsService {
         }
     }
 
+    static async resizeSheet(spreadsheetId: string, sheetId: number, rowCount?: number, columnCount?: number) {
+        return this.fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`, {
+            method: 'POST',
+            body: JSON.stringify({
+                requests: [{
+                    updateSheetProperties: {
+                        properties: {
+                            sheetId: sheetId,
+                            gridProperties: {
+                                ...(rowCount ? { rowCount } : {}),
+                                ...(columnCount ? { columnCount } : {})
+                            }
+                        },
+                        fields: `gridProperties(${rowCount ? 'rowCount,' : ''}${columnCount ? 'columnCount' : ''})`
+                    }
+                }]
+            })
+        });
+    }
+
     static async addSheet(spreadsheetId: string, title: string) {
         return this.fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`, {
             method: 'POST',
@@ -273,7 +293,7 @@ export class GoogleSheetsService {
 
     static async batchGetValues(spreadsheetId: string, ranges: string[]) {
         const rangesParam = ranges.map(r => `ranges=${encodeURIComponent(r)}`).join('&');
-        return this.fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchGet?${rangesParam}`);
+        return this.fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchGet?${rangesParam}&valueRenderOption=UNFORMATTED_VALUE`);
     }
 
     static async appendValues(spreadsheetId: string, range: string, values: any[][]) {
@@ -312,6 +332,7 @@ export class GoogleSheetsService {
                     { properties: { title: 'Patients', gridProperties: { rowCount: 1000, columnCount: 4 } } },
                     { properties: { title: 'Staff', gridProperties: { rowCount: 100, columnCount: 2 } } },
                     { properties: { title: 'TreatmentTypes', gridProperties: { rowCount: 100, columnCount: 1 } } },
+                    { properties: { title: 'BracesType', gridProperties: { rowCount: 100, columnCount: 2 } } },
                     { properties: { title: 'AppConfig' } }
                 ]
             })
@@ -337,6 +358,11 @@ export class GoogleSheetsService {
                 ['Crown'],
                 ['Whitening'],
                 ['Checkup']
+            ]);
+            await this.updateValues(spreadsheetId, 'BracesType!A1:B3', [
+                ['Type', 'Price'],
+                ['Metal', '5000000'],
+                ['Ceramic', '8000000']
             ]);
             await this.updateValues(spreadsheetId, 'AppConfig!A1:B1', [['Key', 'Value']]);
 
