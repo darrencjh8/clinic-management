@@ -1,12 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useStore } from '../store/useStore';
-import { Calendar, User, Stethoscope } from 'lucide-react';
+import { Calendar, User, Stethoscope, Pencil } from 'lucide-react';
 import { format, isSameDay, parseISO } from 'date-fns';
 import { id } from 'date-fns/locale';
 import { useTranslation } from 'react-i18next';
 import { isOrthodontic } from '../utils/constants';
+import type { Treatment } from '../types';
 
-export const TreatmentHistory = () => {
+interface TreatmentHistoryProps {
+    onEditTreatment?: (treatment: Treatment) => void;
+}
+
+export const TreatmentHistory = ({ onEditTreatment }: TreatmentHistoryProps) => {
     const { treatments, patients, currentMonth, loadMonth, syncData, userRole } = useStore();
     const { t } = useTranslation();
 
@@ -125,11 +130,22 @@ export const TreatmentHistory = () => {
                     <div key={treatment.id} className="bg-white rounded-2xl shadow-md p-4 md:p-4 lg:p-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-3 lg:gap-4">
                             <div>
-                                <div className="flex items-center gap-2 mb-2">
-                                    <User className="w-5 h-5 text-primary flex-shrink-0" />
-                                    <span className="font-bold text-lg lg:text-xl text-secondary-dark truncate">
-                                        {getPatientName(treatment.patientId)}
-                                    </span>
+                                <div className="flex items-center justify-between gap-2 mb-2">
+                                    <div className="flex items-center gap-2">
+                                        <User className="w-5 h-5 text-primary flex-shrink-0" />
+                                        <span className="font-bold text-lg lg:text-xl text-secondary-dark truncate">
+                                            {getPatientName(treatment.patientId)}
+                                        </span>
+                                    </div>
+                                    {onEditTreatment && userRole === 'admin' && (
+                                        <button
+                                            onClick={() => onEditTreatment(treatment)}
+                                            className="p-2 text-gray-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors flex-shrink-0"
+                                            title={t('common.edit') || 'Edit'}
+                                        >
+                                            <Pencil className="w-4 h-4" />
+                                        </button>
+                                    )}
                                 </div>
                                 <div className="ml-0 md:ml-7 space-y-1 text-gray-600">
                                     <p className="flex flex-col md:flex-row md:gap-1 text-base md:text-base lg:text-lg font-medium">

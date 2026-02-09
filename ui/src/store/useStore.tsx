@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import type { Patient, Treatment, Staff, BracesType } from '../types';
 import { GoogleSheetsService } from '../services/GoogleSheetsService';
+import { FirebaseAuthService } from '../services/FirebaseAuthService';
 
 import { isOrthodontic, parseIDRCurrency } from '../utils/constants';
 import { addDays } from 'date-fns';
@@ -44,6 +45,7 @@ interface StoreContextType {
     addPatient: (patient: Omit<Patient, 'id' | 'rowIndex'>) => Promise<string | undefined>;
     updatePatient: (patient: Patient) => Promise<void>;
     addTreatment: (treatment: Omit<Treatment, 'id' | 'rowIndex'>, bracesType?: string) => Promise<void>;
+    updateTreatment: (treatment: Treatment) => Promise<void>;
     loadMonth: (month: string) => Promise<void>;
     isDarkMode: boolean;
     toggleDarkMode: () => void;
@@ -52,7 +54,7 @@ interface StoreContextType {
     logout: () => Promise<void>;
 }
 
-const StoreContext = createContext<StoreContextType | null>(null);
+export const StoreContext = createContext<StoreContextType | null>(null);
 
 export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [isLoading, setIsLoading] = useState(true);
@@ -283,6 +285,29 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         }
     }, [accessToken, spreadsheetId, currentMonth, loadData]);
 
+    // Listen for Firebase token refresh
+    useEffect(() => {
+        const unsubscribe = FirebaseAuthService.onTokenChange((token) => {
+            if (token) {
+                console.log('Token refreshed:', token.substring(0, 10) + '...');
+                setAccessToken(token);
+                GoogleSheetsService.setAccessToken(token);
+                // We don't necessarily want to reload data on every refresh, 
+                // but we need to ensure the services have the latest token.
+            } else {
+                // User signed out or session expired completely
+                console.log('No token received (signed out?)');
+                if (accessToken) {
+                    // distinct from initial load where accessToken might be null.
+                    // If we had a token and now don't, it's a logout.
+                    // effectively handled by the logout function usually, but good for safety.
+                }
+            }
+        });
+
+        return () => unsubscribe();
+    }, [accessToken]);
+
     useEffect(() => {
         localStorage.setItem('dark_mode', JSON.stringify(isDarkMode));
         if (isDarkMode) {
@@ -394,6 +419,54 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         await syncData();
     };
 
+    const updateTreatment = async (treatment: Treatment) => {
+        if (!spreadsheetId || !treatment.rowIndex || treatment.rowIndex === -1) return;
+
+        // Recalculate nettTotal
+        const amount = treatment.amount;
+        const adminFee = treatment.adminFee || 0;
+        const discount = treatment.discount || 0;
+        let bracesPrice = treatment.bracesPrice || 0;
+        let nettTotal = amount + adminFee - discount;
+
+        if (isOrthodontic(treatment.treatmentType) && treatment.bracesType) {
+            const selectedBraces = bracesTypes.find(b => b.type === treatment.bracesType);
+            if (selectedBraces) {
+                bracesPrice = selectedBraces.price;
+                nettTotal = (amount + adminFee - discount) - bracesPrice;
+            }
+        }
+
+        const updatedTreatment: Treatment = {
+            ...treatment,
+            bracesPrice,
+            nettTotal
+        };
+
+        // Optimistic update
+        setTreatments(prev => prev.map(t => t.id === treatment.id ? updatedTreatment : t));
+
+        const treatmentsSheet = `Treatments_${currentMonth.replace('-', '_')}`;
+        const range = `${treatmentsSheet}!A${treatment.rowIndex}:L${treatment.rowIndex}`;
+        const row = [
+            treatment.id,
+            treatment.patientId,
+            treatment.dentist,
+            treatment.admin,
+            amount,
+            treatment.treatmentType,
+            treatment.date,
+            bracesPrice,
+            nettTotal,
+            treatment.bracesType || '',
+            adminFee,
+            discount
+        ];
+
+        await GoogleSheetsService.updateValues(spreadsheetId, range, [row]);
+        await syncData();
+    };
+
     const setSheetId = (id: string) => {
         setSpreadsheetId(id);
         localStorage.setItem('spreadsheet_id', id);
@@ -479,6 +552,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         addPatient,
         updatePatient,
         addTreatment,
+        updateTreatment,
         loadMonth,
         isDarkMode,
         toggleDarkMode: () => setIsDarkMode((prev: boolean) => !prev),

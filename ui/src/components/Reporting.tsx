@@ -10,8 +10,9 @@ export const Reporting = () => {
     const { treatments, patients, currentMonth, loadMonth } = useStore();
     const { t } = useTranslation();
     const [selectedDentist, setSelectedDentist] = useState<string | null>(null);
-    const [orthoPercentage, setOrthoPercentage] = useState<string>('40');
-    const [normalPercentage, setNormalPercentage] = useState<string>('50');
+
+    const [orthoPercentage, setOrthoPercentage] = useState<string>('50');
+    const [normalPercentage, setNormalPercentage] = useState<string>('40');
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 25;
 
@@ -24,6 +25,9 @@ export const Reporting = () => {
     // Group treatments by dentist
     const dentistRevenue = treatments.reduce((acc, treatment) => {
         const dentist = treatment.dentist || 'Unknown';
+        // Revenue to clinic/owner is usually NettTotal (money in hand) or Amount? 
+        // User said "nett total as the total revenue receivable by the owner".
+        // The previous code using nettTotal ?? amount seems correct for "Revenue" display.
         acc[dentist] = (acc[dentist] || 0) + (treatment.nettTotal ?? treatment.amount);
         return acc;
     }, {} as Record<string, number>);
@@ -35,13 +39,28 @@ export const Reporting = () => {
         const dentistTreatments = treatments.filter(t => t.dentist === selectedDentist);
         const dentistTotal = dentistRevenue[selectedDentist] || 0;
 
-        // Calculate Commission based on Nett Total and Treatment Type
+        // Calculate Commission
+        // Rule: 
+        // - Rate: 50% if New Ortho (Ortho + Braces), 40% otherwise.
+        // - Base: Amount - Discount - BracesPrice (Excludes Admin Fee)
+        const calculatePayable = (treatment: any) => {
+            const bracesPrice = treatment.bracesPrice || 0;
+            // Bug Fix: Only apply 50% if it's Ortho AND has Braces PRICE > 0 (meaning New Ortho).
+            const isNewOrtho = isOrthodontic(treatment.treatmentType) && bracesPrice > 0;
+
+            const rate = isNewOrtho ? Number(orthoPercentage) : Number(normalPercentage);
+
+            const amount = treatment.amount || 0;
+            const discount = treatment.discount || 0;
+
+            // Commission Base = Amount - Discount - Braces Price
+            const baseAmount = amount - discount - bracesPrice;
+
+            return baseAmount * (rate / 100);
+        };
+
         const payableAmount = dentistTreatments.reduce((sum, treatment) => {
-            const isOrtho = isOrthodontic(treatment.treatmentType);
-            const rate = isOrtho ? Number(orthoPercentage) : Number(normalPercentage);
-            // Use nettTotal if available, otherwise amount (fallback handled in store, but safe to check)
-            const baseAmount = treatment.nettTotal ?? treatment.amount;
-            return sum + (baseAmount * (rate / 100));
+            return sum + calculatePayable(treatment);
         }, 0);
 
         // Pagination Logic
@@ -147,45 +166,51 @@ export const Reporting = () => {
                         </div>
                     )}
 
-                    {paginatedTreatments.map(treatment => (
-                        <div key={treatment.id} className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 flex items-center justify-between">
-                            <div>
-                                <div className="font-bold text-lg text-secondary-dark mb-1">
-                                    {getPatientName(treatment.patientId)}
-                                </div>
-                                <div className="font-semibold text-secondary-dark text-sm lg:text-lg text-gray-600">
-                                    {treatment.treatmentType}
-                                </div>
-                                {isOrthodontic(treatment.treatmentType) && treatment.bracesType && (
-                                    <div className="text-xs lg:text-sm text-primary font-medium mt-0.5">
-                                        {treatment.bracesType}
+                    {paginatedTreatments.map(treatment => {
+                        const payable = calculatePayable(treatment);
+                        return (
+                            <div key={treatment.id} className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 flex items-center justify-between">
+                                <div>
+                                    <div className="font-bold text-lg text-secondary-dark mb-1">
+                                        {getPatientName(treatment.patientId)}
                                     </div>
-                                )}
-                                <div className="text-xs lg:text-sm text-gray-400 flex items-center gap-2 mt-1">
-                                    <Calendar className="w-3 h-3" />
-                                    {format(new Date(treatment.date), 'dd MMM yyyy, HH:mm')}
+                                    <div className="font-semibold text-secondary-dark text-sm lg:text-lg text-gray-600">
+                                        {treatment.treatmentType}
+                                    </div>
+                                    {isOrthodontic(treatment.treatmentType) && treatment.bracesType && (
+                                        <div className="text-xs lg:text-sm text-primary font-medium mt-0.5">
+                                            {treatment.bracesType}
+                                        </div>
+                                    )}
+                                    <div className="text-xs lg:text-sm text-gray-400 flex items-center gap-2 mt-1">
+                                        <Calendar className="w-3 h-3" />
+                                        {format(new Date(treatment.date), 'dd MMM yyyy, HH:mm')}
+                                    </div>
+                                </div>
+                                <div className="text-right">
+                                    <div className="text-primary font-bold text-sm lg:text-xl">
+                                        Rp {(treatment.nettTotal ?? treatment.amount).toLocaleString('id-ID')}
+                                    </div>
+                                    <div className="text-xs text-secondary-dark font-medium mt-1 bg-secondary-light/20 px-2 py-0.5 rounded">
+                                        {t('reporting.payable')}: Rp {payable.toLocaleString('id-ID')}
+                                    </div>
+                                    <div className="text-xs text-gray-400 mt-1">
+                                        {t('reporting.gross')}: Rp {treatment.amount.toLocaleString('id-ID')}
+                                    </div>
+                                    {(treatment.adminFee || 0) > 0 && (
+                                        <div className="text-xs text-gray-500">
+                                            {t('treatment.adminFee')}: +Rp {(treatment.adminFee || 0).toLocaleString('id-ID')}
+                                        </div>
+                                    )}
+                                    {(treatment.discount || 0) > 0 && (
+                                        <div className="text-xs text-green-600">
+                                            {t('treatment.discount')}: -Rp {(treatment.discount || 0).toLocaleString('id-ID')}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
-                            <div className="text-right">
-                                <div className="text-primary font-bold text-sm lg:text-xl">
-                                    Rp {(treatment.nettTotal ?? treatment.amount).toLocaleString('id-ID')}
-                                </div>
-                                <div className="text-xs text-gray-400 mt-1">
-                                    {t('reporting.gross')}: Rp {treatment.amount.toLocaleString('id-ID')}
-                                </div>
-                                {(treatment.adminFee || 0) > 0 && (
-                                    <div className="text-xs text-gray-500">
-                                        {t('treatment.adminFee')}: +Rp {(treatment.adminFee || 0).toLocaleString('id-ID')}
-                                    </div>
-                                )}
-                                {(treatment.discount || 0) > 0 && (
-                                    <div className="text-xs text-green-600">
-                                        {t('treatment.discount')}: -Rp {(treatment.discount || 0).toLocaleString('id-ID')}
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    ))}
+                        );
+                    })}
 
                     {/* Pagination Controls */}
                     {totalPages > 1 && (

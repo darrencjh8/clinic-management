@@ -1,5 +1,5 @@
 import { auth } from '../config/firebase';
-import { signInWithEmailAndPassword, signOut as firebaseSignOut, type User } from 'firebase/auth';
+import { signInWithEmailAndPassword, signOut as firebaseSignOut, onIdTokenChanged, type User } from 'firebase/auth';
 
 const API_URL = import.meta.env.VITE_API_URL || '';
 
@@ -43,5 +43,16 @@ export const FirebaseAuthService = {
 
         const data = await response.json();
         return data.serviceAccount;
+    },
+
+    onTokenChange: (callback: (token: string | null) => void) => {
+        return onIdTokenChanged(auth, async (user) => {
+            if (user) {
+                const token = await user.getIdToken();
+                callback(token);
+            } else {
+                callback(null);
+            }
+        });
     }
 };

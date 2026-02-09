@@ -9,7 +9,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "generate:client": "node scripts/generate-client.js",
-    "test:e2e": "powershell -ExecutionPolicy Bypass -File ./run-e2e.ps1"
+    "test:e2e": "powershell -ExecutionPolicy Bypass -File ./run-e2e.ps1",
+    "test:ct": "playwright test -c playwright-ct.config.ts"
   },
   "dependencies": {
     "@react-oauth/google": "^0.12.2",
@@ -29,7 +30,8 @@
     "uuid": "^9.0.1"
   },
   "devDependencies": {
-    "@playwright/test": "^1.56.1",
+    "@playwright/experimental-ct-react": "^1.58.2",
+    "@playwright/test": "^1.58.2",
     "@types/node": "^20.11.24",
     "@types/react": "^18.2.64",
     "@types/react-dom": "^18.2.21",

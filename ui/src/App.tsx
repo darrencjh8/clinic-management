@@ -11,9 +11,11 @@ import { useStore, StoreProvider } from './store/useStore';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { ToastProvider } from './context/ToastContext';
+import type { Treatment } from './types';
 
 function AppContent() {
   const [currentView, setCurrentView] = useState('treatments');
+  const [editingTreatment, setEditingTreatment] = useState<Treatment | null>(null);
   const {
     isLoading,
     isError,
@@ -53,14 +55,28 @@ function AppContent() {
     return () => clearInterval(intervalId);
   }, [accessToken, spreadsheetId, isError, syncData]);
 
+  const handleEditTreatment = (treatment: Treatment) => {
+    setEditingTreatment(treatment);
+    setCurrentView('treatments');
+  };
+
+  const handleEditComplete = () => {
+    setEditingTreatment(null);
+  };
+
   const renderView = () => {
     switch (currentView) {
       case 'treatments':
-        return <TreatmentEntry />;
+        return (
+          <TreatmentEntry
+            editingTreatment={editingTreatment}
+            onEditComplete={handleEditComplete}
+          />
+        );
       case 'patients':
         return <PatientManager />;
       case 'history':
-        return <TreatmentHistory />;
+        return <TreatmentHistory onEditTreatment={handleEditTreatment} />;
       case 'reporting':
         return userRole === 'admin' ? <Reporting /> : <TreatmentEntry />;
       case 'settings':
