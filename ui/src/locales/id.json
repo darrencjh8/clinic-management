@@ -60,6 +60,7 @@
     },
     "treatment": {
         "title": "Entri Perawatan Baru",
+        "editTitle": "Ubah Perawatan",
         "patient": "Pasien",
         "enterPatientName": "Masukkan nama pasien",
         "dentist": "Dokter Gigi",
@@ -70,15 +71,18 @@
         "treatmentType": "Jenis Perawatan",
         "typePlaceholder": "Pilih jenis perawatan",
         "addTreatment": "Tambah Perawatan",
+        "updateTreatment": "Perbarui Perawatan",
         "loading": "Memuat...",
         "success": "Perawatan berhasil ditambahkan!",
+        "updateSuccess": "Perawatan berhasil diperbarui!",
         "date": "Tanggal",
         "bracesIncluded": "Termasuk Behel",
         "bracesType": "Tipe Behel",
         "selectBracesType": "Pilih Tipe Behel",
         "controlOnly": "Hanya Kontrol",
         "adminFee": "Biaya Admin",
-        "discount": "Diskon"
+        "discount": "Diskon",
+        "selectAtLeastOne": "Pilih setidaknya satu jenis perawatan"
     },
     "patient": {
         "title": "Manajemen Pasien",
@@ -128,6 +132,8 @@
         "retryConnection": "Coba Lagi Koneksi",
         "yes": "Ya",
         "no": "Tidak",
+        "cancel": "Batal",
+        "edit": "Ubah",
         "rotatePortrait": "Silakan Putar ke Potret",
         "rotatePortraitDesc": "Aplikasi ini dirancang untuk digunakan dalam mode potret di perangkat seluler.",
         "rotateLandscape": "Silakan Putar ke Lanskap",

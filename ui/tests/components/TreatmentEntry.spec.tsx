@@ -164,7 +164,7 @@ test.describe('TreatmentEntry Component', () => {
         );
 
         // Should have a cancel button
-        const cancelButton = component.locator('button:has-text("Cancel")');
+        const cancelButton = component.getByTestId('cancel-edit-button');
         await expect(cancelButton).toBeVisible();
     });
 });

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { format } from 'date-fns';
 import { Layout } from './components/Layout';
 import { TreatmentEntry } from './components/TreatmentEntry';
 import { PatientManager } from './components/PatientManager';
@@ -16,6 +17,15 @@ import type { Treatment } from './types';
 function AppContent() {
   const [currentView, setCurrentView] = useState('treatments');
   const [editingTreatment, setEditingTreatment] = useState<Treatment | null>(null);
+
+  // History State Persistence
+  const [historyDate, setHistoryDate] = useState(() => format(new Date(), 'yyyy-MM-dd'));
+  const [historyPage, setHistoryPage] = useState(1);
+
+  const handleHistoryDateChange = (date: string) => {
+    setHistoryDate(date);
+    setHistoryPage(1); // Reset to first page when date changes
+  };
   const {
     isLoading,
     isError,
@@ -62,6 +72,7 @@ function AppContent() {
 
   const handleEditComplete = () => {
     setEditingTreatment(null);
+    setCurrentView('history');
   };
 
   const renderView = () => {
@@ -76,7 +87,15 @@ function AppContent() {
       case 'patients':
         return <PatientManager />;
       case 'history':
-        return <TreatmentHistory onEditTreatment={handleEditTreatment} />;
+        return (
+          <TreatmentHistory
+            onEditTreatment={handleEditTreatment}
+            currentDate={historyDate}
+            onDateChange={handleHistoryDateChange}
+            currentPage={historyPage}
+            onPageChange={setHistoryPage}
+          />
+        );
       case 'reporting':
         return userRole === 'admin' ? <Reporting /> : <TreatmentEntry />;
       case 'settings':

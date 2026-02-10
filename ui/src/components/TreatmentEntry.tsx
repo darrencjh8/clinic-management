@@ -211,9 +211,10 @@ export const TreatmentEntry = ({ editingTreatment, onEditComplete }: TreatmentEn
                     <button
                         type="button"
                         onClick={onEditComplete}
-                        className="text-sm text-gray-500 hover:text-gray-700"
+                        className="px-4 py-2 border-2 border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-100 transition-colors"
+                        data-testid="cancel-edit-button"
                     >
-                        {t('common.cancel') || 'Cancel'}
+                        {t('common.cancel')}
                     </button>
                 )}
             </div>
@@ -296,8 +297,8 @@ export const TreatmentEntry = ({ editingTreatment, onEditComplete }: TreatmentEn
                             <label
                                 key={type}
                                 className={`flex items-center gap-2 px-3 py-2 border-2 rounded-xl cursor-pointer transition-all ${selectedTreatmentTypes.includes(type)
-                                        ? 'border-primary bg-primary/10 text-primary'
-                                        : 'border-secondary-light bg-white text-secondary-dark hover:border-primary/50'
+                                    ? 'border-primary bg-primary/10 text-primary'
+                                    : 'border-secondary-light bg-white text-secondary-dark hover:border-primary/50'
                                     }`}
                             >
                                 <input
@@ -307,8 +308,8 @@ export const TreatmentEntry = ({ editingTreatment, onEditComplete }: TreatmentEn
                                     className="sr-only"
                                 />
                                 <div className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 ${selectedTreatmentTypes.includes(type)
-                                        ? 'border-primary bg-primary'
-                                        : 'border-gray-300 bg-white'
+                                    ? 'border-primary bg-primary'
+                                    : 'border-gray-300 bg-white'
                                     }`}>
                                     {selectedTreatmentTypes.includes(type) && (
                                         <Check className="w-3 h-3 text-white" />

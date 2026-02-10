@@ -60,6 +60,7 @@
     },
     "treatment": {
         "title": "New Treatment Entry",
+        "editTitle": "Edit Treatment",
         "patient": "Patient",
         "enterPatientName": "Enter patient name",
         "dentist": "Dentist",
@@ -70,15 +71,18 @@
         "treatmentType": "Treatment Type",
         "typePlaceholder": "Select treatment type",
         "addTreatment": "Add Treatment",
+        "updateTreatment": "Update Treatment",
         "loading": "Loading...",
         "success": "Treatment added successfully!",
+        "updateSuccess": "Treatment updated successfully!",
         "date": "Date",
         "bracesIncluded": "Braces Included",
         "bracesType": "Braces Type",
         "selectBracesType": "Select Braces Type",
         "controlOnly": "Control Only",
         "adminFee": "Admin Fee",
-        "discount": "Discount"
+        "discount": "Discount",
+        "selectAtLeastOne": "Select at least one treatment type"
     },
     "patient": {
         "title": "Patient Management",
@@ -128,6 +132,8 @@
         "retryConnection": "Retry Connection",
         "yes": "Yes",
         "no": "No",
+        "cancel": "Cancel",
+        "edit": "Edit",
         "rotatePortrait": "Please Rotate to Portrait",
         "rotatePortraitDesc": "This app is designed to be used in portrait mode on mobile devices.",
         "rotateLandscape": "Please Rotate to Landscape",

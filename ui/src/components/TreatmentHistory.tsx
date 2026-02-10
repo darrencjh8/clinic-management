@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useStore } from '../store/useStore';
 import { Calendar, User, Stethoscope, Pencil } from 'lucide-react';
 import { format, isSameDay, parseISO } from 'date-fns';
@@ -9,17 +9,21 @@ import type { Treatment } from '../types';
 
 interface TreatmentHistoryProps {
     onEditTreatment?: (treatment: Treatment) => void;
+    currentDate: string;
+    onDateChange: (date: string) => void;
+    currentPage: number;
+    onPageChange: (page: number) => void;
 }
 
-export const TreatmentHistory = ({ onEditTreatment }: TreatmentHistoryProps) => {
+export const TreatmentHistory = ({
+    onEditTreatment,
+    currentDate: selectedDate,
+    onDateChange: setSelectedDate,
+    currentPage,
+    onPageChange: setCurrentPage
+}: TreatmentHistoryProps) => {
     const { treatments, patients, currentMonth, loadMonth, syncData, userRole } = useStore();
     const { t } = useTranslation();
-
-    // State for selected date (default to today)
-    const [selectedDate, setSelectedDate] = useState(() => {
-        const now = new Date();
-        return format(now, 'yyyy-MM-dd');
-    });
 
     useEffect(() => {
         syncData();
@@ -71,13 +75,7 @@ export const TreatmentHistory = ({ onEditTreatment }: TreatmentHistoryProps) => 
         return sum + (t.amount + fee - disc);
     }, 0);
 
-    const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 25;
-
-    // Reset page when date changes
-    useEffect(() => {
-        setCurrentPage(1);
-    }, [selectedDate]);
 
     // Pagination Logic
     const totalPages = Math.ceil(sortedTreatments.length / itemsPerPage);
@@ -241,7 +239,7 @@ export const TreatmentHistory = ({ onEditTreatment }: TreatmentHistoryProps) => 
             {totalPages > 1 && (
                 <div className="flex justify-center items-center gap-4 mt-8 pb-8">
                     <button
-                        onClick={() => setCurrentPage((p: number) => Math.max(1, p - 1))}
+                        onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                         disabled={currentPage === 1}
                         className="px-4 py-2 rounded-lg bg-white border border-secondary-light text-secondary-dark disabled:opacity-50 disabled:cursor-not-allowed hover:bg-secondary-light/50 transition-colors"
                     >
@@ -251,7 +249,7 @@ export const TreatmentHistory = ({ onEditTreatment }: TreatmentHistoryProps) => 
                         {currentPage} / {totalPages}
                     </span>
                     <button
-                        onClick={() => setCurrentPage((p: number) => Math.min(totalPages, p + 1))}
+                        onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                         disabled={currentPage === totalPages}
                         className="px-4 py-2 rounded-lg bg-white border border-secondary-light text-secondary-dark disabled:opacity-50 disabled:cursor-not-allowed hover:bg-secondary-light/50 transition-colors"
                     >
