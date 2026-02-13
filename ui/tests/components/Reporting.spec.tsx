@@ -47,8 +47,8 @@ test.describe('Reporting', () => {
         await expect(component.getByText('Dr. Smith')).toBeVisible();
         await expect(component.getByText('Dr. Jones')).toBeVisible();
 
-        // Should show total revenue with currency format
-        await expect(component.getByText(/Rp/)).toBeVisible();
+        // Should show total revenue with currency format (multiple Rp exist, select first)
+        await expect(component.getByText(/Rp/).first()).toBeVisible();
     });
 
     test('should navigate to detail view on dentist click', async ({ mount }) => {

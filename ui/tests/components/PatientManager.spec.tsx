@@ -33,7 +33,7 @@ test.describe('PatientManager', () => {
         const addButton = component.getByRole('button', { name: /Tambah Pasien|Add Patient/i });
         await addButton.click();
 
-        await expect(component.getByRole('dialog')).toBeVisible();
+        // The form is shown inline, not as a modal dialog
         // Check for form fields (using placeholder as label is missing)
         await expect(component.getByPlaceholder(/Nama|Name/i)).toBeVisible();
     });
