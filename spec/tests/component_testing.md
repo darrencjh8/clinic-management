@@ -1,6 +1,8 @@
 # Component Testing Guide (Playwright CT)
 
-This document provides context and instructions for writing and running component tests in the `ui` directory using Playwright Experimental Component Testing.
+> **📚 For comprehensive testing patterns, learnings, and troubleshooting**, see [`component_test_patterns.md`](./component_test_patterns.md) which documents proven patterns and best practices.
+
+This document provides setup context and configuration instructions for the Playwright CT environment.
 
 ## 1. Environment Setup
 The environment is already configured with:

@@ -28,6 +28,10 @@ export class GoogleSheetsService {
         return this.accessToken;
     }
 
+    static hasServiceAccount(): boolean {
+        return this.serviceAccountKey !== null;
+    }
+
     static logout() {
         googleLogout();
         this.accessToken = null;

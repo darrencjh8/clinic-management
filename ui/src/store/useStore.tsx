@@ -289,24 +289,22 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     useEffect(() => {
         const unsubscribe = FirebaseAuthService.onTokenChange((token) => {
             if (token) {
-                console.log('Token refreshed:', token.substring(0, 10) + '...');
-                setAccessToken(token);
-                GoogleSheetsService.setAccessToken(token);
-                // We don't necessarily want to reload data on every refresh, 
-                // but we need to ensure the services have the latest token.
+                console.log('Firebase token refreshed:', token.substring(0, 10) + '...');
+                // Only update tokens if we're NOT using a service account.
+                // Service account tokens are managed by GoogleSheetsService itself.
+                // Overwriting with a Firebase ID token would cause 401 on Sheets API calls.
+                if (!GoogleSheetsService.hasServiceAccount()) {
+                    setAccessToken(token);
+                    GoogleSheetsService.setAccessToken(token);
+                }
             } else {
                 // User signed out or session expired completely
                 console.log('No token received (signed out?)');
-                if (accessToken) {
-                    // distinct from initial load where accessToken might be null.
-                    // If we had a token and now don't, it's a logout.
-                    // effectively handled by the logout function usually, but good for safety.
-                }
             }
         });
 
         return () => unsubscribe();
-    }, [accessToken]);
+    }, []); // Subscribe once — no dependency on accessToken
 
     useEffect(() => {
         localStorage.setItem('dark_mode', JSON.stringify(isDarkMode));

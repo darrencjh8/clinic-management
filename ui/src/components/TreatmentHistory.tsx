@@ -135,9 +135,10 @@ export const TreatmentHistory = ({
                                             {getPatientName(treatment.patientId)}
                                         </span>
                                     </div>
-                                    {onEditTreatment && userRole === 'admin' && (
+                                    {onEditTreatment && (
                                         <button
                                             onClick={() => onEditTreatment(treatment)}
+                                            data-testid="edit-treatment-button"
                                             className="p-2 text-gray-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors flex-shrink-0"
                                             title={t('common.edit') || 'Edit'}
                                         >

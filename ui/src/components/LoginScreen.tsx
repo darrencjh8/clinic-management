@@ -42,7 +42,8 @@ export const LoginScreen = ({ onLoginSuccess, onSpreadsheetIdSubmit, initialToke
 
     useEffect(() => {
         if (!initialToken) {
-            localStorage.clear();
+            // Only clear session-related items, not encrypted keys or preferences
+            localStorage.removeItem('user_role');
         }
         console.log('LoginScreen: Effect running', { initialToken: !!initialToken });
 
