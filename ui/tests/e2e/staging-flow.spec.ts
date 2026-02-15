@@ -5,17 +5,14 @@ import { test, expect } from '@playwright/test';
 test.describe('E2E Staging Flow', () => {
     test.setTimeout(300000); // 5 minutes for full flow including pauses
 
-    test('Full User Journey: Login -> Create Sheet -> Add Patient -> Add Treatment', async ({ page }) => {
+    test('Full User Journey: Login -> PIN Setup -> Spreadsheet Selection -> Treatment Entry', async ({ page }) => {
         const email = process.env.E2E_TEST_EMAIL;
         const password = process.env.E2E_TEST_PASSWORD;
-
-        const stagingSheetId = process.env.E2E_STAGING_SHEET_ID;
 
         // Debug: Log all relevant environment variables
         console.log('=== E2E Test Environment ===');
         console.log(`E2E_TEST_EMAIL: ${email}`);
         console.log(`E2E_TEST_PASSWORD: ${password}`);
-        console.log(`E2E_STAGING_SHEET_ID: ${stagingSheetId || 'NOT SET'}`);
         console.log(`BASE_URL: ${process.env.BASE_URL}`);
         console.log(`VITE_FIREBASE_API_KEY: ${process.env.VITE_FIREBASE_API_KEY?.substring(0, 10)}...`);
         console.log(`VITE_API_URL: ${process.env.VITE_API_URL}`);
@@ -121,42 +118,39 @@ test.describe('E2E Staging Flow', () => {
             console.log('On spreadsheet selection screen...');
             await page.screenshot({ path: 'e2e-spreadsheet-selection.png' });
             
-            // Check for "no spreadsheets found" message
-            const noSheetsMsg = page.locator('text=/no.*spreadsheet|tidak ada spreadsheet/i');
-            if (await noSheetsMsg.isVisible({ timeout: 2000 }).catch(() => false)) {
-                console.log('No spreadsheets found for this user.');
-                
-                // Check if E2E_STAGING_SHEET_ID is configured
-                const stagingSheetId = process.env.E2E_STAGING_SHEET_ID;
-                if (stagingSheetId) {
-                    console.log(`Using configured staging sheet ID: ${stagingSheetId}`);
-                    // The staging sheet ID should be pre-shared with the service account
-                    // We need to manually enter it or the app should use it
-                    throw new Error(`Staging sheet ${stagingSheetId} not visible. Ensure it's shared with the service account.`);
-                } else {
-                    console.log('=== E2E_STAGING_SHEET_ID NOT CONFIGURED ===');
-                    console.log('Please set E2E_STAGING_SHEET_ID in ui/.env.e2e');
-                    console.log('1. Create a Google Sheet');
-                    console.log('2. Share it with the service account email');
-                    console.log('3. Add the spreadsheet ID to ui/.env.e2e as E2E_STAGING_SHEET_ID');
-                    throw new Error('E2E_STAGING_SHEET_ID not configured. See console output for setup instructions.');
-                }
-            }
+            // Wait for spreadsheet list to load (service account API must be called first)
+            // The app fetches service account from server, then uses it to list spreadsheets
+            await page.waitForTimeout(3000); // Allow time for API calls
             
-            // Try to find and select a spreadsheet
+            // Try to find and select a spreadsheet or create one
             const createButton = page.locator('button').filter({ hasText: /Create New|Buat Spreadsheet Baru/i });
-            const sheetButtons = page.locator('button').filter({ hasText: /Dental|Clinic|Wisata/i });
             
-            if (await createButton.isVisible({ timeout: 3000 }).catch(() => false)) {
-                console.log('Creating new spreadsheet...');
+            // Look for any spreadsheet button in the list (they appear as buttons with spreadsheet names)
+            // These are typically rendered as a list of clickable items
+            const spreadsheetList = page.locator('ul, .spreadsheet-list, [role="list"]');
+            const anySheetButton = spreadsheetList.locator('button, li[role="button"], .cursor-pointer').first();
+            
+            // Also try to find buttons that might be spreadsheet names (not Create/Refresh buttons)
+            const sheetNameButtons = page.locator('button').filter({ hasNot: page.locator('text=/Create|Buat|Refresh|Perbarui|Logout|Keluar/i') });
+            
+            if (await createButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+                console.log('Creating new spreadsheet (admin user)...');
                 await createButton.click();
-            } else if (await sheetButtons.first().isVisible({ timeout: 3000 }).catch(() => false)) {
-                console.log('Selecting existing spreadsheet...');
-                await sheetButtons.first().click();
+            } else if (await anySheetButton.isVisible({ timeout: 3000 }).catch(() => false)) {
+                console.log('Selecting spreadsheet from list...');
+                await anySheetButton.click();
+            } else if (await sheetNameButtons.first().isVisible({ timeout: 3000 }).catch(() => false)) {
+                const count = await sheetNameButtons.count();
+                console.log(`Found ${count} potential spreadsheet buttons`);
+                if (count > 0) {
+                    await sheetNameButtons.first().click();
+                }
             } else {
-                console.log('No spreadsheet options available.');
-                await page.screenshot({ path: 'e2e-no-sheets.png' });
-                throw new Error('No spreadsheet options found. Test user may need a shared spreadsheet.');
+                // Take screenshot for debugging
+                await page.screenshot({ path: 'e2e-no-sheets-debug.png' });
+                const bodyHtml = await page.locator('body').innerHTML();
+                console.log('Page HTML (truncated):', bodyHtml.substring(0, 2000));
+                throw new Error('No spreadsheet options found. Service account may not have access to any spreadsheets.');
             }
         }
 

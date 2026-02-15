@@ -25,21 +25,29 @@ Get-Content "ui\.env.e2e" | ForEach-Object {
     }
 }
 
-if (-not (Test-Path "server\.env")) {
-    Write-Error "server\.env not found! Cannot inject backend secrets."
+# Read secrets from .env.e2e for staging deployment
+# E2E_TEST_SERVICE_ACCOUNT is the Google Service Account for Sheets API
+$googleSecret = $env:E2E_TEST_SERVICE_ACCOUNT
+
+# Firebase service account from server/.env (for token verification)
+if (Test-Path "server\.env") {
+    $serverEnv = Get-Content "server\.env"
+    $firebaseSecret = $serverEnv | Select-String "FIREBASE_SERVICE_ACCOUNT_BASE64=(.*)" | ForEach-Object { $_.Matches.Groups[1].Value }
+} else {
+    $firebaseSecret = $null
+}
+
+if (-not $googleSecret) {
+    Write-Error "E2E_TEST_SERVICE_ACCOUNT not found in ui\.env.e2e! This is required for the staging server."
     exit 1
 }
 
-# Read secrets for injection
-# Note: This simple parsing assumes KEY=VALUE format without complex quoting/multiline issues for these specific keys
-$serverEnv = Get-Content "server\.env"
-$googleSecret = $serverEnv | Select-String "GOOGLE_SERVICE_ACCOUNT_BASE64=(.*)" | ForEach-Object { $_.Matches.Groups[1].Value }
-$firebaseSecret = $serverEnv | Select-String "FIREBASE_SERVICE_ACCOUNT_BASE64=(.*)" | ForEach-Object { $_.Matches.Groups[1].Value }
-
-if (-not $googleSecret -or -not $firebaseSecret) {
-    Write-Error "Failed to extract GOOGLE_SERVICE_ACCOUNT_BASE64 or FIREBASE_SERVICE_ACCOUNT_BASE64 from server\.env"
+if (-not $firebaseSecret) {
+    Write-Error "FIREBASE_SERVICE_ACCOUNT_BASE64 not found in server\.env! This is required for Firebase auth."
     exit 1
 }
+
+Write-Output "Secrets loaded: GOOGLE_SERVICE_ACCOUNT_BASE64 (from .env.e2e), FIREBASE_SERVICE_ACCOUNT_BASE64 (from server/.env)"
 
 # 2. Run Component Tests FIRST (before creating any cloud resources)
 Write-Output "Step 2: Running Component Tests..."
