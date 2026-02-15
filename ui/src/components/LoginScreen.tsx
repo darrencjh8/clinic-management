@@ -49,24 +49,24 @@ export const LoginScreen = ({ onLoginSuccess, onSpreadsheetIdSubmit, initialToke
 
         // 1. Priority: If we have an initial token (from App), we are in setup mode.
         if (initialToken) {
-            console.log('[LoginScreen] initialToken detected, switching to spreadsheet_setup', { tokenLength: initialToken.length });
+            console.log('[LoginScreen] initialToken detected', { tokenLength: initialToken.length });
             GoogleSheetsService.setAccessToken(initialToken);
             
-            // CRITICAL: Restore service account key from localStorage if available
-            // The token alone isn't enough - we need the key for token refresh
+            // CRITICAL: Restore service account key from localStorage
+            // Without the key, token refresh will fail and spreadsheet listing will break
             const currentUser = FirebaseAuthService.getCurrentUser();
             if (currentUser) {
                 const uid = currentUser.uid;
                 const encryptedKey = localStorage.getItem(`encrypted_key_${uid}`);
                 if (encryptedKey) {
-                    console.log('[LoginScreen] Found encrypted service account key, will restore on PIN entry');
-                    // Key will be restored when user enters PIN in spreadsheet_setup
-                    // For now, just set the token and proceed
+                    console.log('[LoginScreen] Found encrypted key, need PIN to restore service account');
+                    // User needs to enter PIN to decrypt the key before we can list spreadsheets
+                    setAuthStep('pin_check');
+                    return;
                 }
             }
             
-            const verifyToken = GoogleSheetsService.getAccessToken();
-            console.log('[LoginScreen] Token set, verification:', { tokenSet: !!verifyToken, matches: verifyToken === initialToken });
+            console.log('[LoginScreen] No encrypted key found, proceeding to spreadsheet_setup');
             setAuthStep('spreadsheet_setup');
             return;
         }
