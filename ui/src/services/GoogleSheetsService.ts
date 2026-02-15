@@ -74,7 +74,13 @@ export class GoogleSheetsService {
                         'Authorization': `Bearer ${newToken}`,
                         'Content-Type': 'application/json',
                     };
-                    return (await fetch(url, { ...options, headers: newHeaders })).json();
+                    const retryResponse = await fetch(url, { ...options, headers: newHeaders });
+                    if (!retryResponse.ok) {
+                        const errorText = await retryResponse.text();
+                        console.error('Retry request failed', { status: retryResponse.status, error: errorText });
+                        throw new Error(`API Error: ${retryResponse.status}`);
+                    }
+                    return retryResponse.json();
                 } catch (e) {
                     console.error('Service Account Refresh Failed on 401 retry', e);
                     this.logout();
@@ -87,9 +93,11 @@ export class GoogleSheetsService {
             }
         }
 
+        // Check if response is OK (status 200-299)
         if (!response.ok) {
-            const error = await response.json().catch(() => ({ error: { message: response.statusText } }));
-            throw new Error(error.error?.message || 'API Error');
+            const errorText = await response.text();
+            console.error('[GoogleSheetsService] API request failed', { url, status: response.status, error: errorText });
+            throw new Error(`API Error ${response.status}: ${errorText}`);
         }
 
         return response.json();
