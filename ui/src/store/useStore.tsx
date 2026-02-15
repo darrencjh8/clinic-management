@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import type { Patient, Treatment, Staff, BracesType } from '../types';
 import { GoogleSheetsService } from '../services/GoogleSheetsService';
+import { FirebaseAuthService } from '../services/FirebaseAuthService';
 
 import { isOrthodontic, parseIDRCurrency } from '../utils/constants';
 import { addDays } from 'date-fns';
@@ -55,16 +56,13 @@ interface StoreContextType {
 
 export const StoreContext = createContext<StoreContextType | null>(null);
 
-export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const StoreProvider: React.FC<{ children: ReactNode, authService?: typeof FirebaseAuthService }> = ({ children, authService = FirebaseAuthService }) => {
     const [isLoading, setIsLoading] = useState(true);
     const [isError, setIsError] = useState(false);
     const [errorType, setErrorType] = useState<'API' | 'AUTH' | null>(null);
     const [spreadsheetId, setSpreadsheetId] = useState<string | null>(() => localStorage.getItem('spreadsheet_id'));
     const [accessToken, setAccessToken] = useState<string | null>(() => sessionStorage.getItem('google_access_token'));
     const [isSyncing, setIsSyncing] = useState(false);
-    const [userRole, setUserRole] = useState<'admin' | 'staff' | null>(() => {
-        return localStorage.getItem('user_role') as 'admin' | 'staff' | null;
-    });
 
     const [patients, setPatients] = useState<Patient[]>([]);
     const [treatments, setTreatments] = useState<Treatment[]>([]);
@@ -298,6 +296,33 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         }
     }, [accessToken, spreadsheetId, currentMonth, loadData]);
 
+    // Listen for Firebase token refresh
+    useEffect(() => {
+        const unsubscribe = authService.onTokenChange((token) => {
+            if (token) {
+                console.log('Firebase token refreshed:', token.substring(0, 10) + '...');
+                // Only update tokens if we're NOT using a service account.
+                // Service account tokens are managed by GoogleSheetsService itself.
+                // Overwriting with a Firebase ID token would cause 401 on Sheets API calls.
+                const userRole = localStorage.getItem('user_role');
+                const isStaff = userRole === 'staff';
+
+                if (!GoogleSheetsService.hasServiceAccount() && !isStaff) {
+                    console.log('Updating access token from Firebase (User is not staff)');
+                    setAccessToken(token);
+                    GoogleSheetsService.setAccessToken(token);
+                } else {
+                    console.log('Ignoring Firebase token update (User is staff or has Service Account)');
+                }
+            } else {
+                // User signed out or session expired completely
+                console.log('No token received (signed out?)');
+            }
+        });
+
+        return () => unsubscribe();
+    }, [authService]); // Subscribe once — no dependency on accessToken
+
     useEffect(() => {
         localStorage.setItem('dark_mode', JSON.stringify(isDarkMode));
         if (isDarkMode) {
@@ -461,6 +486,10 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         setSpreadsheetId(id);
         localStorage.setItem('spreadsheet_id', id);
     };
+
+    const [userRole, setUserRole] = useState<'admin' | 'staff' | null>(() => {
+        return localStorage.getItem('user_role') as 'admin' | 'staff' | null;
+    });
 
     const handleLoginSuccess = (token: string, role: 'admin' | 'staff' = 'staff') => {
         setAccessToken(token);
