@@ -7,3 +7,8 @@ ui/node_modules
 server/node_modules
 ui/dist
 server/public
+ui/playwright/.cache
+ui/test-results
+ui/playwright-report
+*.png
+e2e-*.png
