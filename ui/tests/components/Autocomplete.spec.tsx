@@ -1,6 +1,5 @@
 import { test, expect } from '@playwright/experimental-ct-react';
 import { Autocomplete } from '../../src/components/Autocomplete';
-import { User } from 'lucide-react';
 
 test.use({ viewport: { width: 500, height: 500 } });
 
@@ -50,11 +49,16 @@ test.describe('Autocomplete', () => {
         const input = component.locator('input');
         await input.click();
 
+        // Wait for suggestions to appear
+        await expect(component.getByText('Apple')).toBeVisible();
+        
         await component.getByText('Apple').click();
-        expect(selectedValue).toBe('Apple');
+        
+        // Wait for state update with polling
+        await expect.poll(() => selectedValue, { timeout: 5000 }).toBe('Apple');
     });
 
-    test('should close suggestions when clicking outside', async ({ mount, page }) => {
+    test('should close suggestions when clicking outside', async ({ mount }) => {
         const component = await mount(
             <div>
                 <div data-testid="outside">Outside</div>
