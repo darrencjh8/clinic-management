@@ -81,10 +81,29 @@ export class GoogleSheetsService {
 
         if (response.status === 401) {
             console.warn('API returned 401 Unauthorized', { url, serviceAccountKey: !!this.serviceAccountKey });
+
+            // SELF-HEALING FIX: DEF-001
+            // If service account key is missing in memory (e.g. race condition on page load),
+            // try to restore it from sessionStorage immediately.
+            if (!this.serviceAccountKey) {
+                const sessionEncryptedKey = this.getEncryptedServiceAccountKey();
+                if (sessionEncryptedKey) {
+                    console.log('[GoogleSheetsService] 401 detected with missing key. Attempting lazy restoration from sessionStorage...');
+                    try {
+                        const key = JSON.parse(atob(sessionEncryptedKey));
+                        this.restoreServiceAccountKey(key);
+                        console.log('[GoogleSheetsService] Key restored successfully during 401 handling.');
+                    } catch (e) {
+                        console.error('[GoogleSheetsService] Failed to restore key from session during 401:', e);
+                    }
+                }
+            }
+
             // Token expired or invalid
-            // If we have a service account, try to refresh once
+            // If we have a service account (either originally or just restored), try to refresh once
             if (this.serviceAccountKey) {
                 try {
+                    console.log('[GoogleSheetsService] Attempting token refresh...');
                     await this.refreshServiceAccountToken();
                     // Retry original request
                     const newToken = this.getAccessToken();
@@ -102,12 +121,17 @@ export class GoogleSheetsService {
                     return retryResponse.json();
                 } catch (e) {
                     console.error('Service Account Refresh Failed on 401 retry', e);
-                    this.logout();
+                    // Critical: If refresh fails, do NOT logout automatically.
+                    // useStore.tsx handles 'Unauthorized' errors by clearing the access token
+                    // but actively PRESERVES the encrypted key in sessionStorage/localStorage.
+                    // This allows LoginScreen to prompt for a PIN or auto-restore instead of forcing a full re-login.
+                    // this.logout(); // <-- REMOVED: Caused premature key deletion
                     throw new Error('Unauthorized');
                 }
             } else {
-                console.warn('401 but no service account key available -> Logout');
-                this.logout();
+                console.warn('401 but no service account key available -> Throw Unauthorized');
+                // Do not logout here either. Let the UI decide if it can restore the key from another source.
+                // this.logout(); // <-- REMOVED: Caused premature key deletion
                 throw new Error('Unauthorized');
             }
         }
@@ -147,7 +171,7 @@ export class GoogleSheetsService {
                 .setIssuer(this.serviceAccountKey.client_email)
                 .setSubject(this.serviceAccountKey.client_email)
                 .setAudience('https://oauth2.googleapis.com/token')
-                .setIssuedAt()
+                .setIssuedAt(Math.floor(Date.now() / 1000) - 60) // Backdate 60s to handle clock skew
                 .setExpirationTime('1h')
                 .sign(privateKey);
 

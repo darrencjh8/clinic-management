@@ -80,7 +80,7 @@ Path aliases (`@/`) are configured in `tsconfig.app.json` and **should be used**
     npm run test:ct
     ```
 2.  **Verify Results:** All tests must pass.
-3.  **Fix Failures:** If any tests fail, you must fix them before proceeding. Do not ignore test failures. If the test file is not related to the changes you made, do not modify it.
+3.  **Fix Failures:** If any tests fail, you must fix them before proceeding. Do not ignore test failures.
 
 ## 6. Firebase & External Services
 

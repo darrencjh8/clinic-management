@@ -1,0 +1,47 @@
+
+> wisata-dental@0.0.0 test:ct
+> playwright test -c playwright-ct.config.ts tests/components/SessionStoragePersistence.spec.tsx --project=chromium
+
+
+Running 1 test using 1 worker
+
+[1A[2K[1/1] [chromium] ΓÇ║ tests\components\SessionStoragePersistence.spec.tsx:117:10 ΓÇ║ SessionStorage Persistence ΓÇ║ Self-healing: 401 should trigger lazy restoration from sessionStorage
+[1A[2K[chromium] ΓÇ║ tests\components\SessionStoragePersistence.spec.tsx:117:10 ΓÇ║ SessionStorage Persistence ΓÇ║ Self-healing: 401 should trigger lazy restoration from sessionStorage
+Test Started: Self-healing
+
+[1A[2K[Browser]: Firebase Config Debug: {apiKey: test-..., projectId: test-project, authDomain: test.firebaseapp.com}
+
+[1A[2K[Browser]: Error: Google OAuth components must be used within GoogleOAuthProvider
+    at useGoogleOAuth (http://localhost:3100/assets/GoogleSheetsService-BZPS7YHh.js:52:15)
+    at useGoogleLogin (http://localhost:3100/assets/GoogleSheetsService-BZPS7YHh.js:135:52)
+    at LoginScreen (http://localhost:3100/assets/LoginScreen-C4uL76ZS.js:102:23)
+    at Nh (http://localhost:3100/assets/index-Bg30e_Np.js:4142:138)
+    at Vk (http://localhost:3100/assets/index-Bg30e_Np.js:4271:340)
+    at Uk (http://localhost:3100/assets/index-Bg30e_Np.js:4261:394)
+    at Tk (http://localhost:3100/assets/index-Bg30e_Np.js:4261:323)
+    at Ik (http://localhost:3100/assets/index-Bg30e_Np.js:4261:182)
+    at Nk (http://localhost:3100/assets/index-Bg30e_Np.js:4252:89)
+    at Gk (http://localhost:3100/assets/index-Bg30e_Np.js:4249:433)
+
+[1A[2K  1) [chromium] ΓÇ║ tests\components\SessionStoragePersistence.spec.tsx:117:10 ΓÇ║ SessionStorage Persistence ΓÇ║ Self-healing: 401 should trigger lazy restoration from sessionStorage 
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoContain[2m([22m[32mexpected[39m[2m) // indexOf[22m
+
+    [1mMatcher error[22m: [31mreceived[39m value must not be null nor undefined
+
+    Received has value: [31mnull[39m
+
+      185 |
+      186 |         const currentToken = await page.evaluate(() => sessionStorage.getItem('google_access_token'));
+    > 187 |         expect(currentToken).toContain('mock_access_token');
+          |                              ^
+      188 |         expect(currentToken).not.toBe('expired_token');
+      189 |     });
+      190 | });
+        at C:\Users\darren\OneDrive\Documents\project\clinic-app\ui\tests\components\SessionStoragePersistence.spec.tsx:187:30
+
+
+[1A[2K  1 failed
+    [chromium] ΓÇ║ tests\components\SessionStoragePersistence.spec.tsx:117:10 ΓÇ║ SessionStorage Persistence ΓÇ║ Self-healing: 401 should trigger lazy restoration from sessionStorage 
+
+[36m  Serving HTML report at http://localhost:56700. Press Ctrl+C to quit.[39m

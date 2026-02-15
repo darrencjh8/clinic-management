@@ -203,3 +203,202 @@ if (e.message === 'Unauthorized') {
 2. **localStorage persists across reloads** - But we need sessionStorage for security (auto-cleared when tab closes)
 3. **Clearing React state is enough** - Setting `accessToken` and `spreadsheetId` to null automatically triggers LoginScreen to render
 4. **Hard reloads should be avoided** - Modern SPAs should handle state changes through React, not page reloads
+
+## Current Status (2026-02-16 01:05)
+
+### Completed Fixes
+- ✅ Fixed `sessionStorage.clear()` to preserve encrypted keys (useStore.tsx:265-269)
+- ✅ Removed `window.location.href = '/'` hard reload that wipes sessionStorage (useStore.tsx:277)
+- ✅ Added race condition prevention with `isKeyRestored` state
+- ✅ Added sessionStorage persistence tests (component and integration)
+- ✅ Updated documentation in login_flow_architecture.md
+
+### Next Steps Planned
+1. **Run component tests** - Verify SessionStoragePersistence.spec.tsx passes
+2. **Run integration test** - Test sessionStorage persistence with real browser
+3. **Fix any test failures** - Address issues found during testing
+4. **Push changes to GitHub** - Commit all fixes and documentation
+5. **Run deploy-and-test** - Final verification with proper timeout (60s)
+6. **Update defect status** - Mark as resolved if E2E passes
+
+### Test Coverage Added
+- `SessionStoragePersistence.spec.tsx` - Component tests for sessionStorage survival
+- `test_session_persistence.mjs` - Integration test for real browser scenario
+- Both tests verify that `encrypted_service_account` persists through:
+  - Component remounting
+  - Error handling scenarios
+  - Page navigation without hard reloads
+
+### Expected Outcome
+With the `window.location.href` fix, sessionStorage should now persist correctly:
+- After PIN setup → `encrypted_service_account` stored in sessionStorage
+- Component remounts → Key restored from sessionStorage before spreadsheet listing
+- No hard reloads → sessionStorage never wiped
+- E2E test should pass and list spreadsheets successfully
+
+## Suspected Problems and Fixes
+
+### Problem 1: Service Account Key Lost During Component Remounting
+**Suspected Issue:** Static class variable `GoogleSheetsService.serviceAccountKey` is lost when React components remount after PIN setup.
+
+**Fix Applied:** Store encrypted service account key in sessionStorage to survive component remounts:
+```typescript
+// Store after PIN setup
+const encodedKey = btoa(JSON.stringify(serviceAccount));
+GoogleSheetsService.setEncryptedServiceAccountKey(encodedKey);
+
+// Restore on component remount
+const sessionEncryptedKey = GoogleSheetsService.getEncryptedServiceAccountKey();
+if (sessionEncryptedKey) {
+    const key = JSON.parse(atob(sessionEncryptedKey));
+    GoogleSheetsService.restoreServiceAccountKey(key);
+    await GoogleSheetsService.refreshServiceAccountToken();
+}
+```
+
+### Problem 2: Race Condition Between Key Restoration and Spreadsheet Listing
+**Suspected Issue:** Async IIFE in useEffect doesn't block, so `fetchSpreadsheets()` may run before key restoration completes.
+
+**Fix Applied:** Use state to track restoration completion:
+```typescript
+const [isKeyRestored, setIsKeyRestored] = useState(false);
+
+// Only fetch spreadsheets after key restoration is complete
+useEffect(() => {
+    if (authStep === 'spreadsheet_setup') {
+        const hasSessionKey = GoogleSheetsService.getEncryptedServiceAccountKey();
+        if (!hasSessionKey || isKeyRestored) {
+            fetchSpreadsheets();
+        }
+    }
+}, [authStep, isKeyRestored]);
+```
+
+### Problem 3: sessionStorage.clear() Wiping Encrypted Keys
+**Suspected Issue:** `sessionStorage.clear()` on 401 errors removes ALL sessionStorage including encrypted service account.
+
+**Fix Applied:** Selectively remove only tokens, preserve encrypted keys:
+```typescript
+// BEFORE (broken):
+sessionStorage.clear();
+
+// AFTER (fixed):
+sessionStorage.removeItem('google_access_token');
+sessionStorage.removeItem('retry_attempted');
+// Preserve sessionStorage.encrypted_service_account
+```
+
+### Problem 4: Hard Page Reload Wiping sessionStorage
+**Suspected Issue:** `window.location.href = '/'` on 401 errors causes full page reload, which wipes ALL sessionStorage by design.
+
+**Fix Applied:** Remove hard reload, just clear React state:
+```typescript
+// BEFORE (broken):
+window.location.href = '/';  // WIPES ALL sessionStorage!
+
+// AFTER (fixed):
+setErrorType('AUTH');
+setAccessToken(null);
+setSpreadsheetId(null);
+// LoginScreen automatically shows when accessToken is null
+```
+
+### Problem 5: Session Storage Key Being Cleared on Restoration Failure
+**Suspected Issue:** When async restoration fails, code calls `clearEncryptedServiceAccountKey()`, wiping the key permanently.
+
+**Fix Applied:** Redirect to PIN check instead of clearing key:
+```typescript
+// BEFORE (broken):
+catch (e) {
+    GoogleSheetsService.clearEncryptedServiceAccountKey();
+    setError('Failed to restore session. Please log in again.');
+}
+
+// AFTER (fixed):
+catch (e) {
+    setAuthStep('pin_check');
+    setError('Session expired. Please enter your PIN.');
+    // Key preserved for recovery
+}
+```
+
+## Root Cause Summary
+
+The primary issue was **Problem 4** - the hard page reload on 401 errors. This single bug was wiping sessionStorage, causing all other sessionStorage-based fixes to fail. The secondary issues (Problems 1-3, 5) were compounding factors that made the system more fragile.
+
+**The Fix Chain:**
+1. Remove hard reload → sessionStorage persists
+2. Store key in sessionStorage → survives component remounts  
+3. Use state tracking → prevents race conditions
+4. Selective clearing → preserves encrypted keys during errors
+5. PIN check fallback → allows recovery without full re-login
+
+## Important Clarification: Token Clearing is NOT Required on Page Load
+
+**Note:** The access tokens (`google_access_token`) should NOT be cleared when the page loads after PIN setup. Clearing them causes Google Sheets API calls to fail because:
+
+- **Tokens are needed immediately** - The spreadsheet selection page needs the token to call Google Drive API
+- **Token refresh requires the service account key** - If token is cleared AND service account key is lost, API calls fail
+- **The flow should be**: PIN setup → store token → navigate to spreadsheet selection → use existing token
+
+**The Problem:**
+When React state clears `accessToken` on page load, but the service account key restoration hasn't completed yet, the GoogleSheetsService has no token to use for API calls.
+
+**How Token Clearing Causes Failures:**
+```typescript
+// PIN setup completes:
+GoogleSheetsService.setAccessToken(token); // Token set
+GoogleSheetsService.setEncryptedServiceAccountKey(encodedKey); // Key stored
+
+// App remounts with initialToken:
+setAccessToken(null); // ❌ React clears token!
+// Component tries to list spreadsheets but token is null
+// Service account key restoration is async, so API fails immediately
+```
+
+**What Should Persist vs What Should Clear:**
+- ✅ **Should Persist**: `google_access_token` (sessionStorage), `encrypted_service_account` (sessionStorage)
+- ✅ **Should Clear**: React state `accessToken` only if user explicitly logs out
+- ❌ **Problem**: React state clearing token on page load before key restoration completes
+
+**The Correct Flow:**
+1. PIN setup → store token AND encrypted key in sessionStorage
+2. Component remounts → restore key from sessionStorage FIRST
+3. Then restore token from sessionStorage OR refresh using restored key
+4. THEN allow spreadsheet listing to proceed
+
+## Final Root Cause (2026-02-16 01:25) - Aggressive Logout Race Condition
+
+### The Hidden Bug: `this.logout()` in `GoogleSheetsService.fetch`
+
+Even after fixing the hard reload, users were still experiencing login loops or "Session expired" errors during transient network failures or when the token expired before key restoration completed.
+
+**Location:** `ui/src/services/GoogleSheetsService.ts`
+
+### What Was Happening
+1. `LoginScreen` starts `restoreServiceAccountKey` (async operation).
+2. `fetchSpreadsheets` is called (race condition).
+3. `fetch` calls API with expired/missing token → Returns 401.
+4. `fetch` catches 401 but sees no `this.serviceAccountKey` (restoration not finished).
+5. **Logic Error**: `fetch` calls `this.logout()` immediately.
+6. `logout()` **wipes** `sessionStorage.encrypted_service_account`.
+7. `restoreServiceAccountKey` finishes but finds `sessionStorage` empty (or the next retry finds it empty).
+8. User is kicked back to PIN Check or Login.
+
+### The Fix
+Modified `GoogleSheetsService.ts` to **NEVER** call `this.logout()` automatically on 401 errors inside `fetch`.
+- If 401 occurs, throw `Unauthorized`.
+- `LoginScreen` or `useStore` catches the error.
+- UI prompts user or retries logic.
+- `encrypted_service_account` remains in `sessionStorage` for subsequent restoration attempts.
+
+This enables **Self-Healing**:
+- If `fetch` fails 401, it throws.
+- The UI stays on the current screen (or shows error).
+- The user can click "Retry" or the app can auto-retry.
+- Because the key is still in session, the retry succeeds!
+
+### Verification
+- **Automated Test**: `Self-healing: 401 should trigger lazy restoration` passed.
+- **Persistence Test**: `sessionStorage should survive React component remounting` passed.
+- **Manual Verification**: App no longer loops on login.

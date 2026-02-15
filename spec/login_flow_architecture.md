@@ -273,6 +273,14 @@ When API returns 401:
 3. **DO** preserve `encrypted_service_account` for token refresh
 4. **DO** preserve `encrypted_key_{uid}` for re-login without full authentication
 
+### Self-Healing Mechanism
+1. **Goal**: Recover from transient 401 errors without forcing the user to re-login.
+2. **Strategy**:
+   - When API returns 401, check if `serviceAccountKey` is missing in memory.
+   - If missing, attempt to restore it from `sessionStorage` (`encrypted_service_account`).
+   - If restoration succeeds, refresh token and retry the original request.
+   - **CRITICAL**: Do NOT call `logout()` on 401 failure immediately. Let the UI (`LoginScreen`) decide if it can prompt for a PIN or restore sessions. Wiping session data prematurely prevents recovery.
+
 ### Token Refresh Strategy
 
 1. **Staff Users**: Use service account key to generate new JWT and exchange for new access token
