@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import type { Patient, Treatment, Staff, BracesType } from '../types';
 import { GoogleSheetsService } from '../services/GoogleSheetsService';
-import { FirebaseAuthService } from '../services/FirebaseAuthService';
 
 import { isOrthodontic, parseIDRCurrency } from '../utils/constants';
 import { addDays } from 'date-fns';
@@ -56,7 +55,7 @@ interface StoreContextType {
 
 export const StoreContext = createContext<StoreContextType | null>(null);
 
-export const StoreProvider: React.FC<{ children: ReactNode, authService?: typeof FirebaseAuthService }> = ({ children, authService = FirebaseAuthService }) => {
+export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [isLoading, setIsLoading] = useState(true);
     const [isError, setIsError] = useState(false);
     const [errorType, setErrorType] = useState<'API' | 'AUTH' | null>(null);
@@ -298,37 +297,6 @@ export const StoreProvider: React.FC<{ children: ReactNode, authService?: typeof
             setIsLoading(false);
         }
     }, [accessToken, spreadsheetId, currentMonth, loadData]);
-
-    // Listen for Firebase token refresh
-    useEffect(() => {
-        const unsubscribe = authService.onTokenChange((token) => {
-            if (token) {
-                console.log('Firebase token refreshed:', token.substring(0, 10) + '...');
-                // CRITICAL: Staff users use service account tokens, NOT Firebase ID tokens for Sheets API
-                // Only admin users (Google OAuth) should use Firebase token refresh
-                // Check state-based userRole to avoid race conditions with localStorage
-                
-                if (userRole === 'staff' || GoogleSheetsService.hasServiceAccount()) {
-                    console.log('Ignoring Firebase token update (Staff user or Service Account active)');
-                    return;
-                }
-
-                // Only update for admin users who use Google OAuth
-                if (userRole === 'admin') {
-                    console.log('Updating access token from Firebase (Admin user)');
-                    setAccessToken(token);
-                    GoogleSheetsService.setAccessToken(token);
-                } else {
-                    console.log('Ignoring Firebase token update (User role not determined or not admin)');
-                }
-            } else {
-                // User signed out or session expired completely
-                console.log('No token received (signed out?)');
-            }
-        });
-
-        return () => unsubscribe();
-    }, [authService, userRole]); // Include userRole to react to role changes
 
     useEffect(() => {
         localStorage.setItem('dark_mode', JSON.stringify(isDarkMode));
