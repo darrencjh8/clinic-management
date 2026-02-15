@@ -33,6 +33,8 @@ export const LoginScreen = ({ onLoginSuccess, onSpreadsheetIdSubmit, initialToke
     // Spreadsheet Selection State
     const [availableSheets, setAvailableSheets] = useState<any[]>([]);
     const [isLoadingSheets, setIsLoadingSheets] = useState(false);
+    const [showManualEntry, setShowManualEntry] = useState(false);
+    const [manualSheetId, setManualSheetId] = useState('');
 
     const toggleLanguage = () => {
         const newLang = i18n.language === 'en' ? 'id' : 'en';
@@ -360,6 +362,40 @@ export const LoginScreen = ({ onLoginSuccess, onSpreadsheetIdSubmit, initialToke
                             </div>
                         ) : (
                             <div className="text-center py-4 text-gray-400 text-sm">{t('spreadsheet.noSpreadsheetsFound')}</div>
+                        )}
+
+                        {/* Manual Spreadsheet ID Entry */}
+                        {showManualEntry ? (
+                            <div className="mt-4 space-y-3">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">{t('spreadsheet.spreadsheetId')}</label>
+                                    <input
+                                        type="text"
+                                        value={manualSheetId}
+                                        onChange={(e) => setManualSheetId(e.target.value)}
+                                        placeholder={t('spreadsheet.spreadsheetIdPlaceholder')}
+                                        className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm"
+                                    />
+                                </div>
+                                <button
+                                    onClick={() => {
+                                        if (manualSheetId.trim() && onSpreadsheetIdSubmit) {
+                                            onSpreadsheetIdSubmit(manualSheetId.trim());
+                                        }
+                                    }}
+                                    disabled={!manualSheetId.trim()}
+                                    className="w-full bg-primary text-white py-2 rounded-lg font-medium hover:bg-opacity-90 disabled:opacity-50 transition-colors text-sm"
+                                >
+                                    {t('spreadsheet.submit')}
+                                </button>
+                            </div>
+                        ) : (
+                            <button
+                                onClick={() => setShowManualEntry(true)}
+                                className="mt-4 w-full text-sm text-primary hover:text-primary-dark underline"
+                            >
+                                {t('spreadsheet.enterManually')}
+                            </button>
                         )}
 
                         <button onClick={handleSignOut} className="mt-2 text-xs text-slate-400 hover:text-red-500 w-full text-center">

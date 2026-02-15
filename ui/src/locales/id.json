@@ -41,6 +41,10 @@
         "loading": "Memuat spreadsheet Anda...",
         "connectionError": "Kesalahan Koneksi",
         "noSpreadsheetsFound": "Tidak ada spreadsheet ditemukan. Silakan buat satu atau periksa izin Anda.",
+        "enterManually": "Masukkan ID Spreadsheet Manual",
+        "spreadsheetId": "ID Spreadsheet",
+        "spreadsheetIdPlaceholder": "Tempel ID spreadsheet di sini",
+        "submit": "Hubungkan",
         "sync": "Sinkronkan",
         "openSheet": "Buka Sheet"
     },

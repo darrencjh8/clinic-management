@@ -41,6 +41,10 @@
         "loading": "Loading your spreadsheets...",
         "connectionError": "Connection Error",
         "noSpreadsheetsFound": "No spreadsheets found. Please create one or check your permissions.",
+        "enterManually": "Enter Spreadsheet ID Manually",
+        "spreadsheetId": "Spreadsheet ID",
+        "spreadsheetIdPlaceholder": "Paste spreadsheet ID here",
+        "submit": "Connect",
         "sync": "Sync",
         "openSheet": "Open Sheet"
     },
