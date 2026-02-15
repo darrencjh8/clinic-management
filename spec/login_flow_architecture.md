@@ -227,25 +227,75 @@ In `GoogleSheetsService.fetch()`:
 **Cause:** `GoogleSheetsService.fetch()` didn't check `response.ok`
 **Solution:** Added `response.ok` check to throw proper errors for failed API requests
 
+## sessionStorage vs localStorage
+
+### Usage Guidelines
+
+**localStorage** (persists across page reloads and browser restarts):
+- `encrypted_key_{uid}` - PIN-encrypted service account (staff users)
+- `user_role` - 'admin' or 'staff' (cleared on logout)
+- `language` - User's language preference
+- General preferences that should persist
+
+**sessionStorage** (cleared when tab closes, survives component remounts):
+- `google_access_token` - Current Google API access token
+- `encrypted_service_account` - Base64-encoded service account key (staff users)
+- `retry_attempted` - Error retry tracking
+- Security-sensitive data that should auto-clear
+
+### Critical: Avoid Hard Page Reloads
+
+**❌ NEVER DO THIS:**
+```typescript
+// This wipes ALL sessionStorage!
+window.location.href = '/';
+window.location.reload();
+location.replace('/');
+```
+
+**✅ DO THIS INSTEAD:**
+```typescript
+// Just clear React state - component will re-render
+setAccessToken(null);
+setSpreadsheetId(null);
+// LoginScreen will automatically show when accessToken is null
+```
+
+**Why:** sessionStorage is designed to persist **within a browsing session** but is **cleared on page reloads**. For SPAs, use React state management instead of hard reloads.
+
+## Error Handling
+
+### 401 Unauthorized Errors
+
+When API returns 401:
+1. **DO NOT** call `sessionStorage.clear()` - selectively remove tokens only
+2. **DO NOT** call `window.location.href = '/'` - clear React state instead
+3. **DO** preserve `encrypted_service_account` for token refresh
+4. **DO** preserve `encrypted_key_{uid}` for re-login without full authentication
+
+### Token Refresh Strategy
+
+1. **Staff Users**: Use service account key to generate new JWT and exchange for new access token
+2. **Admin Users**: Firebase automatically refreshes tokens, `onTokenChange` listener handles it
+3. If refresh fails, redirect to PIN check (not full login) for staff users
+
 ## Testing
 
 ### Component Tests
 - `TokenRefresh.spec.tsx` - Tests token refresh behavior for admin vs staff
 - `RedirectLoopReproduction.spec.tsx` - Ensures staff token updates are ignored
+- `SessionStoragePersistence.spec.tsx` - Verifies encrypted key survives error handling
 - `staging-flow.spec.ts` - Full login flow including PIN and spreadsheet selection
 - `login-flow.spec.ts` - Login form and error handling
 - `treatment-recording.spec.ts` - Treatment entry after successful login
+
+### Integration Tests
+- `test_login_flow.mjs` - Verifies complete backend auth flow works
+- `test_session_persistence.mjs` - Verifies sessionStorage survives component lifecycle
 
 ### E2E Tests
 - `staging-flow.spec.ts` - Full login flow including PIN and spreadsheet selection
 - `login-flow.spec.ts` - Login form and error handling
 - `treatment-recording.spec.ts` - Treatment entry after successful login
-
-### Manual Testing
-Created `test_flow.mjs` to verify complete login flow outside of React:
-- ✅ Firebase authentication
-- ✅ Backend service account fetch
-- ✅ Google OAuth token generation
-- ✅ Spreadsheet listing (2 spreadsheets found)
 
 **Key Finding**: Backend and APIs work perfectly. Issues are in React component lifecycle, not authentication.

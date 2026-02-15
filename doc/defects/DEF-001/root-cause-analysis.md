@@ -143,3 +143,63 @@ Based on the working integration test, the UI must ensure:
 2. Token is refreshed BEFORE spreadsheet listing  
 3. No race conditions between key restoration and API calls
 4. Key persists across React component remounts
+
+## Final Root Cause (2026-02-16 00:59)
+
+**The smoking gun: `window.location.href = '/'` on 401 errors**
+
+Location: `ui/src/store/useStore.tsx` line 277 (removed in fix)
+
+### What Was Happening
+
+1. After PIN setup, `onLoginSuccess` is called with service account token
+2. Token stored in sessionStorage (`google_access_token` and `encrypted_service_account`)
+3. App remounts, triggers `loadData()` to fetch spreadsheet metadata
+4. On first load, if spreadsheet doesn't exist or any 401 error occurs, code called `window.location.href = '/'`
+5. **Hard page reload wipes ALL sessionStorage**, including `encrypted_service_account`
+6. User sees empty sessionStorage when landing on spreadsheet selection
+7. Without service account key, `fetchSpreadsheets()` cannot list spreadsheets
+
+### Why sessionStorage.clear() Wasn't the Only Issue
+
+Two separate bugs were wiping sessionStorage:
+1. **Bug A**: `sessionStorage.clear()` on 401 errors (line 265) - Fixed by selectively removing items
+2. **Bug B**: `window.location.href = '/'` hard reload (line 277) - **This was the actual culprit**
+
+Even after fixing Bug A, Bug B continued to wipe sessionStorage because **any full page reload clears sessionStorage by design** (unlike localStorage which persists across page loads).
+
+### The Fix
+
+```typescript
+// BEFORE (broken):
+if (e.message === 'Unauthorized') {
+    sessionStorage.clear();
+    localStorage.clear();
+    setErrorType('AUTH');
+    setAccessToken(null);
+    setSpreadsheetId(null);
+    window.location.href = '/';  // ❌ WIPES ALL sessionStorage!
+}
+
+// AFTER (working):
+if (e.message === 'Unauthorized') {
+    // Clear tokens but preserve encrypted service account
+    sessionStorage.removeItem('google_access_token');
+    sessionStorage.removeItem('retry_attempted');
+    localStorage.removeItem('user_role');
+    // Preserve sessionStorage.encrypted_service_account
+    
+    setErrorType('AUTH');
+    setAccessToken(null);
+    setSpreadsheetId(null);
+    // Just clearing state triggers LoginScreen to show
+    // NO hard reload needed!
+}
+```
+
+### Key Lessons
+
+1. **sessionStorage is wiped by page reloads** - Any `window.location` change, `location.reload()`, or navigation that causes full page reload will clear sessionStorage
+2. **localStorage persists across reloads** - But we need sessionStorage for security (auto-cleared when tab closes)
+3. **Clearing React state is enough** - Setting `accessToken` and `spreadsheetId` to null automatically triggers LoginScreen to render
+4. **Hard reloads should be avoided** - Modern SPAs should handle state changes through React, not page reloads

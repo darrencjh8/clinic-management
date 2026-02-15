@@ -1,10 +1,22 @@
 # DEF-001: Service Account Key Lost During React Component Remounting
 
 **Status:** In Progress  
-**Priority:** High  
+**Priority:** Critical  
 **Created:** 2026-02-16  
-**Component:** UI - LoginScreen, GoogleSheetsService  
+**Updated:** 2026-02-16 00:54 UTC+8
+**Component:** UI - LoginScreen, GoogleSheetsService, useStore  
 **Affected Version:** After commit f9bef73b7dec108abecc3c71a8d8c98dd94a73b7
+
+## Latest Finding (2026-02-16 00:54)
+
+User screenshot confirms sessionStorage is **completely empty** when landing on spreadsheet selection page, despite:
+- ✅ Storing encrypted key in sessionStorage after PIN setup (line 202)
+- ✅ Fixed sessionStorage.clear() to preserve encrypted keys (useStore.tsx:265-269)  
+- ✅ Added race condition prevention with isKeyRestored state
+- ✅ Manual integration test proves backend works (lists 2 spreadsheets)
+
+**Current Theory:**
+sessionStorage is being wiped by a full page reload (`window.location.href`) somewhere in the flow, OR the key is never being stored in the first place due to timing issues.
 
 ## Summary
 

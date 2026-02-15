@@ -273,8 +273,8 @@ export const StoreProvider: React.FC<{ children: ReactNode, authService?: typeof
                 setAccessToken(null);
                 setSpreadsheetId(null);
 
-                // Force a hard reload to ensure a fresh start
-                window.location.href = '/';
+                // DO NOT use window.location.href = '/' - it wipes ALL sessionStorage
+                // Just clearing state is enough to trigger LoginScreen to show
             }
         } finally {
             setIsLoading(false);
