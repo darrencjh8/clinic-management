@@ -40,6 +40,7 @@
         "orSelectExisting": "Atau pilih yang ada",
         "loading": "Memuat spreadsheet Anda...",
         "connectionError": "Kesalahan Koneksi",
+        "noSpreadsheetsFound": "Tidak ada spreadsheet ditemukan. Silakan buat satu atau periksa izin Anda.",
         "sync": "Sinkronkan",
         "openSheet": "Buka Sheet"
     },

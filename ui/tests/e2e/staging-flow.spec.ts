@@ -3,11 +3,23 @@ import { test, expect } from '@playwright/test';
 // Env vars are loaded by the runner script
 
 test.describe('E2E Staging Flow', () => {
-    test.setTimeout(120000); // Increase timeout for full flow
+    test.setTimeout(300000); // 5 minutes for full flow including pauses
 
     test('Full User Journey: Login -> Create Sheet -> Add Patient -> Add Treatment', async ({ page }) => {
         const email = process.env.E2E_TEST_EMAIL;
         const password = process.env.E2E_TEST_PASSWORD;
+
+        const stagingSheetId = process.env.E2E_STAGING_SHEET_ID;
+
+        // Debug: Log all relevant environment variables
+        console.log('=== E2E Test Environment ===');
+        console.log(`E2E_TEST_EMAIL: ${email}`);
+        console.log(`E2E_TEST_PASSWORD: ${password}`);
+        console.log(`E2E_STAGING_SHEET_ID: ${stagingSheetId || 'NOT SET'}`);
+        console.log(`BASE_URL: ${process.env.BASE_URL}`);
+        console.log(`VITE_FIREBASE_API_KEY: ${process.env.VITE_FIREBASE_API_KEY?.substring(0, 10)}...`);
+        console.log(`VITE_API_URL: ${process.env.VITE_API_URL}`);
+        console.log('============================');
 
         if (!email || !password) {
             throw new Error('E2E_TEST_EMAIL or E2E_TEST_PASSWORD not found in environment');
@@ -29,79 +41,114 @@ test.describe('E2E Staging Flow', () => {
 
         // Debug current page content if email input is not found immediately
         if (!await emailInput.isVisible()) {
-            console.log('Email input not visible immediately. Page text:', await page.textContent('body'));
+            console.log('Email input not visible immediately. Waiting...');
+            console.log('Current page content:', await page.textContent('body'));
         }
 
-        await expect(emailInput).toBeVisible({ timeout: 20000 });
+        await expect(emailInput).toBeVisible({ timeout: 30000 });
+        console.log('Login form visible, filling credentials...');
 
         await emailInput.fill(email);
         await page.fill('input[type="password"]', password);
+        
+        // Take screenshot before login for debugging
+        await page.screenshot({ path: 'e2e-before-login.png' });
+        
         await page.click('button[type="submit"]');
+        console.log('Clicked login button, waiting for response...');
 
-        // Wait for potential error or success
-        console.log('Clicked login, waiting for navigation or error...');
+        // Wait for login to process - check for loading states
+        await page.waitForTimeout(3000);
+        
+        // Take screenshot after login attempt
+        await page.screenshot({ path: 'e2e-after-login.png' });
+        console.log('Current URL after login:', page.url());
+        console.log('Page content after login:', await page.textContent('body'));
 
+        // After login, we could see: PIN screen, Spreadsheet setup, or Main app
+        // The flow depends on whether user has stored credentials
+        console.log('Waiting for next screen after login...');
+        
+        const pinScreen = page.locator('text=/Set a PIN|Enter PIN|Atur PIN|Masukkan PIN/i');
+        const spreadsheetSetup = page.locator('text=/Setup Database|Pengaturan Database/i');
+        const mainApp = page.locator('text=/New Treatment|Perawatan Baru|Treatment Entry|Entri Perawatan/i');
+        const errorLocator = page.locator('text=/Invalid email|Email atau kata sandi tidak valid|User not found|auth\\/invalid|wrong-password|Failed to fetch/i');
+        
+        // Wait for any of these screens
         try {
-            // Check for common error messages (both EN and ID)
-            const errorLocator = page.locator('text=/Invalid email|Email atau kata sandi tidak valid|User not found/i').or(page.locator('.error-message'));
-            if (await errorLocator.isVisible({ timeout: 5000 })) {
-                console.log('Login Error Detected:', await errorLocator.textContent());
-                throw new Error('Login failed with UI error');
-            }
-
-            // 3. Pin Setup - Use regex to match both EN and ID translations
-            // EN: "Set a PIN" / "Enter PIN" / "Atur PIN" / "Masukkan PIN"
-            const pinScreenLocator = page.locator('text=/Set a PIN|Enter PIN|Atur PIN|Masukkan PIN/i');
-            await expect(pinScreenLocator).toBeVisible({ timeout: 15000 });
+            await expect(pinScreen.or(spreadsheetSetup).or(mainApp)).toBeVisible({ timeout: 30000 });
         } catch (e) {
-            console.log('Failed to reach PIN screen. Current URL:', page.url());
-            console.log('Page Content Dump:', await page.textContent('body'));
+            // Check if there's an error
+            const hasError = await errorLocator.isVisible({ timeout: 2000 }).catch(() => false);
+            if (hasError) {
+                const errorText = await errorLocator.textContent();
+                console.log('Login Error Detected:', errorText);
+                throw new Error(`Login failed with UI error: ${errorText}`);
+            }
+            console.log('=== FAILURE DEBUG INFO ===');
+            console.log('No expected screen found. Current URL:', page.url());
+            console.log('Page Content:', await page.textContent('body'));
+            await page.screenshot({ path: 'e2e-failure.png' });
+            console.log('===========================');
             throw e;
         }
 
-        // Check if we're in PIN setup mode (EN: "Set a PIN" / ID: "Atur PIN")
-        const isSetup = await page.locator('text=/Set a PIN|Atur PIN/i').isVisible();
-
-        if (isSetup) {
-            console.log('Setting up new PIN...');
-            // Type PIN in the input field
-            const pinInput = page.locator('input[type="password"]');
-            await pinInput.fill('123456');
-            await page.locator('button[type="submit"]').click();
-            // Confirm PIN
-            await page.waitForTimeout(500);
-            await pinInput.fill('123456');
-            await page.locator('button[type="submit"]').click();
-        } else {
-            console.log('Entering existing PIN...');
-            const pinInput = page.locator('input[type="password"]');
-            await pinInput.fill('123456');
-            await page.locator('button[type="submit"]').click();
+        // 3. Handle PIN screen if visible
+        if (await pinScreen.isVisible()) {
+            const isSetup = await page.locator('text=/Set a PIN|Atur PIN/i').isVisible();
+            
+            if (isSetup) {
+                console.log('Setting up new PIN...');
+                const pinInput = page.locator('input[type="password"]');
+                await pinInput.fill('123456');
+                await page.locator('button[type="submit"]').click();
+                await page.waitForTimeout(1000);
+                await pinInput.fill('123456');
+                await page.locator('button[type="submit"]').click();
+            } else {
+                console.log('Entering existing PIN...');
+                const pinInput = page.locator('input[type="password"]');
+                await pinInput.fill('123456');
+                await page.locator('button[type="submit"]').click();
+            }
+            
+            // Wait for spreadsheet setup or main app after PIN
+            await expect(spreadsheetSetup.or(mainApp)).toBeVisible({ timeout: 20000 });
         }
 
-        // 4. Spreadsheet Selection (EN: "Setup Database" / ID: "Pengaturan Database")
-        // Wait for spreadsheet setup screen or main app
-        const spreadsheetSetup = page.locator('text=/Setup Database|Pengaturan Database|Select Spreadsheet|Dental Clinic Data/i');
-        const mainApp = page.locator('text=/New Treatment|Perawatan Baru|Treatment Entry|Entri Perawatan/i');
-        
-        // Either we see spreadsheet setup OR we're already in the app
-        await expect(spreadsheetSetup.or(mainApp)).toBeVisible({ timeout: 20000 });
-
+        // 4. Handle Spreadsheet Selection if visible
         if (await spreadsheetSetup.isVisible()) {
-            // Click "Create New Spreadsheet" (Admin only) - EN: "Create New" / ID: "Buat Spreadsheet Baru"
+            console.log('On spreadsheet selection screen...');
+            await page.screenshot({ path: 'e2e-spreadsheet-selection.png' });
+            
+            // Check for "no spreadsheets found" message
+            const noSheetsMsg = page.locator('text=/no.*spreadsheet|tidak ada spreadsheet/i');
+            if (await noSheetsMsg.isVisible({ timeout: 2000 }).catch(() => false)) {
+                console.log('No spreadsheets found for this user.');
+                console.log('=== STAGING SPREADSHEET REQUIRED ===');
+                console.log('Please create a staging spreadsheet and share it with the test service account.');
+                console.log('Waiting 120 seconds for manual setup...');
+                await page.waitForTimeout(120000); // 120 second pause for user setup
+                
+                // Refresh and check again
+                await page.reload();
+                await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
+            }
+            
+            // Try to find and select a spreadsheet
             const createButton = page.locator('button').filter({ hasText: /Create New|Buat Spreadsheet Baru/i });
-            if (await createButton.isVisible()) {
+            const sheetButtons = page.locator('button').filter({ hasText: /Dental|Clinic|Wisata/i });
+            
+            if (await createButton.isVisible({ timeout: 3000 }).catch(() => false)) {
                 console.log('Creating new spreadsheet...');
                 await createButton.click();
+            } else if (await sheetButtons.first().isVisible({ timeout: 3000 }).catch(() => false)) {
+                console.log('Selecting existing spreadsheet...');
+                await sheetButtons.first().click();
             } else {
-                // Try selecting an existing spreadsheet
-                console.log('Create button not found, selecting existing spreadsheet...');
-                const existingSheet = page.locator('button').filter({ hasText: /Dental Clinic/i }).first();
-                if (await existingSheet.isVisible()) {
-                    await existingSheet.click();
-                } else {
-                    throw new Error('No spreadsheet options found');
-                }
+                console.log('No spreadsheet options available.');
+                await page.screenshot({ path: 'e2e-no-sheets.png' });
+                throw new Error('No spreadsheet options found. Test user may need a shared spreadsheet.');
             }
         }
 

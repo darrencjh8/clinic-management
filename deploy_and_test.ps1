@@ -73,13 +73,30 @@ try {
     # 5. Run E2E Tests
     Write-Output "Step 5: Running E2E Tests..."
     
-    # Set Env Var for Playwright
+    # Set Env Vars for Playwright - ensure they are available to child processes
     $env:BASE_URL = $stagingUrl
     
-    # Run Playwright from ui directory
+    # Re-load and export .env.e2e variables explicitly for subprocess
+    $envE2E = Get-Content "ui\.env.e2e"
+    foreach ($line in $envE2E) {
+        if ($line -match "^([^#][^=]+)=(.*)$") {
+            $key = $matches[1].Trim()
+            $value = $matches[2].Trim()
+            [Environment]::SetEnvironmentVariable($key, $value, "Process")
+            Write-Output "  ENV: $key = $($value.Substring(0, [Math]::Min(20, $value.Length)))..."
+        }
+    }
+    
+    # Debug: Log credentials (test account, safe to log)
+    Write-Output "DEBUG: E2E_TEST_EMAIL = $env:E2E_TEST_EMAIL"
+    Write-Output "DEBUG: E2E_TEST_PASSWORD = $env:E2E_TEST_PASSWORD"
+    Write-Output "DEBUG: BASE_URL = $env:BASE_URL"
+    
+    # Run Playwright from ui directory using PowerShell directly (not cmd)
     Push-Location ui
     try {
-        cmd /c "npx playwright test tests/e2e/staging-flow.spec.ts"
+        # Use npx directly in PowerShell to preserve environment variables
+        npx playwright test tests/e2e/staging-flow.spec.ts --project=chromium
     } finally {
         Pop-Location
     }

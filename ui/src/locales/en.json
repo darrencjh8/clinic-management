@@ -40,6 +40,7 @@
         "orSelectExisting": "Or select existing",
         "loading": "Loading your spreadsheets...",
         "connectionError": "Connection Error",
+        "noSpreadsheetsFound": "No spreadsheets found. Please create one or check your permissions.",
         "sync": "Sync",
         "openSheet": "Open Sheet"
     },
