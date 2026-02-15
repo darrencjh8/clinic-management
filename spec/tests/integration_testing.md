@@ -24,7 +24,20 @@ Run this test when E2E tests fail at spreadsheet listing to determine if the iss
 
 ```bash
 cd ui
+node tests/integration/test_login_flow.mjs [env_file]
+```
+
+**Parameters:**
+- `env_file` (optional): Environment file to use (default: `.env.e2e`)
+
+**Examples:**
+```bash
+# Use default .env.e2e
 node tests/integration/test_login_flow.mjs
+
+# Use specific environment file
+node tests/integration/test_login_flow.mjs .env.e2e
+node tests/integration/test_login_flow.mjs .env.production
 ```
 
 ### Expected Output
@@ -36,11 +49,11 @@ node tests/integration/test_login_flow.mjs
 
 ### Configuration
 
-Uses credentials from `ui/.env.e2e`:
+Uses credentials from the specified environment file (default: `ui/.env.e2e`):
 - `VITE_FIREBASE_API_KEY`
-- Test email: chongjinheng@gmail.com
-- Test password: 123456
-- Backend URL: https://wisata-dental.fly.dev
+- Test email: `E2E_TEST_EMAIL`
+- Test password: `E2E_TEST_PASSWORD`
+- Backend URL: `VITE_API_URL`
 
 ### Troubleshooting
 

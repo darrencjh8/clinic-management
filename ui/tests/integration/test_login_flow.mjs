@@ -3,17 +3,21 @@ import https from 'https';
 import * as jose from 'jose';
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 
-// Load credentials from .env.e2e
-const __filename = new URL(import.meta.url).pathname;
+// Get env file from command line argument or default to .env.e2e
+const envFileName = process.argv[2] || '.env.e2e';
+
+// Load credentials from specified env file
+const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const envPath = path.resolve(__dirname, '../.env.e2e');
+const envPath = path.resolve(__dirname, '../../', envFileName);
 const envContent = fs.readFileSync(envPath, 'utf8');
 
 function getEnvVar(name) {
     const match = envContent.match(new RegExp(`^${name}=(.*)$`, 'm'));
     if (!match) {
-        throw new Error(`Environment variable ${name} not found in .env.e2e`);
+        throw new Error(`Environment variable ${name} not found in ${envFileName}`);
     }
     return match[1];
 }

@@ -140,7 +140,7 @@ try {
         try {
             Push-Location ui
             $env:CI = "true"
-            node tests/integration/test_login_flow.mjs
+            node tests/integration/test_login_flow.mjs .env.e2e
             $integrationExitCode = $LASTEXITCODE
             Pop-Location
             
