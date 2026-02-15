@@ -259,11 +259,14 @@ export const StoreProvider: React.FC<{ children: ReactNode, authService?: typeof
             setIsError(true);
             setErrorType('API');
             if (e.message === 'Unauthorized') {
-                console.warn('Unauthorized detected. Wiping storage to prevent redirect loop.');
+                console.warn('Unauthorized detected. Clearing access tokens but preserving encrypted keys.');
 
-                // Clear all storage mechanisms
-                sessionStorage.clear();
-                localStorage.clear();
+                // Clear tokens but preserve encrypted service account for re-login
+                sessionStorage.removeItem('google_access_token');
+                sessionStorage.removeItem('retry_attempted');
+                localStorage.removeItem('user_role');
+                // DO NOT clear sessionStorage.encrypted_service_account - needed for token refresh
+                // DO NOT clear localStorage encrypted_key_{uid} - needed for re-login
 
                 // Clear state
                 setErrorType('AUTH');
