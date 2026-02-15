@@ -4,7 +4,7 @@ These rules must be followed by all agents working on this project.
 
 ## 1. Mandatory Verification Protocol (UI)
 
-**CRITICAL:** Before starting your work, run the test first to ensure you started with a clean state. Before completing any task that involves UI changes, you MUST run the full component test suite to ensure no regressions were introduced.
+**CRITICAL:** Before starting your work, run the tests first to ensure you started with a clean state. Before completing any task that involves UI changes, you MUST run the full component test suite to ensure no regressions were introduced.
 
 1.  **Run the suite:**
     ```bash
@@ -47,3 +47,17 @@ Test files go in `ui/tests/components/`. See `spec/tests/component_testing.md` f
 ### Unit Tests (Business Logic)
 For complex business logic (calculations, data transformations, validation), add simple unit tests to verify correctness.
 
+## 6. Deployment
+
+The deployment script (`deploy.ps1`) automatically handles:
+1. **Regression Testing:** Runs component tests to ensure all tests pass before proceeding
+2. Building the Docker image
+3. Tagging and pushing to the registry
+4. Deploying to Fly.io
+5. **Cleanup:** After successful deployment, the script automatically removes local Docker images and tags to keep the local environment clean:
+   - Removes `chongjinheng/wisata-dental:latest`
+   - Removes `wisata-dental:latest`
+
+This cleanup prevents accumulation of unused Docker images on your local machine.
+
+**Note:** The deployment will automatically abort if regression tests fail, preventing deployment of broken code.

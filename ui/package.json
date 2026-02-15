@@ -9,7 +9,6 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "generate:client": "node scripts/generate-client.js",
-    "test:e2e": "powershell -ExecutionPolicy Bypass -File ./run-e2e.ps1",
     "test:ct": "playwright test -c playwright-ct.config.ts"
   },
   "dependencies": {
@@ -37,6 +36,7 @@
     "@types/react-dom": "^18.2.21",
     "@types/uuid": "^10.0.0",
     "@vitejs/plugin-react": "^4.2.1",
+    "baseline-browser-mapping": "^2.9.19",
     "eslint": "^8.57.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.5",

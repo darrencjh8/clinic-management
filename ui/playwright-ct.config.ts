@@ -32,6 +32,9 @@ export default defineConfig({
                 'import.meta.env.VITE_FIREBASE_STORAGE_BUCKET': JSON.stringify('test.appspot.com'),
                 'import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID': JSON.stringify('123456789'),
                 'import.meta.env.VITE_FIREBASE_APP_ID': JSON.stringify('1:123:web:abc'),
+                // Mock Google OAuth Client ID for testing
+                'import.meta.env.VITE_GOOGLE_CLIENT_ID': JSON.stringify('test-google-client-id'),
+                'import.meta.env.VITE_IS_CT': JSON.stringify('true'),
             }
         }
     },

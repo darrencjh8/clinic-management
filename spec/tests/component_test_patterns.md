@@ -323,11 +323,6 @@ npm run test:ct
 - Mobile portrait (< 768px width): content visible
 - Mobile landscape or tablet: rotation warning
 
-### SyncStatus
-- **Store override unreliable** in tests
-- Keep assertions basic (check for non-empty render)
-- Advanced state tests marked as `test.fixme()`
-
 ### PatientManager
 - No search feature implemented
 - Form uses **placeholders**, not labels
@@ -374,12 +369,45 @@ npm run test:ct
 }
 ```
 
+## Mocking External Service Dependencies
+
+### Google OAuth Provider Pattern
+
+**Problem**: Components using `@react-oauth/google`'s `useGoogleLogin` hook require `GoogleOAuthProvider` context, which needs a valid `clientId`.
+
+**Solution**: Two-part setup:
+
+1. **Wrap components in TestWrapper**: The `TestWrapper` must include `GoogleOAuthProvider`:
+   ```typescript
+   import { GoogleOAuthProvider } from '@react-oauth/google';
+   
+   export const TestWrapper = ({ children, storeValues }) => (
+       <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || 'test-client-id'}>
+           <MockStoreProvider value={storeValues}>
+               <ToastProvider>
+                   {children}
+               </ToastProvider>
+           </MockStoreProvider>
+       </GoogleOAuthProvider>
+   );
+   ```
+
+2. **Mock environment variables in playwright-ct.config.ts**:
+   ```typescript
+   define: {
+       'import.meta.env.VITE_GOOGLE_CLIENT_ID': JSON.stringify('test-google-client-id'),
+   }
+   ```
+
+**Verification**: `LoginScreen.spec.tsx` tests now pass across all browsers.
+
+---
+
 ## Areas for Improvement
 
 If you're enhancing the test suite, consider:
-1. **Fix MockStoreProvider context propagation** - Store overrides don't always work reliably
-2. **Multi-language testing** - Add tests for both Indonesian and English locales
-3. **Test utilities** - Create helper functions for common patterns (form filling, assertions)
-4. **Visual regression** - Add screenshot comparison tests for UI components
-5. **Firebase mocking** - Implement comprehensive Firebase Auth mocking for auth-dependent components
-6. **Test data builders** - Create factory functions for consistent mock data generation
+1. **Multi-language testing** - Add tests for both Indonesian and English locales
+2. **Test utilities** - Create helper functions for common patterns (form filling, assertions)
+3. **Visual regression** - Add screenshot comparison tests for UI components
+4. **Firebase mocking** - Implement comprehensive Firebase Auth mocking for auth-dependent components
+5. **Test data builders** - Create factory functions for consistent mock data generation

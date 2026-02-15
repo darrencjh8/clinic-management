@@ -59,6 +59,7 @@ export class GoogleSheetsService {
         const response = await fetch(url, { ...options, headers });
 
         if (response.status === 401) {
+            console.warn('API returned 401 Unauthorized', { url, serviceAccountKey: !!this.serviceAccountKey });
             // Token expired or invalid
             // If we have a service account, try to refresh once
             if (this.serviceAccountKey) {
@@ -73,10 +74,12 @@ export class GoogleSheetsService {
                     };
                     return (await fetch(url, { ...options, headers: newHeaders })).json();
                 } catch (e) {
+                    console.error('Service Account Refresh Failed on 401 retry', e);
                     this.logout();
                     throw new Error('Unauthorized');
                 }
             } else {
+                console.warn('401 but no service account key available -> Logout');
                 this.logout();
                 throw new Error('Unauthorized');
             }
@@ -136,6 +139,7 @@ export class GoogleSheetsService {
             const data = await response.json();
             this.setAccessToken(data.access_token);
             this.tokenExpiration = Date.now() + (data.expires_in * 1000);
+            console.log('Service Account Token Refreshed', { expiresIn: data.expires_in });
         } catch (e) {
             console.error('Service Account Login Failed', e);
             throw e;

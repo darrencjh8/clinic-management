@@ -45,7 +45,8 @@ function AppContent() {
       const hasRetried = sessionStorage.getItem('retry_attempted');
       if (!hasRetried) {
         sessionStorage.setItem('retry_attempted', 'true');
-        window.location.reload();
+        // window.location.reload();
+        console.log('App: Auto-reload suppressed for debugging');
       }
     } else if (accessToken && spreadsheetId && !isLoading) {
       // Successful session, clear the retry flag
@@ -127,6 +128,8 @@ function AppContent() {
       />
     );
   }
+
+  console.log('App Rendering State:', { accessToken: !!accessToken, spreadsheetId, isLoading, isError });
 
   // 3. Loading
   if (isLoading) {

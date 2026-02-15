@@ -76,10 +76,24 @@ export const LoginScreen = ({ onLoginSuccess, onSpreadsheetIdSubmit, initialToke
     const fetchSpreadsheets = async () => {
         setIsLoadingSheets(true);
         try {
+            // CRITICAL FIX: Validate token exists before making API call
+            // This prevents redirect to login if sessionStorage is cleared
+            const currentToken = GoogleSheetsService.getAccessToken();
+            if (!currentToken && initialToken) {
+                console.log('Token lost from sessionStorage, restoring from initialToken');
+                GoogleSheetsService.setAccessToken(initialToken);
+            } else if (!currentToken && !initialToken) {
+                console.error('No token available to fetch sheets');
+                setError('Session expired. Please log in again.');
+                setAuthStep('login');
+                return;
+            }
+
             const sheets = await GoogleSheetsService.listSpreadsheets();
             setAvailableSheets(sheets);
         } catch (e) {
             console.error('Failed to list sheets', e);
+            setError('Failed to load spreadsheets. Please try again.');
         } finally {
             setIsLoadingSheets(false);
         }

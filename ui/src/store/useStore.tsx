@@ -56,7 +56,7 @@ interface StoreContextType {
 
 export const StoreContext = createContext<StoreContextType | null>(null);
 
-export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const StoreProvider: React.FC<{ children: ReactNode, authService?: typeof FirebaseAuthService }> = ({ children, authService = FirebaseAuthService }) => {
     const [isLoading, setIsLoading] = useState(true);
     const [isError, setIsError] = useState(false);
     const [errorType, setErrorType] = useState<'API' | 'AUTH' | null>(null);
@@ -259,8 +259,19 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             setIsError(true);
             setErrorType('API');
             if (e.message === 'Unauthorized') {
+                console.warn('Unauthorized detected. Wiping storage to prevent redirect loop.');
+
+                // Clear all storage mechanisms
+                sessionStorage.clear();
+                localStorage.clear();
+
+                // Clear state
                 setErrorType('AUTH');
                 setAccessToken(null);
+                setSpreadsheetId(null);
+
+                // Force a hard reload to ensure a fresh start
+                window.location.href = '/';
             }
         } finally {
             setIsLoading(false);
@@ -287,15 +298,21 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
     // Listen for Firebase token refresh
     useEffect(() => {
-        const unsubscribe = FirebaseAuthService.onTokenChange((token) => {
+        const unsubscribe = authService.onTokenChange((token) => {
             if (token) {
                 console.log('Firebase token refreshed:', token.substring(0, 10) + '...');
                 // Only update tokens if we're NOT using a service account.
                 // Service account tokens are managed by GoogleSheetsService itself.
                 // Overwriting with a Firebase ID token would cause 401 on Sheets API calls.
-                if (!GoogleSheetsService.hasServiceAccount()) {
+                const userRole = localStorage.getItem('user_role');
+                const isStaff = userRole === 'staff';
+
+                if (!GoogleSheetsService.hasServiceAccount() && !isStaff) {
+                    console.log('Updating access token from Firebase (User is not staff)');
                     setAccessToken(token);
                     GoogleSheetsService.setAccessToken(token);
+                } else {
+                    console.log('Ignoring Firebase token update (User is staff or has Service Account)');
                 }
             } else {
                 // User signed out or session expired completely
@@ -304,7 +321,7 @@ export const StoreProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         });
 
         return () => unsubscribe();
-    }, []); // Subscribe once — no dependency on accessToken
+    }, [authService]); // Subscribe once — no dependency on accessToken
 
     useEffect(() => {
         localStorage.setItem('dark_mode', JSON.stringify(isDarkMode));
