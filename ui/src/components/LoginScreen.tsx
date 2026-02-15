@@ -49,20 +49,6 @@ export const LoginScreen = ({ onLoginSuccess, onSpreadsheetIdSubmit, initialToke
 
         // 1. Priority: If we have an initial token (from App), we are in setup mode.
         if (initialToken) {
-            const userRole = localStorage.getItem('user_role');
-            const currentUser = FirebaseAuthService.getCurrentUser();
-            
-            // CRITICAL FIX: For staff users, we need the service account key to refresh tokens
-            // If serviceAccountKey is not set, we need to go through PIN check to restore it
-            if (userRole === 'staff' && currentUser && !GoogleSheetsService.hasServiceAccount()) {
-                const uid = currentUser.uid;
-                if (localStorage.getItem(`encrypted_key_${uid}`)) {
-                    console.log('LoginScreen: Staff user needs PIN to restore service account key');
-                    setAuthStep('pin_check');
-                    return;
-                }
-            }
-            
             console.log('LoginScreen: initialToken detected, switching to spreadsheet_setup');
             GoogleSheetsService.setAccessToken(initialToken);
             setAuthStep('spreadsheet_setup');
