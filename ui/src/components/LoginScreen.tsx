@@ -49,8 +49,10 @@ export const LoginScreen = ({ onLoginSuccess, onSpreadsheetIdSubmit, initialToke
 
         // 1. Priority: If we have an initial token (from App), we are in setup mode.
         if (initialToken) {
-            console.log('LoginScreen: initialToken detected, switching to spreadsheet_setup');
+            console.log('[LoginScreen] initialToken detected, switching to spreadsheet_setup', { tokenLength: initialToken.length });
             GoogleSheetsService.setAccessToken(initialToken);
+            const verifyToken = GoogleSheetsService.getAccessToken();
+            console.log('[LoginScreen] Token set, verification:', { tokenSet: !!verifyToken, matches: verifyToken === initialToken });
             setAuthStep('spreadsheet_setup');
             return;
         }
@@ -74,12 +76,14 @@ export const LoginScreen = ({ onLoginSuccess, onSpreadsheetIdSubmit, initialToke
     }, [authStep]);
 
     const fetchSpreadsheets = async () => {
+        console.log('[LoginScreen] fetchSpreadsheets called');
         setIsLoadingSheets(true);
         try {
             const sheets = await GoogleSheetsService.listSpreadsheets();
+            console.log('[LoginScreen] Spreadsheets fetched:', { count: sheets.length });
             setAvailableSheets(sheets);
         } catch (e) {
-            console.error('Failed to list sheets', e);
+            console.error('[LoginScreen] Failed to list sheets', e);
         } finally {
             setIsLoadingSheets(false);
         }

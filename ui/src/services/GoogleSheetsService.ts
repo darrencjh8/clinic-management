@@ -16,6 +16,7 @@ export class GoogleSheetsService {
     private static tokenExpiration: number | null = null;
 
     static setAccessToken(token: string) {
+        console.log('[GoogleSheetsService] setAccessToken called', { tokenLength: token?.length, hasServiceAccount: !!this.serviceAccountKey });
         this.accessToken = token;
         // Also save to sessionStorage for persistence across reloads
         sessionStorage.setItem('google_access_token', token);
@@ -25,6 +26,7 @@ export class GoogleSheetsService {
         if (!this.accessToken) {
             this.accessToken = sessionStorage.getItem('google_access_token');
         }
+        console.log('[GoogleSheetsService] getAccessToken called', { hasToken: !!this.accessToken, tokenLength: this.accessToken?.length });
         return this.accessToken;
     }
 
@@ -379,9 +381,11 @@ export class GoogleSheetsService {
     }
 
     static async listSpreadsheets() {
+        console.log('[GoogleSheetsService] listSpreadsheets called', { hasToken: !!this.accessToken, hasServiceAccount: !!this.serviceAccountKey });
         // Requires https://www.googleapis.com/auth/drive.readonly scope
         const q = "mimeType='application/vnd.google-apps.spreadsheet' and trashed=false";
         const response = await this.fetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id,name)`);
+        console.log('[GoogleSheetsService] listSpreadsheets response', { filesCount: response.files?.length || 0 });
         return response.files || [];
     }
 }
