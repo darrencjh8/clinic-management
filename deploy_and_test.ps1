@@ -115,7 +115,8 @@ try {
     # Run Playwright from ui directory using PowerShell directly (not cmd)
     Push-Location ui
     try {
-        # Use npx directly in PowerShell to preserve environment variables
+        # Set CI mode to avoid HTML report server blocking
+        $env:CI = "true"
         npx playwright test tests/e2e/staging-flow.spec.ts --project=chromium
     } finally {
         Pop-Location
