@@ -191,9 +191,85 @@ This is NOT a login flow issue - the authentication is working correctly.
 - `ui/src/store/useStore.tsx` - Restored `onTokenChange` listener
 - `.dockerignore` - Added playwright cache to prevent build failures
 
+## Additional Bugs Found After Initial Fix
+
+### Bug #2: Staff Validation Logic Breaking Spreadsheet Listing
+
+**Commit**: Added between `f9bef73` and `2b5d7ab`
+
+**Problem**: After PIN setup, validation logic was checking if staff user had service account and redirecting back to PIN check, preventing spreadsheet listing.
+
+**Code Location**: `ui/src/components/LoginScreen.tsx` lines 55-64
+
+**Fix**: Removed the problematic validation check in commit `b7a8399`
+
+```typescript
+// REMOVED THIS BUGGY CODE:
+if (userRole === 'staff' && currentUser && !GoogleSheetsService.hasServiceAccount()) {
+    const uid = currentUser.uid;
+    if (localStorage.getItem(`encrypted_key_${uid}`)) {
+        setAuthStep('pin_check');  // This prevented spreadsheet_setup!
+        return;
+    }
+}
+```
+
+### Bug #3: Token Validation Logic Breaking API Calls
+
+**Commit**: Added between `f9bef73` and `2b5d7ab`
+
+**Problem**: fetchSpreadsheets had token validation logic that redirected to login if token was missing, interrupting the normal flow.
+
+**Code Location**: `ui/src/components/LoginScreen.tsx` fetchSpreadsheets function
+
+**Fix**: Removed token validation logic in commit `cad5720`, reverting to simple working version from `f9bef73`
+
+```typescript
+// REMOVED THIS:
+const currentToken = GoogleSheetsService.getAccessToken();
+if (!currentToken && initialToken) {
+    GoogleSheetsService.setAccessToken(initialToken);
+} else if (!currentToken && !initialToken) {
+    setError('Session expired. Please log in again.');
+    setAuthStep('login');
+    return;
+}
+```
+
+### Bug #4: Missing response.ok Check in GoogleSheetsService.fetch
+
+**Commit**: Missing from original implementation
+
+**Problem**: GoogleSheetsService.fetch() didn't check response.ok, so failed API requests would return error JSON as if they succeeded. This caused listSpreadsheets() to return `undefined.files || []` = `[]` instead of throwing an error.
+
+**Code Location**: `ui/src/services/GoogleSheetsService.ts` lines 96-101
+
+**Fix**: Added response.ok check in commit `0bc01ce`
+
+```typescript
+// Check if response is OK (status 200-299)
+if (!response.ok) {
+    const errorText = await response.text();
+    console.error('[GoogleSheetsService] API request failed', { url, status: response.status, error: errorText });
+    throw new Error(`API Error ${response.status}: ${errorText}`);
+}
+```
+
 ## Testing
 
 - ✅ All 46 component tests passing
 - ✅ Firebase login working in E2E tests
 - ✅ Service account fetch working
-- ⚠️  E2E test needs spreadsheet access configuration
+- ✅ PIN setup working
+- ⚠️  Spreadsheet listing still failing in E2E - investigating with debug logs
+
+## Debug Commits
+
+Added extensive logging in commits:
+- `9ce5257` - Added debug logging to track token flow
+- `b375c27` - Added token verification before spreadsheet listing
+
+These logs will help identify if:
+1. Token is being set correctly after PIN setup
+2. Token is persisting through state changes
+3. Google Drive API is returning errors or empty results
