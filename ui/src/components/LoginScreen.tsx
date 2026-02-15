@@ -203,12 +203,23 @@ export const LoginScreen = ({ onLoginSuccess, onSpreadsheetIdSubmit, initialToke
             const encryptedKey = localStorage.getItem(`encrypted_key_${uid}`);
             if (!encryptedKey) throw new Error('No stored key');
 
+            console.log('[LoginScreen] Decrypting service account key with PIN...');
             const key = await GoogleSheetsService.decryptKey(encryptedKey, pin);
             await GoogleSheetsService.loginWithServiceAccount(key);
+            console.log('[LoginScreen] Service account restored successfully');
 
             const token = GoogleSheetsService.getAccessToken();
             if (token) {
-                onLoginSuccess(token, 'staff');
+                // If we already have initialToken, just proceed to spreadsheet_setup
+                // Don't call onLoginSuccess again as that would cause a remount and lose the key
+                if (initialToken) {
+                    console.log('[LoginScreen] Key restored, proceeding to spreadsheet_setup');
+                    setAuthStep('spreadsheet_setup');
+                    setIsLoading(false);
+                } else {
+                    console.log('[LoginScreen] Key restored, calling onLoginSuccess');
+                    onLoginSuccess(token, 'staff');
+                }
             } else {
                 throw new Error('Failed to retrieve access token');
             }
