@@ -51,6 +51,20 @@ export const LoginScreen = ({ onLoginSuccess, onSpreadsheetIdSubmit, initialToke
         if (initialToken) {
             console.log('[LoginScreen] initialToken detected, switching to spreadsheet_setup', { tokenLength: initialToken.length });
             GoogleSheetsService.setAccessToken(initialToken);
+            
+            // CRITICAL: Restore service account key from localStorage if available
+            // The token alone isn't enough - we need the key for token refresh
+            const currentUser = FirebaseAuthService.getCurrentUser();
+            if (currentUser) {
+                const uid = currentUser.uid;
+                const encryptedKey = localStorage.getItem(`encrypted_key_${uid}`);
+                if (encryptedKey) {
+                    console.log('[LoginScreen] Found encrypted service account key, will restore on PIN entry');
+                    // Key will be restored when user enters PIN in spreadsheet_setup
+                    // For now, just set the token and proceed
+                }
+            }
+            
             const verifyToken = GoogleSheetsService.getAccessToken();
             console.log('[LoginScreen] Token set, verification:', { tokenSet: !!verifyToken, matches: verifyToken === initialToken });
             setAuthStep('spreadsheet_setup');
@@ -85,9 +99,9 @@ export const LoginScreen = ({ onLoginSuccess, onSpreadsheetIdSubmit, initialToke
             const sheets = await GoogleSheetsService.listSpreadsheets();
             console.log('[LoginScreen] Spreadsheets fetched:', { count: sheets.length });
             setAvailableSheets(sheets);
-        } catch (e) {
+        } catch (e: any) {
             console.error('[LoginScreen] Failed to list sheets', e);
-            setError(`Failed to load spreadsheets: ${e.message}`);
+            setError(`Failed to load spreadsheets: ${e?.message || String(e)}`);
         } finally {
             setIsLoadingSheets(false);
         }
