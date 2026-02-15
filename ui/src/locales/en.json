@@ -45,6 +45,7 @@
         "spreadsheetId": "Spreadsheet ID",
         "spreadsheetIdPlaceholder": "Paste spreadsheet ID here",
         "submit": "Connect",
+        "refresh": "Refresh List",
         "sync": "Sync",
         "openSheet": "Open Sheet"
     },

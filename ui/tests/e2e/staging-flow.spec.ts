@@ -125,14 +125,22 @@ test.describe('E2E Staging Flow', () => {
             const noSheetsMsg = page.locator('text=/no.*spreadsheet|tidak ada spreadsheet/i');
             if (await noSheetsMsg.isVisible({ timeout: 2000 }).catch(() => false)) {
                 console.log('No spreadsheets found for this user.');
-                console.log('=== STAGING SPREADSHEET REQUIRED ===');
-                console.log('Please create a staging spreadsheet and share it with the test service account.');
-                console.log('Waiting 120 seconds for manual setup...');
-                await page.waitForTimeout(120000); // 120 second pause for user setup
                 
-                // Refresh and check again
-                await page.reload();
-                await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
+                // Check if E2E_STAGING_SHEET_ID is configured
+                const stagingSheetId = process.env.E2E_STAGING_SHEET_ID;
+                if (stagingSheetId) {
+                    console.log(`Using configured staging sheet ID: ${stagingSheetId}`);
+                    // The staging sheet ID should be pre-shared with the service account
+                    // We need to manually enter it or the app should use it
+                    throw new Error(`Staging sheet ${stagingSheetId} not visible. Ensure it's shared with the service account.`);
+                } else {
+                    console.log('=== E2E_STAGING_SHEET_ID NOT CONFIGURED ===');
+                    console.log('Please set E2E_STAGING_SHEET_ID in ui/.env.e2e');
+                    console.log('1. Create a Google Sheet');
+                    console.log('2. Share it with the service account email');
+                    console.log('3. Add the spreadsheet ID to ui/.env.e2e as E2E_STAGING_SHEET_ID');
+                    throw new Error('E2E_STAGING_SHEET_ID not configured. See console output for setup instructions.');
+                }
             }
             
             // Try to find and select a spreadsheet

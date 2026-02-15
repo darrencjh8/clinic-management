@@ -41,10 +41,30 @@ if (-not $googleSecret -or -not $firebaseSecret) {
     exit 1
 }
 
-# 2. Create Staging App
+# 2. Run Component Tests FIRST (before creating any cloud resources)
+Write-Output "Step 2: Running Component Tests..."
+Push-Location ui
+try {
+    npm run test:ct -- --project=chromium
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "Component tests failed! Aborting deployment."
+        exit 1
+    }
+    Write-Output "✅ Component Tests PASSED!"
+} finally {
+    Pop-Location
+}
+
+# 3. Build Docker Image (validate build before creating cloud resources)
+Write-Output "Step 3: Building Docker Image..."
+docker build -t wisata-dental-staging-test .
+Check-Error "Docker build failed! Aborting deployment."
+Write-Output "✅ Docker Build PASSED!"
+
+# 4. Create Staging App (only after tests and build pass)
 $timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
 $appName = "wisata-dental-staging-$timestamp"
-Write-Output "Step 2: Creating Staging App ($appName)..."
+Write-Output "Step 4: Creating Staging App ($appName)..."
 
 # Try to create app.
 fly apps create $appName --org personal
@@ -56,13 +76,13 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 try {
-    # 3. Configure Secrets
-    Write-Output "Step 3: Setting Secrets..."
+    # 5. Configure Secrets
+    Write-Output "Step 5: Setting Secrets..."
     fly secrets set GOOGLE_SERVICE_ACCOUNT_BASE64=$googleSecret FIREBASE_SERVICE_ACCOUNT_BASE64=$firebaseSecret --app $appName
     Check-Error "Failed to set secrets"
 
-    # 4. Deploy
-    Write-Output "Step 4: Deploying to Staging..."
+    # 6. Deploy
+    Write-Output "Step 6: Deploying to Staging..."
     # fly deploy will build locally or remotely and push to fly registry automatically
     fly deploy --app $appName --ha=false
     Check-Error "Staging deployment failed"
@@ -70,8 +90,8 @@ try {
     $stagingUrl = "https://$appName.fly.dev"
     Write-Output "Staging App Deployed: $stagingUrl"
 
-    # 5. Run E2E Tests
-    Write-Output "Step 5: Running E2E Tests..."
+    # 7. Run E2E Tests
+    Write-Output "Step 7: Running E2E Tests..."
     
     # Set Env Vars for Playwright - ensure they are available to child processes
     $env:BASE_URL = $stagingUrl
@@ -110,8 +130,8 @@ try {
 } catch {
     Write-Error "An error occurred during execution: $_"
 } finally {
-    # 6. Cleanup
-    Write-Output "Step 6: Cleaning up..."
+    # 8. Cleanup
+    Write-Output "Step 8: Cleaning up..."
     
     Write-Output "Destroying Staging App..."
     fly apps destroy $appName --yes

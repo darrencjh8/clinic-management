@@ -45,6 +45,7 @@
         "spreadsheetId": "ID Spreadsheet",
         "spreadsheetIdPlaceholder": "Tempel ID spreadsheet di sini",
         "submit": "Hubungkan",
+        "refresh": "Perbarui Daftar",
         "sync": "Sinkronkan",
         "openSheet": "Buka Sheet"
     },

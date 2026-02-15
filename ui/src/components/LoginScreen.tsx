@@ -33,8 +33,6 @@ export const LoginScreen = ({ onLoginSuccess, onSpreadsheetIdSubmit, initialToke
     // Spreadsheet Selection State
     const [availableSheets, setAvailableSheets] = useState<any[]>([]);
     const [isLoadingSheets, setIsLoadingSheets] = useState(false);
-    const [showManualEntry, setShowManualEntry] = useState(false);
-    const [manualSheetId, setManualSheetId] = useState('');
 
     const toggleLanguage = () => {
         const newLang = i18n.language === 'en' ? 'id' : 'en';
@@ -51,6 +49,20 @@ export const LoginScreen = ({ onLoginSuccess, onSpreadsheetIdSubmit, initialToke
 
         // 1. Priority: If we have an initial token (from App), we are in setup mode.
         if (initialToken) {
+            const userRole = localStorage.getItem('user_role');
+            const currentUser = FirebaseAuthService.getCurrentUser();
+            
+            // CRITICAL FIX: For staff users, we need the service account key to refresh tokens
+            // If serviceAccountKey is not set, we need to go through PIN check to restore it
+            if (userRole === 'staff' && currentUser && !GoogleSheetsService.hasServiceAccount()) {
+                const uid = currentUser.uid;
+                if (localStorage.getItem(`encrypted_key_${uid}`)) {
+                    console.log('LoginScreen: Staff user needs PIN to restore service account key');
+                    setAuthStep('pin_check');
+                    return;
+                }
+            }
+            
             console.log('LoginScreen: initialToken detected, switching to spreadsheet_setup');
             GoogleSheetsService.setAccessToken(initialToken);
             setAuthStep('spreadsheet_setup');
@@ -364,39 +376,17 @@ export const LoginScreen = ({ onLoginSuccess, onSpreadsheetIdSubmit, initialToke
                             <div className="text-center py-4 text-gray-400 text-sm">{t('spreadsheet.noSpreadsheetsFound')}</div>
                         )}
 
-                        {/* Manual Spreadsheet ID Entry */}
-                        {showManualEntry ? (
-                            <div className="mt-4 space-y-3">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">{t('spreadsheet.spreadsheetId')}</label>
-                                    <input
-                                        type="text"
-                                        value={manualSheetId}
-                                        onChange={(e) => setManualSheetId(e.target.value)}
-                                        placeholder={t('spreadsheet.spreadsheetIdPlaceholder')}
-                                        className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm"
-                                    />
-                                </div>
-                                <button
-                                    onClick={() => {
-                                        if (manualSheetId.trim() && onSpreadsheetIdSubmit) {
-                                            onSpreadsheetIdSubmit(manualSheetId.trim());
-                                        }
-                                    }}
-                                    disabled={!manualSheetId.trim()}
-                                    className="w-full bg-primary text-white py-2 rounded-lg font-medium hover:bg-opacity-90 disabled:opacity-50 transition-colors text-sm"
-                                >
-                                    {t('spreadsheet.submit')}
-                                </button>
-                            </div>
-                        ) : (
-                            <button
-                                onClick={() => setShowManualEntry(true)}
-                                className="mt-4 w-full text-sm text-primary hover:text-primary-dark underline"
-                            >
-                                {t('spreadsheet.enterManually')}
-                            </button>
-                        )}
+                        {/* Refresh Button */}
+                        <button
+                            onClick={fetchSpreadsheets}
+                            disabled={isLoadingSheets}
+                            className="mt-4 w-full flex items-center justify-center gap-2 text-sm text-primary hover:text-primary-dark border border-primary rounded-lg py-2 px-4 disabled:opacity-50 transition-colors"
+                        >
+                            <svg className={`w-4 h-4 ${isLoadingSheets ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                            {t('spreadsheet.refresh')}
+                        </button>
 
                         <button onClick={handleSignOut} className="mt-2 text-xs text-slate-400 hover:text-red-500 w-full text-center">
                             {t('pin.signOut')}

@@ -1,0 +1,192 @@
+# Login Flow Architecture
+
+## Overview
+
+This document describes the authentication flow for the clinic management app, covering both admin and staff user types.
+
+## User Types
+
+### Admin Users
+- Login via **Google OAuth** directly
+- Use their personal Google account token to access Google Sheets API
+- Can create new spreadsheets
+- Have full access to all features including reporting
+
+### Staff Users  
+- Login via **Firebase Email/Password**
+- Use a **Service Account** (fetched from server) to access Google Sheets API
+- Service account key is encrypted with a user-set **PIN** and stored in localStorage
+- Cannot create spreadsheets - can only select existing ones shared with the service account
+
+## Authentication Flow Diagram
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        LOGIN SCREEN                              │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  ┌─────────────────┐          ┌─────────────────┐               │
+│  │  ADMIN LOGIN    │          │  STAFF LOGIN    │               │
+│  │  (Google OAuth) │          │  (Firebase)     │               │
+│  └────────┬────────┘          └────────┬────────┘               │
+│           │                            │                         │
+│           ▼                            ▼                         │
+│  ┌─────────────────┐          ┌─────────────────┐               │
+│  │ Google Token    │          │ Firebase Token  │               │
+│  │ (User's own)    │          │ (ID Token)      │               │
+│  └────────┬────────┘          └────────┬────────┘               │
+│           │                            │                         │
+│           │                            ▼                         │
+│           │                   ┌─────────────────┐               │
+│           │                   │ Fetch Service   │               │
+│           │                   │ Account from    │               │
+│           │                   │ Server API      │               │
+│           │                   └────────┬────────┘               │
+│           │                            │                         │
+│           │                            ▼                         │
+│           │                   ┌─────────────────┐               │
+│           │                   │ PIN Setup/Check │               │
+│           │                   │ (Encrypt/Decrypt│               │
+│           │                   │  Service Acct)  │               │
+│           │                   └────────┬────────┘               │
+│           │                            │                         │
+│           │                            ▼                         │
+│           │                   ┌─────────────────┐               │
+│           │                   │ Generate JWT &  │               │
+│           │                   │ Exchange for    │               │
+│           │                   │ Access Token    │               │
+│           │                   └────────┬────────┘               │
+│           │                            │                         │
+│           ▼                            ▼                         │
+│  ┌─────────────────────────────────────────────────┐            │
+│  │           SPREADSHEET SELECTION                  │            │
+│  │  (Admin can create, Staff can only select)       │            │
+│  └─────────────────────────────────────────────────┘            │
+│                            │                                     │
+│                            ▼                                     │
+│  ┌─────────────────────────────────────────────────┐            │
+│  │                  MAIN APP                        │            │
+│  └─────────────────────────────────────────────────┘            │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+## Key Components
+
+### 1. FirebaseAuthService (`ui/src/services/FirebaseAuthService.ts`)
+- `signIn(email, password)` - Firebase email/password auth
+- `fetchServiceAccount(token)` - Calls server API to get Google Service Account
+- `onTokenChange(callback)` - Listens for Firebase token refreshes
+
+### 2. GoogleSheetsService (`ui/src/services/GoogleSheetsService.ts`)
+- `loginWithServiceAccount(credentials)` - Generates JWT and exchanges for access token
+- `refreshServiceAccountToken()` - Auto-refreshes token before expiry
+- `encryptKey(key, pin)` / `decryptKey(jwe, pin)` - PIN-based encryption
+- `listSpreadsheets()` - Lists spreadsheets accessible to current token
+- `hasServiceAccount()` - Checks if service account key is loaded
+
+### 3. Server API (`server/index.js`)
+- `POST /api/auth/service-account` - Returns Google Service Account (protected by Firebase token)
+- Requires `GOOGLE_SERVICE_ACCOUNT_BASE64` env var
+
+### 4. LoginScreen (`ui/src/components/LoginScreen.tsx`)
+- Manages auth state machine: `login` → `pin_check`/`pin_setup` → `spreadsheet_setup`
+- Handles both admin (Google OAuth) and staff (Firebase) login flows
+
+## Critical Implementation Details
+
+### Service Account Token Flow (Staff Users)
+
+1. **First Login:**
+   - Firebase auth → Get Firebase ID token
+   - Call `/api/auth/service-account` with Bearer token
+   - User sets a PIN
+   - Service account key encrypted with PIN → stored in `localStorage` as `encrypted_key_{uid}`
+   - Generate JWT signed with service account private key
+   - Exchange JWT for Google access token at `https://oauth2.googleapis.com/token`
+
+2. **Subsequent Logins:**
+   - Firebase auth (may be persisted)
+   - User enters PIN
+   - Decrypt service account key from localStorage
+   - Generate JWT and exchange for access token
+
+### Token Refresh Handling
+
+**CRITICAL:** Staff users must NOT have their access token overwritten by Firebase token refreshes.
+
+In `useStore.tsx`:
+```typescript
+authService.onTokenChange((token) => {
+    if (token) {
+        const userRole = localStorage.getItem('user_role');
+        const isStaff = userRole === 'staff';
+        
+        // IGNORE Firebase token updates for staff users
+        if (!GoogleSheetsService.hasServiceAccount() && !isStaff) {
+            setAccessToken(token);
+            GoogleSheetsService.setAccessToken(token);
+        }
+    }
+});
+```
+
+### Service Account Key Restoration
+
+When `initialToken` is passed to LoginScreen (user authenticated but no spreadsheet selected):
+- **Admin users:** Go directly to spreadsheet selection
+- **Staff users:** Must re-enter PIN to restore service account key (for token refresh capability)
+
+```typescript
+if (userRole === 'staff' && currentUser && !GoogleSheetsService.hasServiceAccount()) {
+    if (localStorage.getItem(`encrypted_key_${uid}`)) {
+        setAuthStep('pin_check'); // Force PIN re-entry
+        return;
+    }
+}
+```
+
+### 401 Error Handling
+
+In `GoogleSheetsService.fetch()`:
+- If 401 received AND `serviceAccountKey` is set → auto-refresh token and retry
+- If 401 received AND `serviceAccountKey` is null → logout (can't refresh)
+
+## Environment Variables
+
+### UI (`.env` / `.env.e2e`)
+- `VITE_FIREBASE_API_KEY` - Firebase project API key
+- `VITE_FIREBASE_AUTH_DOMAIN` - Firebase auth domain
+- `VITE_FIREBASE_PROJECT_ID` - Firebase project ID
+- `VITE_GOOGLE_CLIENT_ID` - Google OAuth client ID (for admin login)
+- `VITE_API_URL` - Backend API URL (for service account fetch)
+
+### Server (`.env`)
+- `FIREBASE_SERVICE_ACCOUNT_BASE64` - Base64-encoded Firebase Admin SDK service account
+- `GOOGLE_SERVICE_ACCOUNT_BASE64` - Base64-encoded Google Service Account for Sheets API
+
+## Common Issues & Solutions
+
+### Issue: Staff user sees "No spreadsheets found"
+**Cause:** Service account key not restored, or spreadsheet not shared with service account
+**Solution:** 
+1. Ensure user goes through PIN check to restore service account key
+2. Verify spreadsheet is shared with the service account email
+
+### Issue: 401 error on Google Drive API
+**Cause:** Service account key is null, can't refresh token
+**Solution:** Force staff users through PIN check when `hasServiceAccount()` returns false
+
+### Issue: Redirect loop on token refresh
+**Cause:** Firebase token update overwrites service account token for staff users
+**Solution:** Ignore Firebase token updates when `user_role === 'staff'`
+
+## Testing
+
+### Component Tests
+- `TokenRefresh.spec.tsx` - Tests token refresh behavior for admin vs staff
+- `RedirectLoopReproduction.spec.tsx` - Ensures staff token updates are ignored
+
+### E2E Tests
+- `staging-flow.spec.ts` - Full login flow including PIN and spreadsheet selection
+- `login-flow.spec.ts` - Login form and error handling
+- `treatment-recording.spec.ts` - Treatment entry after successful login
