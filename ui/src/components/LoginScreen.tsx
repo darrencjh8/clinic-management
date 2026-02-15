@@ -57,21 +57,23 @@ export const LoginScreen = ({ onLoginSuccess, onSpreadsheetIdSubmit, initialToke
             const sessionEncryptedKey = GoogleSheetsService.getEncryptedServiceAccountKey();
             if (sessionEncryptedKey) {
                 console.log('[LoginScreen] Found encrypted key in sessionStorage, restoring...');
-                try {
-                    const key = JSON.parse(atob(sessionEncryptedKey));
-                    GoogleSheetsService.restoreServiceAccountKey(key);
-                    console.log('[LoginScreen] Service account key restored, refreshing token...');
-                    
-                    // Refresh token to ensure it's valid and tokenExpiration is set
-                    await GoogleSheetsService.refreshServiceAccountToken();
-                    console.log('[LoginScreen] Token refreshed, proceeding to spreadsheet_setup');
-                    
-                    setAuthStep('spreadsheet_setup');
-                    return;
-                } catch (e) {
-                    console.error('[LoginScreen] Failed to restore key from session:', e);
-                    GoogleSheetsService.clearEncryptedServiceAccountKey();
-                }
+                (async () => {
+                    try {
+                        const key = JSON.parse(atob(sessionEncryptedKey));
+                        GoogleSheetsService.restoreServiceAccountKey(key);
+                        console.log('[LoginScreen] Service account key restored, refreshing token...');
+                        
+                        // Refresh token to ensure it's valid and tokenExpiration is set
+                        await GoogleSheetsService.refreshServiceAccountToken();
+                        console.log('[LoginScreen] Token refreshed, proceeding to spreadsheet_setup');
+                        
+                        setAuthStep('spreadsheet_setup');
+                    } catch (e) {
+                        console.error('[LoginScreen] Failed to restore key from session:', e);
+                        GoogleSheetsService.clearEncryptedServiceAccountKey();
+                    }
+                })();
+                return;
             }
             
             // Fallback: Check localStorage for encrypted key (requires PIN)

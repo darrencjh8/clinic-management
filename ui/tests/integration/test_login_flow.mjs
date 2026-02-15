@@ -1,11 +1,27 @@
 // Test the complete staff login flow
 import https from 'https';
 import * as jose from 'jose';
+import fs from 'fs';
+import path from 'path';
 
-const FIREBASE_API_KEY = "AIzaSyDsmavUPO_LoF6QxTz9x9HlPsdTWT8RdSs";
-const EMAIL = "chongjinheng@gmail.com";
-const PASSWORD = "123456";
-const BACKEND_API_URL = "https://wisata-dental.fly.dev";
+// Load credentials from .env.e2e
+const __filename = new URL(import.meta.url).pathname;
+const __dirname = path.dirname(__filename);
+const envPath = path.resolve(__dirname, '../.env.e2e');
+const envContent = fs.readFileSync(envPath, 'utf8');
+
+function getEnvVar(name) {
+    const match = envContent.match(new RegExp(`^${name}=(.*)$`, 'm'));
+    if (!match) {
+        throw new Error(`Environment variable ${name} not found in .env.e2e`);
+    }
+    return match[1];
+}
+
+const FIREBASE_API_KEY = getEnvVar('VITE_FIREBASE_API_KEY');
+const EMAIL = getEnvVar('E2E_TEST_EMAIL');
+const PASSWORD = getEnvVar('E2E_TEST_PASSWORD');
+const BACKEND_API_URL = getEnvVar('VITE_API_URL');
 
 function makeRequest(url, options, postData = null) {
     return new Promise((resolve, reject) => {
