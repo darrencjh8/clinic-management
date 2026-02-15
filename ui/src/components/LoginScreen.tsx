@@ -74,8 +74,10 @@ export const LoginScreen = ({ onLoginSuccess, onSpreadsheetIdSubmit, initialToke
                         setAuthStep('spreadsheet_setup');
                     } catch (e) {
                         console.error('[LoginScreen] Failed to restore key from session:', e);
-                        GoogleSheetsService.clearEncryptedServiceAccountKey();
-                        setError('Failed to restore session. Please log in again.');
+                        // Don't clear the encrypted key - redirect to PIN check so user can re-enter PIN
+                        // This prevents losing the key and allows recovery without full re-login
+                        setAuthStep('pin_check');
+                        setError('Session expired. Please enter your PIN.');
                     }
                 })();
                 return;
