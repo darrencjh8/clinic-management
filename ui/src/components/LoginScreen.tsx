@@ -77,6 +77,9 @@ export const LoginScreen = ({ onLoginSuccess, onSpreadsheetIdSubmit, initialToke
 
     const fetchSpreadsheets = async () => {
         console.log('[LoginScreen] fetchSpreadsheets called');
+        const currentToken = GoogleSheetsService.getAccessToken();
+        console.log('[LoginScreen] Token check before listSpreadsheets:', { hasToken: !!currentToken, tokenLength: currentToken?.length });
+        
         setIsLoadingSheets(true);
         try {
             const sheets = await GoogleSheetsService.listSpreadsheets();
@@ -84,6 +87,7 @@ export const LoginScreen = ({ onLoginSuccess, onSpreadsheetIdSubmit, initialToke
             setAvailableSheets(sheets);
         } catch (e) {
             console.error('[LoginScreen] Failed to list sheets', e);
+            setError(`Failed to load spreadsheets: ${e.message}`);
         } finally {
             setIsLoadingSheets(false);
         }
