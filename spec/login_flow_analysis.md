@@ -268,8 +268,66 @@ if (!response.ok) {
 Added extensive logging in commits:
 - `9ce5257` - Added debug logging to track token flow
 - `b375c27` - Added token verification before spreadsheet listing
+- `440205b` - Fix TypeScript error and restore service account key context
+- `3e05a2a` - Require PIN entry to restore service account key when returning with initialToken
+- `2dc912b` - After PIN check with initialToken, go to spreadsheet_setup instead of remounting
 
-These logs will help identify if:
-1. Token is being set correctly after PIN setup
-2. Token is persisting through state changes
-3. Google Drive API is returning errors or empty results
+## Manual Testing Results
+
+Created `test_flow.mjs` to manually test the complete login flow outside of React:
+
+**Test Results: ✅ SUCCESS**
+```
+=== Step 1: Firebase Login ===
+✓ Firebase ID Token obtained (length: 926)
+
+=== Step 2: Get Service Account from Backend ===
+✓ Service Account obtained: google-sheet-bot@wisata-dental.iam.gserviceaccount.com
+
+=== Step 3: Get Google OAuth Token ===
+✓ JWT created
+✓ Google Access Token obtained (length: 1024)
+  Expires in: 3599 seconds
+
+=== Step 4: List Spreadsheets ===
+✓ Found 2 spreadsheets:
+  1. Copy of Wisata Dental - February 9, 11:17 PM
+  2. Wisata Dental
+
+✅ SUCCESS: Service account can access spreadsheets!
+```
+
+**Critical Finding:** The service account works perfectly! The bug is in the UI React component lifecycle, not in:
+- Firebase authentication ✓
+- Backend API ✓
+- Service account credentials ✓
+- Google Sheets API permissions ✓
+
+## Root Cause Analysis
+
+The bug is **service account key persistence during React component remounting**:
+
+### The Problem
+
+After PIN setup, `onLoginSuccess` triggers App to remount, which causes LoginScreen to remount with `initialToken`. During this remount:
+
+1. The service account key stored in `GoogleSheetsService.serviceAccountKey` (static class variable) is lost
+2. Only the token persists (via sessionStorage and initialToken prop)
+3. Without the key, `GoogleSheetsService` cannot refresh expired tokens
+4. When `fetchSpreadsheets` tries to list spreadsheets, the token may be stale or the API call fails
+
+### Attempted Fixes
+
+**Commit `3e05a2a`:** When remounting with `initialToken` and encrypted key exists, redirect to `pin_check` to restore the service account key.
+
+**Commit `2dc912b`:** After PIN check succeeds with `initialToken` present, go directly to `spreadsheet_setup` instead of calling `onLoginSuccess` again (which would cause another remount and lose the key).
+
+### Remaining Issue
+
+E2E tests still fail with "No spreadsheet options found" despite the fixes. Possible causes:
+1. **React lifecycle timing**: Service account key might be lost between state transitions
+2. **Token staleness**: Token might expire before spreadsheet listing
+3. **E2E test timing**: Test might not wait long enough for all async operations
+4. **Race condition**: localStorage read/write timing issues
+
+The manual test proves the backend and API work. The issue is specific to the React component lifecycle in the UI.
