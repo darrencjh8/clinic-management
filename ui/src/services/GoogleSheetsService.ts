@@ -40,7 +40,26 @@ export class GoogleSheetsService {
         this.serviceAccountKey = null;
         this.tokenExpiration = null;
         sessionStorage.removeItem('google_access_token');
+        sessionStorage.removeItem('encrypted_service_account'); // Clear session encrypted key
         localStorage.removeItem('service_account_key'); // Clear encrypted key on logout
+    }
+
+    // Store encrypted service account key in sessionStorage for persistence across remounts
+    static setEncryptedServiceAccountKey(encryptedKey: string) {
+        sessionStorage.setItem('encrypted_service_account', encryptedKey);
+    }
+
+    static getEncryptedServiceAccountKey(): string | null {
+        return sessionStorage.getItem('encrypted_service_account');
+    }
+
+    static clearEncryptedServiceAccountKey() {
+        sessionStorage.removeItem('encrypted_service_account');
+    }
+
+    // Restore service account key from decoded object (for sessionStorage restoration)
+    static restoreServiceAccountKey(key: any) {
+        this.serviceAccountKey = key;
     }
 
     static async fetch(url: string, options: RequestInit = {}) {
