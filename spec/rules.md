@@ -16,8 +16,9 @@ These rules must be followed by all agents working on this project.
 3.  **Fix Failures:** If any tests fail, you must fix them before proceeding. Do not ignore test failures.
 
 ## 2. Context
-For detailed instructions on writing and debugging component tests, refer to:
-`spec/tests/component_testing.md`
+For detailed instructions on writing and debugging tests, refer to:
+- `spec/tests/component_testing.md` - Component testing guidelines
+- `spec/tests/integration_testing.md` - Integration testing guidelines
 
 ## 3. Build
     ```bash

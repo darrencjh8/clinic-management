@@ -134,6 +134,26 @@ try {
         Write-Output "✅ E2E Tests PASSED!"
     } else {
         Write-Error "❌ E2E Tests FAILED!"
+        
+        # Run integration test to diagnose if issue is backend/API vs UI
+        Write-Output "Running integration test to diagnose backend/API functionality..."
+        try {
+            Push-Location ui
+            $env:CI = "true"
+            node tests/integration/test_login_flow.mjs
+            $integrationExitCode = $LASTEXITCODE
+            Pop-Location
+            
+            if ($integrationExitCode -eq 0) {
+                Write-Output "✅ Integration Test PASSED - Backend APIs are working correctly"
+                Write-Output "🔍 The E2E failure is likely in React component lifecycle or UI state management"
+            } else {
+                Write-Output "❌ Integration Test FAILED - Backend/API issue detected"
+                Write-Output "🔍 Check Firebase credentials, service account secrets, or Google API permissions"
+            }
+        } catch {
+            Write-Output "❌ Integration Test error: $_"
+        }
     }
 
 } catch {
