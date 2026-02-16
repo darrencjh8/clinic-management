@@ -314,8 +314,28 @@ async function testUIAuthenticationFlow(credentials) {
         });
         
         console.log('   Navigating to staging application...');
-        await page.goto('http://localhost:5173');
-        await page.waitForLoadState('domcontentloaded');
+        console.log('   Target URL: http://localhost:5173');
+        console.log('   Available environment variables:');
+        console.log(`   - VITE_API_URL: ${credentials.backendUrl}`);
+        console.log(`   - VITE_FIREBASE_API_KEY: ${credentials.firebaseApiKey ? 'SET' : 'MISSING'}`);
+        console.log(`   - VITE_GOOGLE_CLIENT_ID: ${credentials.googleClientId ? 'SET' : 'MISSING'}`);
+        console.log(`   - E2E_TEST_EMAIL: ${credentials.email}`);
+        
+        await page.goto('http://localhost:5173', { waitUntil: 'domcontentloaded', timeout: 15000 });
+        
+        // Wait a bit more for the app to fully load
+        await page.waitForTimeout(2000);
+        
+        // Check if page loaded successfully
+        const pageTitle = await page.title();
+        console.log(`   Page title: ${pageTitle}`);
+        
+        // Check for any error messages on the page
+        const errorElements = await page.locator('text=/error|Error|ERROR/').count();
+        if (errorElements > 0) {
+            const errorText = await page.locator('text=/error|Error|ERROR/').first().textContent();
+            console.log(`   ⚠️  Error detected on page: ${errorText}`);
+        }
         
         console.log('   ✅ Application loaded');
         

@@ -57,10 +57,27 @@ jobs:
 
       - name: Start Local Development Server
         run: |
+          echo "Starting development server with staging environment..."
           npm run dev &
           SERVER_PID=$!
           echo "SERVER_PID=$SERVER_PID" >> $GITHUB_ENV
-          sleep 10
+          
+          # Wait for server to start and validate it's running
+          echo "Waiting for server to start..."
+          for i in {1..30}; do
+            if curl -s http://localhost:5173 > /dev/null; then
+              echo "✅ Development server is running on port 5173"
+              break
+            fi
+            if [ $i -eq 30 ]; then
+              echo "❌ Development server failed to start within 30 seconds"
+              exit 1
+            fi
+            sleep 1
+          done
+          
+          # Additional wait for app to fully load
+          sleep 5
         env:
           DEPLOYMENT_ENV: staging
           VITE_API_URL: ${{ secrets.VITE_API_URL }}
