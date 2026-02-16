@@ -75,7 +75,7 @@ jobs:
         run: npx playwright install --with-deps chromium firefox webkit
 
       - name: Run Component Tests
-        run: npm run test:ct -- --reporter=list --workers
+        run: npm run test:ct -- --reporter=list
 
   test-staging-sanity:
     name: Staging Environment Sanity Test
