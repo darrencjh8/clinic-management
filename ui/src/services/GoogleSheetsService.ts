@@ -15,6 +15,29 @@ export class GoogleSheetsService {
     private static serviceAccountKey: any | null = null;
     private static tokenExpiration: number | null = null;
 
+    // Initialize from sessionStorage on module load to survive HMR
+    private static initializeFromStorage(): void {
+        // Restore service account key from sessionStorage if present
+        const rawKey = sessionStorage.getItem('service_account_key_raw');
+        if (rawKey) {
+            try {
+                GoogleSheetsService.serviceAccountKey = JSON.parse(rawKey);
+                console.log('[GoogleSheetsService] Restored service account key from sessionStorage (HMR recovery)');
+            } catch (e) {
+                console.error('[GoogleSheetsService] Failed to restore service account key:', e);
+            }
+        }
+        
+        // Restore token expiration
+        const expiration = sessionStorage.getItem('token_expiration');
+        if (expiration) {
+            GoogleSheetsService.tokenExpiration = parseInt(expiration, 10);
+        }
+    }
+
+    // Call initialization immediately on module load
+    static { GoogleSheetsService.initializeFromStorage(); }
+
     static setAccessToken(token: string) {
         console.log('[GoogleSheetsService] setAccessToken called', { tokenLength: token?.length, hasServiceAccount: !!this.serviceAccountKey });
         this.accessToken = token;
@@ -41,6 +64,8 @@ export class GoogleSheetsService {
         this.tokenExpiration = null;
         sessionStorage.removeItem('google_access_token');
         sessionStorage.removeItem('encrypted_service_account'); // Clear session encrypted key
+        sessionStorage.removeItem('service_account_key_raw'); // Clear raw key
+        sessionStorage.removeItem('token_expiration'); // Clear token expiration
         localStorage.removeItem('service_account_key'); // Clear encrypted key on logout
     }
 
@@ -60,9 +85,17 @@ export class GoogleSheetsService {
     // Restore service account key from decoded object (for sessionStorage restoration)
     static restoreServiceAccountKey(key: any) {
         this.serviceAccountKey = key;
+        // Also persist to raw sessionStorage for HMR survival
+        sessionStorage.setItem('service_account_key_raw', JSON.stringify(key));
     }
 
     static async fetch(url: string, options: RequestInit = {}) {
+        console.log('[GoogleSheetsService.fetch] Called', { 
+            url: url.substring(0, 60),
+            hasServiceAccountKey: !!this.serviceAccountKey,
+            hasToken: !!this.accessToken
+        });
+        
         // Auto-refresh token if using Service Account
         if (this.serviceAccountKey && this.tokenExpiration && Date.now() > this.tokenExpiration - 60000) {
             await this.refreshServiceAccountToken();
@@ -149,8 +182,19 @@ export class GoogleSheetsService {
     // --- Service Account Logic ---
 
     static async loginWithServiceAccount(credentials: any) {
+        console.log('[GoogleSheetsService] loginWithServiceAccount called', { 
+            hasCredentials: !!credentials, 
+            hasPrivateKey: !!credentials?.private_key,
+            email: credentials?.client_email 
+        });
         this.serviceAccountKey = credentials;
+        
+        // Persist to sessionStorage to survive HMR reloads
+        sessionStorage.setItem('service_account_key_raw', JSON.stringify(credentials));
+        console.log('[GoogleSheetsService] serviceAccountKey set and persisted', { keyIsNowSet: !!this.serviceAccountKey });
+        
         await this.refreshServiceAccountToken();
+        console.log('[GoogleSheetsService] Token refreshed, serviceAccountKey status:', { stillSet: !!this.serviceAccountKey });
     }
 
     static async refreshServiceAccountToken() {
@@ -192,6 +236,7 @@ export class GoogleSheetsService {
             const data = await response.json();
             this.setAccessToken(data.access_token);
             this.tokenExpiration = Date.now() + (data.expires_in * 1000);
+            sessionStorage.setItem('token_expiration', this.tokenExpiration.toString());
             console.log('Service Account Token Refreshed', { expiresIn: data.expires_in });
         } catch (e) {
             console.error('Service Account Login Failed', e);

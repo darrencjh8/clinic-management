@@ -15,7 +15,36 @@ npm run test:ct -- ui/tests/components/MyComponent.spec.tsx
 
 # Debug mode
 npm run test:ct -- --ui
+
+# Validate E2E credentials (before debugging E2E tests)
+node ui/tests/integration/test_login_flow.mjs
 ```
+
+## Component Tests vs E2E Tests
+
+**Critical Decision**: Choose the right test type for your scenario.
+
+### Use Component Tests For:
+- ✅ Isolated component behavior (rendering, state changes, props)
+- ✅ User interactions with mocked services (click, type, select)
+- ✅ Conditional rendering logic (role-based features)
+- ✅ Form validation and error states
+- ✅ Component-specific edge cases
+
+### Use E2E Tests For:
+- ✅ Complete user workflows (login → setup → usage)
+- ✅ Multi-screen navigation flows
+- ✅ Real authentication and API interactions
+- ✅ Session persistence across page reloads
+- ✅ Integration with backend services
+
+### Recently Migrated Tests
+The following tests were moved from component tests to E2E (`ui/tests/e2e/auth-flow.spec.ts`):
+- **DEF-005**: Sheet fetching after PIN setup (requires full auth flow)
+- **DEF-006**: Logout redirect behavior (requires full app navigation)
+- **Session Persistence**: Cross-reload session validation (requires real session)
+
+**Reason**: These scenarios require multiple steps of real authentication, navigation between screens, and actual API calls—making them unsuitable for isolated component testing.
 
 ## Critical i18n Considerations
 
@@ -448,6 +477,21 @@ npm run test:ct
 
 
 ---
+
+## HMR (Hot Module Replacement) Considerations
+
+### DEF-007: Service Account Key Persistence
+During development, Vite's HMR can reload modules, clearing static properties. This was causing 401 errors on fresh login because `GoogleSheetsService.serviceAccountKey` was being reset to null.
+
+**Solution**: Critical service state is now persisted in `sessionStorage` and restored on module initialization.
+
+**For Services with Static State**:
+- ✅ Persist to sessionStorage on update
+- ✅ Restore from sessionStorage on module load (IIFE pattern)
+- ✅ Clear on explicit logout
+- ❌ Never rely solely on in-memory static properties for critical data
+
+**Reference**: See `GoogleSheetsService.ts` initialization IIFE for implementation pattern.
 
 ## Areas for Improvement
 

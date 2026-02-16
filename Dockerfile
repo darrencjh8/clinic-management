@@ -4,7 +4,12 @@ WORKDIR /app/ui
 COPY ui/package*.json ./
 RUN npm ci
 COPY ui/ ./
-# Copy production env file to .env so Vite uses it
+# Environment handling for production build:
+# 1. Remove any accidental .env file from COPY ui/. command
+# 2. Copy .env-prod to .env so Vite uses production values
+# 3. Vite bakes these values into the bundle at build time
+# 4. No runtime environment files needed
+RUN rm -f ./.env || true
 COPY ui/.env-prod ./.env
 RUN npm run build
 

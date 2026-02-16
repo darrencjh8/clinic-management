@@ -98,6 +98,43 @@ define: {
 
 If you add new environment variables, add corresponding mocks to this config.
 
+## 7. E2E Test Credentials & Validation
+
+**CRITICAL:** When working with E2E tests that require Firebase authentication and Google Sheets access, ALWAYS validate credentials before debugging test failures.
+
+### E2E Credentials Location
+- **File**: `ui/.env.e2e`
+- **Purpose**: Contains production Firebase credentials and test user credentials
+- **Variables**: 
+  - `E2E_TEST_EMAIL`: Firebase user email
+  - `E2E_TEST_PASSWORD`: Firebase user password
+  - `E2E_TEST_SERVICE_ACCOUNT`: Base64-encoded service account JSON
+  - `VITE_FIREBASE_*`: Firebase configuration
+  - `VITE_GOOGLE_CLIENT_ID`: Google OAuth client ID
+  - `VITE_API_URL`: Backend API URL
+
+### Credentials Validation Script
+**Before debugging E2E test failures**, run the validation script to verify the complete authentication flow:
+
+```bash
+node ui/tests/integration/test_login_flow.mjs
+```
+
+This script validates:
+1. ✓ Firebase authentication (email/password login)
+2. ✓ Backend service account retrieval
+3. ✓ Google OAuth token generation (JWT signing)
+4. ✓ Google Drive API access (spreadsheet listing)
+
+**If this script fails**, the E2E test credentials are invalid. Fix credentials in `.env.e2e` before proceeding.
+
+**If this script passes but E2E tests fail**, the issue is in the test logic, not the credentials.
+
+### Component vs E2E Test Boundaries
+- **Component Tests**: Test isolated component behavior with mocked services
+- **E2E Tests**: Test full user workflows with real authentication and API calls
+- **Migrated Tests**: Tests previously skipped in component tests have been migrated to `ui/tests/e2e/auth-flow.spec.ts`
+
 ## 7. Test Writing Best Practices
 
 ### ✅ DO:

@@ -3,9 +3,7 @@ import { LoginScreen } from '../../src/components/LoginScreen';
 import { TestWrapper } from '../../src/components/TestWrapper';
 
 test.describe('LoginScreen Guards', () => {
-    test('DEF-002: should handle unmount/navigation during slow fetch without errors', async ({ mount, page, browserName }) => {
-        // Skip for Firefox due to timing issues with button state
-        test.skip(browserName === 'firefox', 'Firefox has timing issues with refresh button state');
+    test('DEF-002: should handle unmount/navigation during slow fetch without errors', async ({ mount, page }) => {
         // Enable console logs
         page.on('console', msg => console.log(`[Browser]: ${msg.text()}`));
 

@@ -46,7 +46,6 @@ export default defineConfig({
         {
             name: 'firefox',
             use: { ...devices['Desktop Firefox'] },
-            fullyParallel: false,
         },
         {
             name: 'webkit',

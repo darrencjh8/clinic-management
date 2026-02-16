@@ -61,29 +61,8 @@ test.describe('SessionStorage Persistence', () => {
         });
     });
 
-    test.skip('encrypted service account key should persist in sessionStorage after PIN setup', async ({ mount, page }) => {
-        const onLoginSuccess = () => { };
-
-        // Spy on sessionStorage
-        await page.addInitScript(() => {
-            (window as any).sessionClearCalled = false;
-            const originalClear = sessionStorage.clear.bind(sessionStorage);
-            sessionStorage.clear = () => {
-                (window as any).sessionClearCalled = true;
-                return originalClear();
-            };
-        });
-
-        await mount(
-            <TestWrapper>
-                <LoginScreen onLoginSuccess={onLoginSuccess} />
-            </TestWrapper>
-        );
-
-        // Verify clear wasn't called
-        const clearCalled = await page.evaluate(() => (window as any).sessionClearCalled);
-        expect(clearCalled).toBe(false);
-    });
+    // NOTE: Session persistence after PIN setup is covered in e2e/auth-flow.spec.ts
+    // Component tests should focus on isolated behavior, not full authentication flows.
 
     test('sessionStorage should survive React component remounting', async ({ mount, page }) => {
         // Set valid test data in sessionStorage using mount-evaluate-remount strategy
