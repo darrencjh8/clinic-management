@@ -13,10 +13,19 @@ interface LoginScreenProps {
     userRole?: 'admin' | 'staff' | null;
 }
 
-export const LoginScreen = ({ onLoginSuccess, onSpreadsheetIdSubmit, initialToken, userRole }: LoginScreenProps) => {
+export const LoginScreen = ({
+    onLoginSuccess,
+    onSpreadsheetIdSubmit,
+    initialToken,
+    userRole,
+}: LoginScreenProps) => {
     // Login Method State
     const [loginMethod, setLoginMethod] = useState<'firebase' | 'google'>('firebase');
     const { t, i18n } = useTranslation();
+
+    // Service Locators (for testing)
+    const authService = (window as any).MockAuthService || FirebaseAuthService;
+    const sheetsService = (window as any).MockSheetsService || GoogleSheetsService;
 
     // Firebase State
     const [email, setEmail] = useState('');
@@ -34,6 +43,12 @@ export const LoginScreen = ({ onLoginSuccess, onSpreadsheetIdSubmit, initialToke
     const [availableSheets, setAvailableSheets] = useState<any[]>([]);
     const [isLoadingSheets, setIsLoadingSheets] = useState(false);
     const [isKeyRestored, setIsKeyRestored] = useState(false);
+
+    // Ref to track the current authStep for async operations to avoid closure staleness
+    const authStepRef = useRef(authStep);
+    useEffect(() => {
+        authStepRef.current = authStep;
+    }, [authStep]);
 
     const toggleLanguage = () => {
         const newLang = i18n.language === 'en' ? 'id' : 'en';
@@ -62,8 +77,9 @@ export const LoginScreen = ({ onLoginSuccess, onSpreadsheetIdSubmit, initialToke
         if (initialToken) {
             // CRITICAL FIX: If we are in the middle of PIN setup/check (e.g. from Firebase Login flow),
             // do NOT let initialToken (which might be the Firebase ID token bubbling down) hijack the state.
-            if (authStep === 'pin_setup' || authStep === 'pin_check') {
-                console.log('[LoginScreen] Ignoring initialToken update during PIN flow');
+            // Also block if we are loading (e.g. during sign-in) to prevent race conditions (401s).
+            if (authStep === 'pin_setup' || authStep === 'pin_check' || isLoading) {
+                console.log('[LoginScreen] Ignoring initialToken update during PIN flow or loading state');
                 return;
             }
 
@@ -72,18 +88,18 @@ export const LoginScreen = ({ onLoginSuccess, onSpreadsheetIdSubmit, initialToke
 
             // CRITICAL FIX: Try to restore service account key from sessionStorage first
             // This survives component remounts unlike static class variables
-            const sessionEncryptedKey = GoogleSheetsService.getEncryptedServiceAccountKey();
+            const sessionEncryptedKey = sheetsService.getEncryptedServiceAccountKey();
             if (sessionEncryptedKey) {
                 console.log('[LoginScreen] Found encrypted key in sessionStorage, restoring...');
                 setIsKeyRestored(false); // Reset state
                 (async () => {
                     try {
                         const key = JSON.parse(atob(sessionEncryptedKey));
-                        GoogleSheetsService.restoreServiceAccountKey(key);
+                        sheetsService.restoreServiceAccountKey(key);
                         console.log('[LoginScreen] Service account key restored, refreshing token...');
 
                         // Refresh token to ensure it's valid and tokenExpiration is set
-                        await GoogleSheetsService.refreshServiceAccountToken();
+                        await sheetsService.refreshServiceAccountToken();
                         console.log('[LoginScreen] Token refreshed successfully');
 
                         // Set state AFTER async operations complete
@@ -101,7 +117,7 @@ export const LoginScreen = ({ onLoginSuccess, onSpreadsheetIdSubmit, initialToke
             }
 
             // Fallback: Check localStorage for encrypted key (requires PIN)
-            const currentUser = FirebaseAuthService.getCurrentUser();
+            const currentUser = authService.getCurrentUser();
             if (currentUser) {
                 const uid = currentUser.uid;
                 const encryptedKey = localStorage.getItem(`encrypted_key_${uid}`);
@@ -118,7 +134,7 @@ export const LoginScreen = ({ onLoginSuccess, onSpreadsheetIdSubmit, initialToke
         }
 
         // 2. Check if user is already logged in to Firebase
-        const currentUser = FirebaseAuthService.getCurrentUser();
+        const currentUser = authService.getCurrentUser();
         if (currentUser) {
             // If already logged in, check if we have a stored key
             const uid = currentUser.uid;
@@ -133,7 +149,7 @@ export const LoginScreen = ({ onLoginSuccess, onSpreadsheetIdSubmit, initialToke
         if (authStep === 'spreadsheet_setup') {
             // Only fetch spreadsheets if key restoration is complete or not needed
             // This prevents race condition where fetchSpreadsheets runs before key is restored
-            const hasSessionKey = GoogleSheetsService.getEncryptedServiceAccountKey();
+            const hasSessionKey = sheetsService.getEncryptedServiceAccountKey();
             if (!hasSessionKey || isKeyRestored) {
                 console.log('[LoginScreen] Triggering fetchSpreadsheets', { hasSessionKey: !!hasSessionKey, isKeyRestored });
                 fetchSpreadsheets();
@@ -143,11 +159,7 @@ export const LoginScreen = ({ onLoginSuccess, onSpreadsheetIdSubmit, initialToke
         }
     }, [authStep, isKeyRestored]);
 
-    // Ref to track the current authStep for async operations to avoid closure staleness
-    const authStepRef = useRef(authStep);
-    useEffect(() => {
-        authStepRef.current = authStep;
-    }, [authStep]);
+
 
     const fetchSpreadsheets = async () => {
         console.log('[LoginScreen] fetchSpreadsheets called');
@@ -158,12 +170,12 @@ export const LoginScreen = ({ onLoginSuccess, onSpreadsheetIdSubmit, initialToke
             return;
         }
 
-        const currentToken = GoogleSheetsService.getAccessToken();
+        const currentToken = sheetsService.getAccessToken();
         console.log('[LoginScreen] Token check before listSpreadsheets:', { hasToken: !!currentToken, tokenLength: currentToken?.length });
 
         setIsLoadingSheets(true);
         try {
-            const sheets = await GoogleSheetsService.listSpreadsheets();
+            const sheets = await sheetsService.listSpreadsheets();
 
             // GUARD: Check ref again
             if (authStepRef.current !== 'spreadsheet_setup') {
@@ -187,7 +199,7 @@ export const LoginScreen = ({ onLoginSuccess, onSpreadsheetIdSubmit, initialToke
                 console.warn('[LoginScreen] Critical 401 during fetch. Redirecting to PIN check/Login.');
 
                 // If we have a stored key, go to PIN check to re-decrypt/refresh properly
-                const currentUser = FirebaseAuthService.getCurrentUser();
+                const currentUser = authService.getCurrentUser();
                 const uid = currentUser?.uid;
                 if (uid && localStorage.getItem(`encrypted_key_${uid}`)) {
                     setAuthStep('pin_check');
@@ -214,7 +226,7 @@ export const LoginScreen = ({ onLoginSuccess, onSpreadsheetIdSubmit, initialToke
     const googleLogin = useGoogleLogin({
         onSuccess: (tokenResponse) => {
             // DIRECT OAUTH ACCESS: Use the user's token, skip PIN/Service Account
-            GoogleSheetsService.setAccessToken(tokenResponse.access_token);
+            sheetsService.setAccessToken(tokenResponse.access_token);
             onLoginSuccess(tokenResponse.access_token, 'admin');
         },
         onError: () => setError('Google Login Failed'),
@@ -228,7 +240,7 @@ export const LoginScreen = ({ onLoginSuccess, onSpreadsheetIdSubmit, initialToke
         setError(null);
 
         try {
-            const userCredential = await FirebaseAuthService.signIn(email, password);
+            const userCredential = await authService.signIn(email, password);
             const uid = userCredential.user.uid;
 
             // Check if we already have a key for this user
@@ -238,7 +250,7 @@ export const LoginScreen = ({ onLoginSuccess, onSpreadsheetIdSubmit, initialToke
                 // Fetch service account from server
                 console.log('Fetching service account...');
                 const token = await userCredential.user.getIdToken();
-                const serviceAccount = await FirebaseAuthService.fetchServiceAccount(token);
+                const serviceAccount = await authService.fetchServiceAccount(token);
                 console.log('Service account fetched:', !!serviceAccount);
 
                 if (serviceAccount) {
@@ -265,34 +277,41 @@ export const LoginScreen = ({ onLoginSuccess, onSpreadsheetIdSubmit, initialToke
         }
         setIsLoading(true);
         try {
-            const uid = FirebaseAuthService.getCurrentUser()?.uid;
+            const uid = authService.getCurrentUser()?.uid;
             if (!uid) throw new Error('No user');
 
             console.log('Encrypting key...');
-            const jwe = await GoogleSheetsService.encryptKey(tempServiceAccount, pin);
+            const jwe = await sheetsService.encryptKey(tempServiceAccount, pin);
             localStorage.setItem(`encrypted_key_${uid}`, jwe);
 
             // Login to sheets
             console.log('Logging in with service account...');
-            await GoogleSheetsService.loginWithServiceAccount(tempServiceAccount);
+            await sheetsService.loginWithServiceAccount(tempServiceAccount);
             console.log('Service account login successful');
 
             // Store base64-encoded service account in sessionStorage for remount persistence
             const encodedKey = btoa(JSON.stringify(tempServiceAccount));
-            GoogleSheetsService.setEncryptedServiceAccountKey(encodedKey);
+            sheetsService.setEncryptedServiceAccountKey(encodedKey);
             console.log('Service account key stored in sessionStorage');
 
             // Mark key as restored since it's in memory now
             setIsKeyRestored(true);
 
             // Get the actual access token generated by the service account login
-            const token = GoogleSheetsService.getAccessToken();
+            const token = sheetsService.getAccessToken();
             console.log('Access token retrieved:', !!token);
 
             if (token) {
                 console.log('Calling onLoginSuccess from Setup...');
                 // UNLOCK TRANSITION: Explicitly set step to allow initialToken update to pass guard
                 setAuthStep('spreadsheet_setup');
+
+                // FIX DEF-005: Explicitly trigger fetch to ensure it happens immediately
+                // The useEffect might be skipped or delayed due to batching/race
+                // MANUALLY UPDATE REF to bypass guard since state update is async
+                authStepRef.current = 'spreadsheet_setup';
+                fetchSpreadsheets();
+
                 onLoginSuccess(token, 'staff');
                 console.log('onLoginSuccess called');
             } else {
@@ -310,26 +329,26 @@ export const LoginScreen = ({ onLoginSuccess, onSpreadsheetIdSubmit, initialToke
         setIsLoading(true);
         setError(null);
         try {
-            const uid = FirebaseAuthService.getCurrentUser()?.uid;
+            const uid = authService.getCurrentUser()?.uid;
             if (!uid) throw new Error('No user');
 
             const encryptedKey = localStorage.getItem(`encrypted_key_${uid}`);
             if (!encryptedKey) throw new Error('No stored key');
 
             console.log('[LoginScreen] Decrypting service account key with PIN...');
-            const key = await GoogleSheetsService.decryptKey(encryptedKey, pin);
-            await GoogleSheetsService.loginWithServiceAccount(key);
+            const key = await sheetsService.decryptKey(encryptedKey, pin);
+            await sheetsService.loginWithServiceAccount(key);
             console.log('[LoginScreen] Service account restored successfully');
 
             // Store base64-encoded service account in sessionStorage for remount persistence
             const encodedKey = btoa(JSON.stringify(key));
-            GoogleSheetsService.setEncryptedServiceAccountKey(encodedKey);
+            sheetsService.setEncryptedServiceAccountKey(encodedKey);
             console.log('Service account key stored in sessionStorage');
 
             // Mark key as restored since it's in memory now
             setIsKeyRestored(true);
 
-            const token = GoogleSheetsService.getAccessToken();
+            const token = sheetsService.getAccessToken();
             if (token) {
                 // If we already have initialToken, just proceed to spreadsheet_setup
                 if (initialToken) {
@@ -338,11 +357,18 @@ export const LoginScreen = ({ onLoginSuccess, onSpreadsheetIdSubmit, initialToke
                     // We assume initialToken is already the correct one if we are here?
                     // Actually, if we just restored the key, we might need to refresh?
                     // But if initialToken is null, we do onLoginSuccess.
+                    authStepRef.current = 'spreadsheet_setup';
+                    fetchSpreadsheets(); // Ensure fetch happens
                 } else {
                     // Standard flow: Pin Check -> Service Account Restore -> Login Success
                     console.log('PIN check success, restoring session...');
                     // UNLOCK TRANSITION: Explicitly set step to allow initialToken update to pass guard
                     setAuthStep('spreadsheet_setup');
+
+                    // FIX DEF-005: Explicitly trigger fetch here too for consistency
+                    authStepRef.current = 'spreadsheet_setup';
+                    fetchSpreadsheets();
+
                     onLoginSuccess(token, 'staff');
                 }
             } else {
@@ -360,7 +386,7 @@ export const LoginScreen = ({ onLoginSuccess, onSpreadsheetIdSubmit, initialToke
 
         setIsLoading(true);
         try {
-            const user = FirebaseAuthService.getCurrentUser();
+            const user = authService.getCurrentUser();
             if (!user) throw new Error('No user');
 
             // 1. Clear stored key
@@ -369,7 +395,7 @@ export const LoginScreen = ({ onLoginSuccess, onSpreadsheetIdSubmit, initialToke
             // 2. Re-fetch service account
             console.log('Fetching service account for reset...');
             const token = await user.getIdToken();
-            const serviceAccount = await FirebaseAuthService.fetchServiceAccount(token);
+            const serviceAccount = await authService.fetchServiceAccount(token);
 
             if (serviceAccount) {
                 setTempServiceAccount(serviceAccount);
@@ -387,11 +413,20 @@ export const LoginScreen = ({ onLoginSuccess, onSpreadsheetIdSubmit, initialToke
     };
 
     const handleSignOut = async () => {
-        await FirebaseAuthService.signOut();
-        GoogleSheetsService.logout();
-        setAuthStep('login');
-        setEmail('');
-        setPassword('');
+        console.log('[LoginScreen] handleSignOut called');
+        try {
+            await authService.signOut();
+            sheetsService.logout();
+        } catch (e) {
+            console.error('Sign out error', e);
+        } finally {
+            console.log('[LoginScreen] handleSignOut finally block - resetting loading state');
+            // FIX DEF-004: Ensure loading state is reset
+            setIsLoading(false);
+            setAuthStep('login');
+            setEmail('');
+            setPassword('');
+        }
     };
 
     // --- RENDER ---
@@ -459,7 +494,7 @@ export const LoginScreen = ({ onLoginSuccess, onSpreadsheetIdSubmit, initialToke
                                         setIsLoading(true);
                                         try {
                                             const title = `Dental Clinic Data - ${new Date().getFullYear()}`;
-                                            const sheet = await GoogleSheetsService.createSpreadsheet(title);
+                                            const sheet = await sheetsService.createSpreadsheet(title);
                                             if (onSpreadsheetIdSubmit) {
                                                 onSpreadsheetIdSubmit(sheet.spreadsheetId);
                                             }

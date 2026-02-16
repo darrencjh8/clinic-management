@@ -119,6 +119,16 @@ This document describes the authentication flow for the clinic management app, c
    - Decrypt service account key from localStorage
    - Generate JWT and exchange for access token
 
+### Logout Flow
+
+1.  **User Trigger**: Click Logout.
+2.  **`useStore.logout` Execution**:
+    -   **Firebase Signout**: `await authService.signOut()` (CRITICAL: Ensures "new user" state on next login).
+    -   **Google Sheets Logout**: Clears memory and session tokens.
+    -   **State Clearing**: Clears `accessToken`, `spreadsheetId`, `userRole`, `retry_attempted`.
+    -   **Cache Clearing**: Clears Cache Storage and unregisters Service Workers.
+3.  **Redirect**: Reloads page to `/`.
+
 ### Token Refresh Handling
 
 **CRITICAL:** Staff users must NOT have their access token overwritten by Firebase token refreshes.
@@ -157,6 +167,23 @@ useEffect(() => {
 2. The `onTokenChange` listener is **required for Firebase Auth initialization** - removing it breaks login entirely
 3. For **staff users**, we MUST NOT overwrite the Google Sheets service account token with the Firebase ID token
 4. For **admin users** (Google OAuth), we DO update the token since they use Firebase tokens directly for Sheets API
+
+### Premature Token Usage (Race Condition)
+
+**Problem**: Immediately after Firebase login, the global `accessToken` updates. If `LoginScreen` attempts to use this *Firebase ID Token* to query Google Sheets API (before the Service Account is unlocked via PIN), it results in **401 Unauthorized** errors.
+
+**Mechanism**:
+1. User signs in -> `accessToken` updates.
+2. `LoginScreen` effect triggers on `initialToken` change.
+3. If not guarded, it tries `fetchSpreadsheets()` with the wrong token type.
+
+**Fix**:
+In `LoginScreen.tsx`, the `useEffect` for `initialToken` **MUST** check `isLoading` or `authStep`.
+```typescript
+if (authStep === 'pin_setup' || authStep === 'pin_check' || isLoading) {
+    return; // Ignore token updates during setup/loading
+}
+```
 
 ### Service Account Key Restoration
 

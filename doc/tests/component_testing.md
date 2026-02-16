@@ -16,9 +16,10 @@ All commands should be run from the `ui` directory.
 
 - **Run All Tests**:
   ```bash
-  npm run test:ct
+  npm run test:ct -- --reporter=list
   ```
-  *(Alias for `playwright test -c playwright-ct.config.ts`)*
+  *(Alias for `playwright test -c playwright-ct.config.ts --reporter=list`)*
+  > **⚠️ IMPORTANT**: The Playwright HTTP server may hang indefinitely after tests complete. If the process does not exit, you may need to manually terminate it (Ctrl+C). Always use `--reporter=list` to see progress.
 
 - **Run Specific Test**:
   ```bash

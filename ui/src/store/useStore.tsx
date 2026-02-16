@@ -508,6 +508,12 @@ export const StoreProvider: React.FC<{ children: ReactNode, authService?: typeof
     };
 
     const logout = async () => {
+        try {
+            await authService.signOut();
+        } catch (e) {
+            console.error('Firebase signout failed during app logout', e);
+        }
+
         GoogleSheetsService.logout();
         setAccessToken(null);
         setSpreadsheetId(null);

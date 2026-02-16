@@ -1,0 +1,33 @@
+
+Running 1 test using 1 worker
+
+  Γ£ÿ  1 [chromium] ΓÇ║ tests\components\LogoutSpinner.spec.tsx:8:5 ΓÇ║ DEF-004: Logout Spinner Stuck ΓÇ║ should reset loading state when signing out (5.3s)
+
+
+  1) [chromium] ΓÇ║ tests\components\LogoutSpinner.spec.tsx:8:5 ΓÇ║ DEF-004: Logout Spinner Stuck ΓÇ║ should reset loading state when signing out 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeVisible[2m([22m[2m)[22m failed
+
+    Locator: locator('#root').locator('internal:control=component').getByText(/Enter PIN/i)
+    Expected: visible
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+    [2m  - Expect "toBeVisible" with timeout 5000ms[22m
+    [2m  - waiting for locator('#root').locator('internal:control=component').getByText(/Enter PIN/i)[22m
+
+
+      26 |
+      27 |         // 2. Verify we are at PIN Check
+    > 28 |         await expect(component.getByText(/Enter PIN/i)).toBeVisible();
+         |                                                         ^
+      29 |         await expect(component.getByRole('button', { name: /Sign Out|Keluar/i })).toBeVisible();
+      30 |
+      31 |         // 3. Inject State: Set isLoading to true to simulate a stuck process
+        at C:\Users\darren\OneDrive\Documents\project\clinic-app\ui\tests\components\LogoutSpinner.spec.tsx:28:57
+
+    Error Context: test-results\components-LogoutSpinner-D-7f7c1-ding-state-when-signing-out-chromium\error-context.md
+
+  1 failed
+    [chromium] ΓÇ║ tests\components\LogoutSpinner.spec.tsx:8:5 ΓÇ║ DEF-004: Logout Spinner Stuck ΓÇ║ should reset loading state when signing out 

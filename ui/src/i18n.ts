@@ -12,7 +12,7 @@ i18n
     .use(initReactI18next)
     .init({
         resources,
-        lng: localStorage.getItem('language') || 'id',
+        lng: (window as any).TEST_LANGUAGE || localStorage.getItem('language') || 'id',
         fallbackLng: 'id',
         interpolation: {
             escapeValue: false

@@ -1,0 +1,99 @@
+
+Running 168 tests using 11 workers
+
+  Γ£ô    8 [chromium] ΓÇ║ tests\components\Layout.spec.tsx:24:5 ΓÇ║ Layout ΓÇ║ should render bottom tabs on mobile (856ms)
+  Γ£ô    9 [chromium] ΓÇ║ tests\components\Layout.spec.tsx:8:5 ΓÇ║ Layout ΓÇ║ should render sidebar and children on desktop (1.0s)
+  Γ£ô    1 [chromium] ΓÇ║ tests\components\Layout.spec.tsx:33:5 ΓÇ║ Layout Mobile ΓÇ║ should render bottom tabs and children (1.5s)
+  Γ£ô    2 [chromium] ΓÇ║ tests\components\BottomTabs.spec.tsx:30:5 ΓÇ║ BottomTabs ΓÇ║ should highlight active tab (1.6s)
+  Γ£ô    3 [chromium] ΓÇ║ tests\components\Autocomplete.spec.tsx:7:5 ΓÇ║ Autocomplete ΓÇ║ should render with label and placeholder (1.7s)
+  Γ£ô    4 [chromium] ΓÇ║ tests\components\BottomTabs.spec.tsx:47:5 ΓÇ║ BottomTabs ΓÇ║ should call onNavigate when clicked (1.3s)
+  Γ£ô    7 [chromium] ΓÇ║ tests\components\Autocomplete.spec.tsx:61:5 ΓÇ║ Autocomplete ΓÇ║ should close suggestions when clicking outside (1.6s)
+  Γ£ô    5 [chromium] ΓÇ║ tests\components\Autocomplete.spec.tsx:22:5 ΓÇ║ Autocomplete ΓÇ║ should show suggestions when typing matches (1.6s)
+  Γ£ô   10 [chromium] ΓÇ║ tests\components\Autocomplete.spec.tsx:39:5 ΓÇ║ Autocomplete ΓÇ║ should call onChange when selecting a suggestion (1.9s)
+  Γ£ô   11 [chromium] ΓÇ║ tests\components\BottomTabs.spec.tsx:10:5 ΓÇ║ BottomTabs ΓÇ║ should render navigation items (1.8s)
+  Γ£ô    6 [chromium] ΓÇ║ tests\components\BottomTabs.spec.tsx:62:5 ΓÇ║ BottomTabs ΓÇ║ should show reporting tab for admin (2.0s)
+[Browser]: Firebase Config Debug: {apiKey: test-..., projectId: test-project, authDomain: test.firebaseapp.com}
+[Browser]: [LoginScreen] Step changed to: login
+[Browser]: LoginScreen: Effect running {initialToken: true}
+[Browser]: [LoginScreen] initialToken detected {tokenLength: 11}
+[Browser]: [GoogleSheetsService] setAccessToken called {tokenLength: 11, hasServiceAccount: false}
+[Browser]: [LoginScreen] No encrypted key found, proceeding to spreadsheet_setup
+[Browser]: [LoginScreen] Step changed to: spreadsheet_setup
+[Browser]: [LoginScreen] Triggering fetchSpreadsheets {hasSessionKey: false, isKeyRestored: false}
+[Browser]: [LoginScreen] fetchSpreadsheets called
+[Browser]: [GoogleSheetsService] getAccessToken called {hasToken: true, tokenLength: 11}
+[Browser]: [LoginScreen] Token check before listSpreadsheets: {hasToken: true, tokenLength: 11}
+[Browser]: [GoogleSheetsService] listSpreadsheets called {hasToken: true, hasServiceAccount: false}
+[Browser]: [GoogleSheetsService] getAccessToken called {hasToken: true, tokenLength: 11}
+[Browser]: Failed to load resource: the server responded with a status of 404 (Not Found)
+Mock API hit, delaying...
+Clicking Refresh...
+  Γ£ô   12 [chromium] ΓÇ║ tests\components\LoginScreen.spec.tsx:7:1 ΓÇ║ should render firebase login by default and switch to google (1.3s)
+  Γ£ô   19 [chromium] ΓÇ║ tests\components\OrientationGuard.spec.tsx:20:5 ΓÇ║ OrientationGuard ΓÇ║ should show warning when orientation is incorrect (Desktop Portrait?) (330ms)
+  Γ£ô   14 [chromium] ΓÇ║ tests\components\LoginScreenLogout.spec.tsx:6:5 ΓÇ║ LoginScreen Logout ΓÇ║ should clear session storage on sign out from spreadsheet setup (802ms)
+  Γ£ô   16 [chromium] ΓÇ║ tests\components\OrientationGuard.spec.tsx:6:5 ΓÇ║ OrientationGuard ΓÇ║ should render children when orientation is correct (Desktop Landscape) (579ms)
+  Γ£ô   20 [chromium] ΓÇ║ tests\components\OrientationGuard.spec.tsx:36:5 ΓÇ║ OrientationGuard Mobile ΓÇ║ should render children when mobile portrait (500ms)
+  Γ£ô   22 [chromium] ΓÇ║ tests\components\OrientationGuard.spec.tsx:52:5 ΓÇ║ OrientationGuard Mobile Landscape ΓÇ║ should show rotate warning when mobile landscape (568ms)
+  Γ£ô   21 [chromium] ΓÇ║ tests\components\PatientManager.spec.tsx:8:5 ΓÇ║ PatientManager ΓÇ║ should render patient list (623ms)
+[Browser Console]: Firebase Config Debug: {apiKey: test-..., projectId: test-project, authDomain: test.firebaseapp.com}
+  Γ£ÿ   15 [chromium] ΓÇ║ tests\components\LoginScreenSheetFetch.spec.tsx:6:5 ΓÇ║ DEF-005: Sheet Selection API Trigger ΓÇ║ should fetch spreadsheets automatically after valid PIN setup (425ms)
+  -   30 [chromium] ΓÇ║ tests\components\ServiceLogic.spec.tsx:33:10 ΓÇ║ GoogleSheetsService Logic ΓÇ║ Token Refresh: should auto-refresh token on 401
+  -   31 [chromium] ΓÇ║ tests\components\SessionStoragePersistence.spec.tsx:64:10 ΓÇ║ SessionStorage Persistence ΓÇ║ encrypted service account key should persist in sessionStorage after PIN setup
+  Γ£ô   23 [chromium] ΓÇ║ tests\components\PinEntry.spec.tsx:6:1 ΓÇ║ should render PinEntry in enter mode (481ms)
+  Γ£ÿ   18 [chromium] ΓÇ║ tests\components\LogoutRedirect.spec.tsx:8:5 ΓÇ║ DEF-006: Logout Redirect ΓÇ║ should redirect to login screen after logout (499ms)
+[Browser Console]: MockAuthService did not register __triggerTokenChange
+  Γ£ÿ   17 [chromium] ΓÇ║ tests\components\LogoutSpinner.spec.tsx:8:5 ΓÇ║ DEF-004: Logout Spinner Stuck ΓÇ║ should reset loading state when signing out (438ms)
+  Γ£ô   25 [chromium] ΓÇ║ tests\components\Reporting.spec.tsx:39:5 ΓÇ║ Reporting ΓÇ║ should render summary view with dentist cards (551ms)
+  Γ£ô   24 [chromium] ΓÇ║ tests\components\PatientManager.spec.tsx:26:5 ΓÇ║ PatientManager ΓÇ║ should open add patient modal (583ms)
+  Γ£ô   29 [chromium] ΓÇ║ tests\components\ServiceLogic.spec.tsx:9:5 ΓÇ║ GoogleSheetsService Logic ΓÇ║ DEF-001: JWT iat claim should be backdated by 60 seconds (Clock Skew) (259ms)
+  Γ£ô   28 [chromium] ΓÇ║ tests\components\Reporting.spec.tsx:74:5 ΓÇ║ Reporting ΓÇ║ should render empty state when no treatments (474ms)
+  Γ£ô   27 [chromium] ΓÇ║ tests\components\Reporting.spec.tsx:54:5 ΓÇ║ Reporting ΓÇ║ should navigate to detail view on dentist click (634ms)
+  Γ£ô   26 [chromium] ΓÇ║ tests\components\RedirectLoopReproduction.spec.tsx:7:1 ΓÇ║ should IGNORE firebase token update when user is STAFF to prevent redirect loop (995ms)
+  Γ£ô   33 [chromium] ΓÇ║ tests\components\Sidebar.spec.tsx:48:5 ΓÇ║ Sidebar ΓÇ║ should highlight active view (402ms)
+  Γ£ô   35 [chromium] ΓÇ║ tests\components\Sidebar.spec.tsx:68:5 ΓÇ║ Sidebar ΓÇ║ should show extra options for admin (384ms)
+  Γ£ô   34 [chromium] ΓÇ║ tests\components\SyncStatus.spec.tsx:8:5 ΓÇ║ SyncStatus ΓÇ║ should render status when authenticated (409ms)
+[Browser Console]: Firebase Config Debug: {apiKey: test-..., projectId: test-project, authDomain: test.firebaseapp.com}
+[Browser Console]: MockAuthService did not register __triggerTokenChange
+[Browser Console]: Firebase Config Debug: {apiKey: test-..., projectId: test-project, authDomain: test.firebaseapp.com}
+  Γ£ô   37 [chromium] ΓÇ║ tests\components\TokenRefresh.spec.tsx:38:5 ΓÇ║ Token Refresh Behavior ΓÇ║ should UPDATE token when user is ADMIN and Firebase refreshes token (404ms)
+  Γ£ô   38 [chromium] ΓÇ║ tests\components\TokenRefresh.spec.tsx:59:5 ΓÇ║ Token Refresh Behavior ΓÇ║ should display null token when not authenticated (397ms)
+  Γ£ô   40 [chromium] ΓÇ║ tests\components\TreatmentEntry.spec.tsx:8:5 ΓÇ║ TreatmentEntry Component ΓÇ║ should render with date picker (403ms)
+  Γ£ô   41 [chromium] ΓÇ║ tests\components\TreatmentEntry.spec.tsx:24:5 ΓÇ║ TreatmentEntry Component ΓÇ║ should display treatment type checkboxes (406ms)
+  Γ£ô   36 [chromium] ΓÇ║ tests\components\TokenRefresh.spec.tsx:8:5 ΓÇ║ Token Refresh Behavior ΓÇ║ should IGNORE firebase token update when user is STAFF to prevent redirect loop (925ms)
+  Γ£ô   42 [chromium] ΓÇ║ tests\components\TreatmentEntry.spec.tsx:43:5 ΓÇ║ TreatmentEntry Component ΓÇ║ should allow multiple treatment type selection (532ms)
+  Γ£ô   43 [chromium] ΓÇ║ tests\components\TreatmentEntry.spec.tsx:63:5 ΓÇ║ TreatmentEntry Component ΓÇ║ should show admin fee default of 10.000 (363ms)
+  Γ£ô   44 [chromium] ΓÇ║ tests\components\TreatmentEntry.spec.tsx:75:5 ΓÇ║ TreatmentEntry Component ΓÇ║ should clear admin fee on focus (334ms)
+  Γ£ô   45 [chromium] ΓÇ║ tests\components\TreatmentEntry.spec.tsx:92:5 ΓÇ║ TreatmentEntry Component ΓÇ║ should show braces type selector when orthodontic is selected (445ms)
+  Γ£ô   39 [chromium] ΓÇ║ tests\components\TokenRefresh.spec.tsx:69:5 ΓÇ║ Token Refresh Behavior ΓÇ║ should preserve token across component re-renders for staff (1.1s)
+  Γ£ô   46 [chromium] ΓÇ║ tests\components\TreatmentEntry.spec.tsx:111:5 ΓÇ║ TreatmentEntry Component ΓÇ║ should pre-populate form in edit mode (379ms)
+  Γ£ô   47 [chromium] ΓÇ║ tests\components\TreatmentEntry.spec.tsx:145:5 ΓÇ║ TreatmentEntry Component ΓÇ║ should show cancel button in edit mode (355ms)
+  Γ£ô   48 [chromium] ΓÇ║ tests\components\TreatmentEntryI18n.spec.tsx:8:5 ΓÇ║ TreatmentEntry i18n ΓÇ║ should render translated text for edit mode (386ms)
+  Γ£ô   49 [chromium] ΓÇ║ tests\components\TreatmentEntryI18n.spec.tsx:36:5 ΓÇ║ TreatmentEntry i18n ΓÇ║ should render translated validation message (378ms)
+Mock API resuming...
+[Browser]: [GoogleSheetsService] listSpreadsheets response {filesCount: 0}
+  Γ£ô   50 [chromium] ΓÇ║ tests\components\TreatmentHistory.spec.tsx:9:9 ΓÇ║ TreatmentHistory ΓÇ║ State Persistence ΓÇ║ should render with provided date and page props (516ms)
+[Browser]: [LoginScreen] Spreadsheets fetched: {count: 0}
+  Γ£ô   52 [chromium] ΓÇ║ tests\components\TreatmentHistory.spec.tsx:119:9 ΓÇ║ TreatmentHistory ΓÇ║ Access Control ΓÇ║ should show edit button for admin users (544ms)
+[Browser]: [LoginScreen] fetchSpreadsheets called
+[Browser]: [GoogleSheetsService] getAccessToken called {hasToken: true, tokenLength: 11}
+[Browser]: [LoginScreen] Token check before listSpreadsheets: {hasToken: true, tokenLength: 11}
+[Browser]: [GoogleSheetsService] listSpreadsheets called {hasToken: true, hasServiceAccount: false}
+[Browser]: [GoogleSheetsService] getAccessToken called {hasToken: true, tokenLength: 11}
+Mock API hit, delaying...
+Clicking Sign Out...
+  Γ£ô   51 [chromium] ΓÇ║ tests\components\TreatmentHistory.spec.tsx:96:9 ΓÇ║ TreatmentHistory ΓÇ║ Access Control ΓÇ║ should show edit button for non-admin users (staff) (617ms)
+[Browser]: [LoginScreen] handleSignOut called
+[Browser]: [LoginScreen] handleSignOut finally block - resetting loading state
+[Browser]: [LoginScreen] Step changed to: login
+Waiting for delay...
+  Γ£ô   53 [chromium] ΓÇ║ tests\components\TreatmentHistory.spec.tsx:140:9 ΓÇ║ TreatmentHistory ΓÇ║ Access Control ΓÇ║ should NOT show edit button if onEditTreatment prop is missing (583ms)
+  Γ£ô   32 [chromium] ΓÇ║ tests\components\SessionStoragePersistence.spec.tsx:138:5 ΓÇ║ SessionStorage Persistence ΓÇ║ Self-healing: 401 should trigger lazy restoration from sessionStorage (2.6s)
+  Γ£ô   54 [chromium] ΓÇ║ tests\components\Sidebar.spec.tsx:8:5 ΓÇ║ Sidebar ΓÇ║ should render navigation items (671ms)
+Mock API resuming...
+[Browser]: [GoogleSheetsService] listSpreadsheets response {filesCount: 0}
+[Browser]: [LoginScreen] Ignoring fetch result: User navigated away
+  Γ£ô   55 [chromium] ΓÇ║ tests\components\Sidebar.spec.tsx:26:5 ΓÇ║ Sidebar ΓÇ║ should collapse and expand (769ms)
+Asserting state...
+  Γ£ô   13 [chromium] ΓÇ║ tests\components\LoginScreenGuards.spec.tsx:6:5 ΓÇ║ LoginScreen Guards ΓÇ║ DEF-002: should handle unmount/navigation during slow fetch without errors (8.1s)
+  Γ£ô   56 [chromium] ΓÇ║ tests\components\SessionStoragePersistence.spec.tsx:88:5 ΓÇ║ SessionStorage Persistence ΓÇ║ sessionStorage should survive React component remounting (1.3s)
+  Γ£ô   58 [firefox] ΓÇ║ tests\components\Autocomplete.spec.tsx:39:5 ΓÇ║ Autocomplete ΓÇ║ should call onChange when selecting a suggestion (6.3s)
