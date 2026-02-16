@@ -220,7 +220,7 @@ jobs:
 
   deploy-production:
     name: Deploy to Production
-    needs: e2e-test
+    needs: [e2e-test, unit-tests, component-tests]
     runs-on: ubuntu-latest
     environment: production
     if: github.ref == 'refs/heads/main'
