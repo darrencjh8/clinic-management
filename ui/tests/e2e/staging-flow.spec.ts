@@ -14,8 +14,37 @@ test.describe('E2E Staging Flow', () => {
 
         console.log(`Starting E2E test against: ${process.env.BASE_URL || 'localhost'}`);
 
-        // 1. Visit App
-        await page.goto('/');
+        // 1. Visit App - Use explicit full URL to avoid navigation issues
+        const baseUrl = process.env.BASE_URL || 'http://localhost:5173';
+        console.log(`Navigating to base URL: ${baseUrl}`);
+        
+        // Wait for server to be ready (especially important for CI environment)
+        console.log('Checking server availability...');
+        let serverReady = false;
+        let retryCount = 0;
+        const maxRetries = 10;
+        
+        while (!serverReady && retryCount < maxRetries) {
+            try {
+                // Try to fetch the base URL to check if server is ready
+                const response = await page.goto(baseUrl, { waitUntil: 'domcontentloaded', timeout: 5000 });
+                if (response && response.ok()) {
+                    serverReady = true;
+                    console.log(`Server ready after ${retryCount + 1} attempts`);
+                } else {
+                    throw new Error(`Server responded with status: ${response?.status()}`);
+                }
+            } catch (e) {
+                retryCount++;
+                console.log(`Server not ready (attempt ${retryCount}/${maxRetries}), waiting 3 seconds...`);
+                await page.waitForTimeout(3000);
+            }
+        }
+        
+        if (!serverReady) {
+            throw new Error(`Server at ${baseUrl} is not ready after ${maxRetries} attempts. Deployment may have failed or server is still starting.`);
+        }
+        
         try {
             await page.waitForLoadState('networkidle', { timeout: 10000 });
         } catch (e) {

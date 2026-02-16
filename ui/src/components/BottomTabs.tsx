@@ -25,7 +25,7 @@ export const BottomTabs: React.FC<BottomTabsProps> = ({ currentView, onNavigate 
     navItems.push({ id: 'settings', label: t('sidebar.settings'), icon: Settings });
 
     return (
-        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-secondary-light z-50 pb-safe shadow-lg">
+        <div className={`md:hidden ${import.meta.env.VITE_IS_CT === 'true' ? 'absolute bottom-0 left-0 right-0' : 'fixed bottom-0 left-0 right-0'} bg-white border-t border-secondary-light z-50 pb-safe shadow-lg`}>
             <nav className="flex justify-around items-center h-16">
                 {navItems.map((item) => (
                     <button
