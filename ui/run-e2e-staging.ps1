@@ -59,8 +59,8 @@ if (Test-Path "..\server\.env") {
 
 # 2. Build and Deploy to Staging (if not skipped)
 if (-not $SkipDeployment) {
-    Write-Output "Step 2: Building Docker Image..."
-    docker build -t wisata-dental-staging-test ..
+    Write-Output "Step 2: Building Docker Image with E2E environment..."
+    docker build --build-arg ENV_FILE=.env.e2e -t wisata-dental-staging-test ..
     Check-Error "Docker build failed!"
     Write-Output "✅ Docker Build PASSED!"
 

@@ -1,0 +1,34 @@
+name: Manual Production Deploy
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy-production-skip-tests:
+    name: Manual Deploy to Production
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+
+      # Recreate .env-prod for the Docker build
+      - name: Create .env-prod
+        run: |
+          echo "VITE_API_URL=${{ secrets.VITE_API_URL }}" >> ui/.env-prod
+          echo "VITE_GOOGLE_CLIENT_ID=${{ secrets.VITE_GOOGLE_CLIENT_ID }}" >> ui/.env-prod
+          echo "VITE_CLIENT_SECRET=${{ secrets.VITE_CLIENT_SECRET }}" >> ui/.env-prod
+          echo "VITE_CLINIC_NAME=${{ secrets.VITE_CLINIC_NAME }}" >> ui/.env-prod
+          echo "VITE_FIREBASE_API_KEY=${{ secrets.VITE_FIREBASE_API_KEY }}" >> ui/.env-prod
+          echo "VITE_FIREBASE_AUTH_DOMAIN=${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}" >> ui/.env-prod
+          echo "VITE_FIREBASE_PROJECT_ID=${{ secrets.VITE_FIREBASE_PROJECT_ID }}" >> ui/.env-prod
+          echo "VITE_FIREBASE_STORAGE_BUCKET=${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}" >> ui/.env-prod
+          echo "VITE_FIREBASE_MESSAGING_SENDER_ID=${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}" >> ui/.env-prod
+          echo "VITE_FIREBASE_APP_ID=${{ secrets.VITE_FIREBASE_APP_ID }}" >> ui/.env-prod
+
+      # Set Production Secrets step removed as per user request (managed manually)
+
+      - name: Deploy to Production
+        run: flyctl deploy --app wisata-dental --ha=false
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
