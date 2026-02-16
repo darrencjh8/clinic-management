@@ -149,6 +149,17 @@ jobs:
           echo "VITE_FIREBASE_MESSAGING_SENDER_ID=${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}" >> ui/.env
           echo "VITE_FIREBASE_APP_ID=${{ secrets.VITE_FIREBASE_APP_ID }}" >> ui/.env
 
+      - name: Debug .env File Creation
+        run: |
+          echo "=== Debugging .env file creation ==="
+          echo "Current working directory: $(pwd)"
+          echo "Files in ui directory:"
+          ls -la ui/ | grep -E "\.env|Dockerfile"
+          echo "Contents of ui/.env (first 3 lines):"
+          head -3 ui/.env || echo "ui/.env file not found!"
+          echo "Dockerfile expects: COPY ui/.env ./.env"
+          echo "=== End debugging ==="
+
       - name: Deploy to Staging
         run: flyctl deploy --app wisata-dental-staging --config fly.staging.toml --ha=false
         env:
