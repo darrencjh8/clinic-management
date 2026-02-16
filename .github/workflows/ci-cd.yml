@@ -151,7 +151,7 @@ jobs:
 
   e2e-test:
     name: E2E Tests (Staging)
-    needs: [staging-secret-checks, unit-tests, component-tests]
+    needs: staging-secret-checks
     runs-on: ubuntu-latest
     environment: staging
     steps:
