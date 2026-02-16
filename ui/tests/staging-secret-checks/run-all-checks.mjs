@@ -13,6 +13,28 @@ const __dirname = path.dirname(__filename);
 
 // Load staging environment credentials
 function loadStagingCredentials(envFileName = '.env.e2e') {
+    // In CI pipeline, use environment variables instead of .env file
+    if (process.env.CI || process.env.GITHUB_ACTIONS) {
+        console.log('   🔄 Running in CI - using environment variables');
+        
+        const getEnvVar = (name) => {
+            const value = process.env[name];
+            if (!value) {
+                throw new Error(`Environment variable ${name} not set in CI environment`);
+            }
+            return value;
+        };
+        
+        return {
+            firebaseApiKey: getEnvVar('VITE_FIREBASE_API_KEY'),
+            email: getEnvVar('E2E_TEST_EMAIL'),
+            password: getEnvVar('E2E_TEST_PASSWORD'),
+            backendUrl: getEnvVar('VITE_API_URL'),
+            googleClientId: getEnvVar('VITE_GOOGLE_CLIENT_ID')
+        };
+    }
+    
+    // Local development - use .env file
     const envPath = path.resolve(__dirname, '../../', envFileName);
     const envContent = fs.readFileSync(envPath, 'utf8');
     
