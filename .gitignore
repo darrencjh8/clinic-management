@@ -1,0 +1,46 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+# Environment files
+.env
+.env.*
+!.env.example
+test-results/
+playwright-report/
+playwright/.cache/
+
+# Test outputs and logs
+test_*.txt
+*_results.txt
+*_err.txt
+error_log*.txt
+
+# Temporary debug files
+test_debug_output.txt
+service_account_temp.json
+create_jwt_temp.js
+
+# E2E test screenshots
+e2e-*.png
+

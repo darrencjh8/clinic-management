@@ -1,0 +1,51 @@
+{
+  "name": "wisata-dental",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "generate:client": "node scripts/generate-client.js",
+    "test:ct": "playwright test -c playwright-ct.config.ts",
+    "test:unit": "vitest run"
+  },
+  "dependencies": {
+    "@react-oauth/google": "^0.12.2",
+    "autoprefixer": "^10.4.18",
+    "clsx": "^2.1.1",
+    "date-fns": "^3.3.1",
+    "firebase": "^12.6.0",
+    "i18next": "^25.6.3",
+    "jose": "^6.1.2",
+    "lucide-react": "^0.344.0",
+    "postcss": "^8.4.35",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-i18next": "^16.3.5",
+    "tailwind-merge": "^2.2.1",
+    "tailwindcss": "^3.4.1",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "@playwright/experimental-ct-react": "^1.58.2",
+    "@playwright/test": "^1.58.2",
+    "@types/node": "^20.11.24",
+    "@types/react": "^18.2.64",
+    "@types/react-dom": "^18.2.21",
+    "@types/uuid": "^10.0.0",
+    "@vitejs/plugin-react": "^4.2.1",
+    "baseline-browser-mapping": "^2.9.19",
+    "eslint": "^8.57.0",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.4.5",
+    "js-yaml": "^4.1.1",
+    "jsdom": "^23.0.0",
+    "openapi-typescript-codegen": "^0.27.0",
+    "typescript": "^5.2.2",
+    "vite": "^5.1.4",
+    "vitest": "^1.0.0"
+  }
+}

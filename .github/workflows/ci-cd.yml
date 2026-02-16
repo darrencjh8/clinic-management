@@ -1,0 +1,223 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    name: Build Application
+    runs-on: ubuntu-latest
+    environment: staging
+    defaults:
+      run:
+        working-directory: ./ui
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: ui/package-lock.json
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Build Application
+        run: npm run build
+        env:
+          DEPLOYMENT_ENV: staging
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+          VITE_GOOGLE_CLIENT_ID: ${{ secrets.VITE_GOOGLE_CLIENT_ID }}
+          VITE_CLIENT_SECRET: ${{ secrets.VITE_CLIENT_SECRET }}
+          VITE_CLINIC_NAME: ${{ secrets.VITE_CLINIC_NAME }}
+          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+          VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
+          VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
+          VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
+          VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
+          VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
+
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: ui/dist/
+          retention-days: 1
+
+  staging-secret-checks:
+    name: Staging Secret Checks
+    needs: [build]
+    runs-on: ubuntu-latest
+    environment: staging
+    defaults:
+      run:
+        working-directory: ./ui
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: ui/package-lock.json
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Start Local Development Server
+        run: |
+          npm run dev &
+          SERVER_PID=$!
+          echo "SERVER_PID=$SERVER_PID" >> $GITHUB_ENV
+          sleep 10
+        env:
+          DEPLOYMENT_ENV: staging
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+          VITE_GOOGLE_CLIENT_ID: ${{ secrets.VITE_GOOGLE_CLIENT_ID }}
+          VITE_CLIENT_SECRET: ${{ secrets.VITE_CLIENT_SECRET }}
+          VITE_CLINIC_NAME: ${{ secrets.VITE_CLINIC_NAME }}
+          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+          VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}
+          VITE_FIREBASE_PROJECT_ID: ${{ secrets.VITE_FIREBASE_PROJECT_ID }}
+          VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}
+          VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}
+          VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
+
+      - name: Run Staging Secret Checks
+        run: |
+          echo "Running comprehensive staging environment validation..."
+          node tests/staging-secret-checks/run-all-checks.mjs
+        env:
+          E2E_TEST_EMAIL: ${{ secrets.E2E_TEST_EMAIL }}
+          E2E_TEST_PASSWORD: ${{ secrets.E2E_TEST_PASSWORD }}
+
+      - name: Run Individual Staging Checks
+        run: |
+          echo "Running individual staging secret checks..."
+          node tests/staging-secret-checks/01-credentials-validation.mjs
+          node tests/staging-secret-checks/02-firebase-auth.mjs
+          node tests/staging-secret-checks/03-backend-api.mjs
+          node tests/staging-secret-checks/04-google-cloud-services.mjs
+        env:
+          E2E_TEST_EMAIL: ${{ secrets.E2E_TEST_EMAIL }}
+          E2E_TEST_PASSWORD: ${{ secrets.E2E_TEST_PASSWORD }}
+
+      - name: Stop Development Server
+        if: always()
+        run: kill $SERVER_PID || true
+
+      - name: Upload Staging Secret Check Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: staging-secret-check-results
+          path: |
+            ui/csp-report.md
+            ui/playwright-report/
+          retention-days: 3
+
+  e2e-test:
+    name: E2E Tests (Staging)
+    needs: [build, staging-secret-checks]
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: ui/package-lock.json
+
+      - name: Install Dependencies
+        working-directory: ./ui
+        run: npm ci
+
+      - name: Install Playwright Browsers
+        working-directory: ./ui
+        run: npx playwright install --with-deps chromium firefox
+
+      # Recreate .env-build for the Docker build using STAGING secrets
+      - name: Create .env-build (Staging Config)
+        run: |
+          echo "VITE_API_URL=${{ secrets.VITE_API_URL }}" >> ui/.env-build
+          echo "VITE_GOOGLE_CLIENT_ID=${{ secrets.VITE_GOOGLE_CLIENT_ID }}" >> ui/.env-build
+          echo "VITE_CLIENT_SECRET=${{ secrets.VITE_CLIENT_SECRET }}" >> ui/.env-build
+          echo "VITE_CLINIC_NAME=${{ secrets.VITE_CLINIC_NAME }}" >> ui/.env-build
+          echo "VITE_FIREBASE_API_KEY=${{ secrets.VITE_FIREBASE_API_KEY }}" >> ui/.env-build
+          echo "VITE_FIREBASE_AUTH_DOMAIN=${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}" >> ui/.env-build
+          echo "VITE_FIREBASE_PROJECT_ID=${{ secrets.VITE_FIREBASE_PROJECT_ID }}" >> ui/.env-build
+          echo "VITE_FIREBASE_STORAGE_BUCKET=${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}" >> ui/.env-build
+          echo "VITE_FIREBASE_MESSAGING_SENDER_ID=${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}" >> ui/.env-build
+          echo "VITE_FIREBASE_APP_ID=${{ secrets.VITE_FIREBASE_APP_ID }}" >> ui/.env-build
+          echo "DEPLOYMENT_ENV=staging" >> ui/.env-build
+
+      - name: Validate Secrets
+        run: |
+          if [ -z "${{ secrets.FLY_API_TOKEN }}" ]; then
+            echo "Error: FLY_API_TOKEN is not set"
+            exit 1
+          fi
+          if [ -z "${{ secrets.GOOGLE_SERVICE_ACCOUNT_BASE64 }}" ]; then
+            echo "Error: GOOGLE_SERVICE_ACCOUNT_BASE64 is not set"
+            exit 1
+          fi
+          if [ -z "${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}" ]; then
+             echo "Warning: No FIREBASE_SERVICE_ACCOUNT_BASE64 found for staging. Authentication might fail. Check environment secrets."
+          fi
+
+      - name: Deploy to Staging
+        run: flyctl deploy --app wisata-dental-staging --config fly.staging.toml --ha=false
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+      - name: Run E2E Tests
+        working-directory: ./ui
+        run: npx playwright test tests/e2e/staging-flow.spec.ts
+        env:
+          BASE_URL: https://wisata-dental-staging.fly.dev
+          E2E_TEST_EMAIL: ${{ secrets.E2E_TEST_EMAIL }}
+          E2E_TEST_PASSWORD: ${{ secrets.E2E_TEST_PASSWORD }}
+          # Some E2E tests might check these values, so we provide them
+          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+
+  deploy-production:
+    name: Deploy to Production
+    needs: [build, staging-secret-checks, e2e-test]
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+
+      # Recreate .env-build for the Docker build
+      - name: Create .env-build
+        run: |
+          echo "VITE_API_URL=${{ secrets.VITE_API_URL }}" >> ui/.env-build
+          echo "VITE_GOOGLE_CLIENT_ID=${{ secrets.VITE_GOOGLE_CLIENT_ID }}" >> ui/.env-build
+          echo "VITE_CLIENT_SECRET=${{ secrets.VITE_CLIENT_SECRET }}" >> ui/.env-build
+          echo "VITE_CLINIC_NAME=${{ secrets.VITE_CLINIC_NAME }}" >> ui/.env-build
+          echo "VITE_FIREBASE_API_KEY=${{ secrets.VITE_FIREBASE_API_KEY }}" >> ui/.env-build
+          echo "VITE_FIREBASE_AUTH_DOMAIN=${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}" >> ui/.env-build
+          echo "VITE_FIREBASE_PROJECT_ID=${{ secrets.VITE_FIREBASE_PROJECT_ID }}" >> ui/.env-build
+          echo "VITE_FIREBASE_STORAGE_BUCKET=${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}" >> ui/.env-build
+          echo "VITE_FIREBASE_MESSAGING_SENDER_ID=${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}" >> ui/.env-build
+          echo "VITE_FIREBASE_APP_ID=${{ secrets.VITE_FIREBASE_APP_ID }}" >> ui/.env-build
+          echo "DEPLOYMENT_ENV=production" >> ui/.env-build
+
+      - name: Deploy to Production
+        run: flyctl deploy --app wisata-dental --ha=false
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
