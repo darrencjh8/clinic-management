@@ -1,0 +1,26 @@
+# fly.staging.toml - Staging app configuration with static domain
+# This creates a permanent staging app with a predictable domain name
+# for Google OAuth whitelist purposes
+
+app = 'wisata-dental-staging'
+primary_region = 'sin'
+
+[build]
+  dockerfile = 'Dockerfile'
+
+[env]
+  PORT = '3000'
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = 'stop'
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ['app']
+
+[[vm]]
+  size = "shared-cpu-1x"
+  cpu_kind = "shared"
+  memory_mb = 256
+  cpus = 1
