@@ -117,3 +117,126 @@ To run the application locally:
     npm run dev
     ```
     Access at `http://localhost:5173`.
+
+## 🧪 Testing Strategy
+
+This project uses a **staging-focused testing approach** that prioritizes environment-specific validation over traditional unit/component testing.
+
+### Staging Secret Checks (Primary Testing)
+
+**Staging Secret Checks** are comprehensive validation tests that verify critical security configurations, authentication flows, API endpoints, and database interactions in the staging environment before production deployment.
+
+#### Purpose
+- Validate staging environment credentials and configurations
+- Test complete authentication flows (Firebase → Backend → Google Services)
+- Verify API endpoint functionality and security
+- Ensure database connectivity and data integrity
+- Confirm CSP (Content Security Policy) configurations
+- Validate environment-specific settings
+
+#### Test Coverage
+
+**Authentication Flow Tests:**
+- Firebase authentication with staging credentials
+- Backend service account retrieval
+- Google OAuth token generation
+- Complete login flow validation
+
+**API Endpoint Tests:**
+- Staging backend API connectivity
+- Authentication endpoint validation
+- Service account endpoint security
+- Error handling and response validation
+
+**Database Interaction Tests:**
+- Google Sheets API connectivity
+- Data read/write operations
+- Permission validation
+- Service account access verification
+
+**Security Configuration Tests:**
+- CSP (Content Security Policy) validation
+- Environment variable verification
+- Service account credential validation
+- Third-party service integration testing
+
+#### Running Staging Secret Checks
+
+```bash
+cd ui
+npm install
+npm run dev &  # Start local development server
+node tests/staging-secret-checks/run-all-checks.mjs
+```
+
+### E2E Tests (Integration Testing)
+
+End-to-end tests validate complete user workflows and are executed after staging secret checks pass.
+
+#### Test Coverage
+- Complete user authentication flows
+- Patient management workflows
+- Treatment record operations
+- Financial reporting functionality
+- Cross-browser compatibility
+
+#### Running E2E Tests Locally
+
+```bash
+cd ui
+npm run test:e2e
+```
+
+### CI/CD Pipeline Flow
+
+1. **Build Application** - Verify code compiles successfully
+2. **Staging Secret Checks** - Validate staging environment security and functionality
+3. **E2E Tests** - Test complete user workflows against staging
+4. **Deploy to Staging** - Deploy validated code to staging environment
+5. **Deploy to Production** - Deploy to production (main branch only)
+
+### Success Criteria for Production Deployment
+
+For a successful production deployment, all staging secret checks must pass:
+
+✅ **Environment Credentials Validation**
+- All required environment variables are configured
+- Firebase API keys are valid
+- Service account credentials are properly set up
+
+✅ **Firebase Authentication Tests**
+- User can authenticate with staging credentials
+- Authentication tokens are generated successfully
+- Token refresh mechanisms work correctly
+
+✅ **Backend API Tests**
+- Staging backend is accessible and responsive
+- API endpoints return expected responses
+- Authentication flows work end-to-end
+
+✅ **Google Cloud Services Tests**
+- Google Sheets API is accessible
+- Service account has appropriate permissions
+- Data operations complete successfully
+
+### Local Development Testing
+
+For local development, you can run specific staging secret checks:
+
+```bash
+# Run individual test modules
+cd ui
+node tests/staging-secret-checks/01-credentials-validation.mjs
+node tests/staging-secret-checks/02-firebase-auth.mjs
+node tests/staging-secret-checks/03-backend-api.mjs
+node tests/staging-secret-checks/04-google-cloud-services.mjs
+```
+
+### Testing Philosophy
+
+This testing strategy prioritizes:
+- **Environment-specific validation** over generic unit tests
+- **Security-first approach** with comprehensive credential validation
+- **Integration testing** that mirrors production scenarios
+- **Staging-focused validation** before production deployment
+- **Comprehensive coverage** of authentication, API, and service integration
