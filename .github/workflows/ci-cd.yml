@@ -26,7 +26,7 @@ jobs:
         run: npm ci
 
       - name: Run Component Tests
-        run: npm run test:ct
+        run: npm run test:ct -- --reporter=list
         env:
           # Build-time variables needed for component tests
           # SAFEGUARD: Use STAGING secrets to prevent accidental production data modification
