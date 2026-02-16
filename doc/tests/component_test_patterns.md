@@ -21,12 +21,27 @@ npm run test:ct -- --ui
 
 **⚠️ Default Language**: Tests run with Indonesian (`id`) as the default language, NOT English.
 
+### Language-Agnostic Assertions
+Prefer using regex to match both languages to make tests robust:
 ```typescript
-// ❌ WRONG - Expects English
+// ❌ WRONG - Expects English only
 await expect(component.getByText('New Treatment')).toBeVisible();
 
 // ✅ CORRECT - Expects Indonesian OR uses regex for both
-await expect(component.getByText(/Perawatan Baru|New Treatment/)).toBeVisible();
+await expect(component.getByText(/Perawatan Baru|New Treatment/i)).toBeVisible();
+```
+
+### Forcing Language via TestWrapper
+To force a specific language in a test, use `window.TEST_LANGUAGE` and the `TestWrapper`.
+
+**⚠️ Warning**: When implementing `i18n.changeLanguage` in a wrapper, **ALWAYS** check the current language first to avoid an infinite render loop.
+
+```typescript
+// In TestWrapper.tsx
+const { i18n } = useTranslation();
+if (window.TEST_LANGUAGE && i18n.language !== window.TEST_LANGUAGE) {
+    i18n.changeLanguage(window.TEST_LANGUAGE);
+}
 ```
 
 **Common Translation Mappings**:
@@ -399,7 +414,38 @@ npm run test:ct
    }
    ```
 
+### Window-based Service Mocking (Recommended)
+
+**Problem**: Importing services directly inside `page.evaluate()` often fails with `Failed to fetch dynamically imported module` because the browser context lacks the same module resolution as the test runner.
+
+**Solution**: Use a "Service Locator" pattern in your components.
+
+1. **In Component**:
+   ```typescript
+   // LoginScreen.tsx
+   const authService = (window as any).MockAuthService || FirebaseAuthService;
+   ```
+
+2. **In Test**:
+   ```typescript
+   // MyComponent.spec.tsx
+   await page.evaluate(() => {
+     (window as any).MockAuthService = {
+       signIn: async () => ({ user: { uid: 'test' } }),
+       signOut: async () => {}
+     };
+   });
+   ```
+
+**Benefits**:
+- No dynamic import errors.
+- Simple, sync-like mocking.
+- Bypasses Playwright's prop serialization limits (cant pass functions/classes as props).
+
+**Verification**: `LogoutSpinner.spec.tsx` uses this pattern to successfully mock service hanging and state resets.
+
 **Verification**: `LoginScreen.spec.tsx` tests now pass across all browsers.
+
 
 ---
 

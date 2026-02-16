@@ -94,6 +94,7 @@ This document describes the authentication flow for the clinic management app, c
 - Manages auth state machine: `login` → `pin_check`/`pin_setup` → `spreadsheet_setup`
 - Handles both admin (Google OAuth) and staff (Firebase) login flows
 - **CRITICAL**: Must handle component remounting with `initialToken` properly
+- **Testability**: Uses a **Service Locator** pattern (`window.MockAuthService`) to allow robust dependency injection in component tests.
 
 ### 5. Store (`ui/src/store/useStore.tsx`)
 - **CRITICAL**: Contains `onTokenChange` listener that:
