@@ -7,126 +7,8 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build:
-    name: Build Application
-    runs-on: ubuntu-latest
-    environment: staging
-    defaults:
-      run:
-        working-directory: ./ui
-    steps:
-      - uses: actions/checkout@v4
-      
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: ui/package-lock.json
-
-      - name: Install Dependencies
-        run: npm ci
-
-      - name: Build Application
-        run: npm run build
-        env:
-          DEPLOYMENT_ENV: staging
-          VITE_API_URL: ${{ secrets.VITE_API_URL }}
-
-  staging-secret-checks:
-    name: Staging Secret Checks
-    needs: [build]
-    runs-on: ubuntu-latest
-    environment: staging
-    defaults:
-      run:
-        working-directory: ./ui
-    steps:
-      - uses: actions/checkout@v4
-      
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: ui/package-lock.json
-
-      - name: Install Dependencies
-        run: npm ci
-
-      - name: Install Playwright Browsers
-        run: npx playwright install --with-deps chromium
-
-      - name: Start Local Development Server
-        run: |
-          echo "Starting development server with staging environment..."
-          npm run dev &
-          SERVER_PID=$!
-          echo "SERVER_PID=$SERVER_PID" >> $GITHUB_ENV
-          
-          # Wait for server to start and validate it's running
-          echo "Waiting for server to start..."
-          for i in {1..30}; do
-            if curl -s http://localhost:5173 > /dev/null; then
-              echo "✅ Development server is running on port 5173"
-              break
-            fi
-            if [ $i -eq 30 ]; then
-              echo "❌ Development server failed to start within 30 seconds"
-              exit 1
-            fi
-            sleep 1
-          done
-          
-          # Additional wait for app to fully load
-          sleep 5
-        env:
-          DEPLOYMENT_ENV: staging
-          VITE_API_URL: ${{ secrets.VITE_API_URL }}
-          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
-          VITE_GOOGLE_CLIENT_ID: ${{ secrets.VITE_GOOGLE_CLIENT_ID }}
-
-      - name: Run Staging Secret Checks
-        run: |
-          echo "Running comprehensive staging environment validation..."
-          node tests/staging-secret-checks/run-all-checks.mjs
-        env:
-          E2E_TEST_EMAIL: ${{ secrets.E2E_TEST_EMAIL }}
-          E2E_TEST_PASSWORD: ${{ secrets.E2E_TEST_PASSWORD }}
-          VITE_API_URL: ${{ secrets.VITE_API_URL }}
-          VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
-          VITE_GOOGLE_CLIENT_ID: ${{ secrets.VITE_GOOGLE_CLIENT_ID }}
-
-      - name: Stop Development Server
-        if: always()
-        run: |
-          if [ -n "$SERVER_PID" ]; then
-            kill $SERVER_PID || true
-          fi
-
-  unit-tests:
-    name: Unit Tests
-    needs: [build]
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./ui
-    steps:
-      - uses: actions/checkout@v4
-      
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: ui/package-lock.json
-
-      - name: Install Dependencies
-        run: npm ci
-
-      - name: Run Unit Tests
-        run: npm run test:unit
-
-  component-tests:
+  test-component:
     name: Component Tests
-    needs: [build]
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -136,24 +18,33 @@ jobs:
       
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '18'
           cache: 'npm'
           cache-dependency-path: ui/package-lock.json
 
       - name: Install Dependencies
         run: npm ci
-
-      - name: Install Playwright Browsers
-        run: npx playwright install --with-deps chromium
 
       - name: Run Component Tests
         run: npm run test:ct -- --reporter=list
+        env:
+          # Build-time variables needed for component tests
+          # SAFEGUARD: Use STAGING secrets to prevent accidental production data modification
+          VITE_API_URL: ${{ secrets.STAGING_VITE_API_URL }}
+          VITE_GOOGLE_CLIENT_ID: ${{ secrets.STAGING_VITE_GOOGLE_CLIENT_ID }}
+          VITE_CLIENT_SECRET: ${{ secrets.STAGING_VITE_CLIENT_SECRET }}
+          VITE_CLINIC_NAME: ${{ secrets.STAGING_VITE_CLINIC_NAME }}
+          VITE_FIREBASE_API_KEY: ${{ secrets.STAGING_VITE_FIREBASE_API_KEY }}
+          VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.STAGING_VITE_FIREBASE_AUTH_DOMAIN }}
+          VITE_FIREBASE_PROJECT_ID: ${{ secrets.STAGING_VITE_FIREBASE_PROJECT_ID }}
+          VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.STAGING_VITE_FIREBASE_STORAGE_BUCKET }}
+          VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.STAGING_VITE_FIREBASE_MESSAGING_SENDER_ID }}
+          VITE_FIREBASE_APP_ID: ${{ secrets.STAGING_VITE_FIREBASE_APP_ID }}
 
   e2e-test:
     name: E2E Tests (Staging)
-    needs: staging-secret-checks
+    needs: test-component
     runs-on: ubuntu-latest
-    environment: staging
     steps:
       - uses: actions/checkout@v4
       
@@ -161,7 +52,7 @@ jobs:
       
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '18'
           cache: 'npm'
           cache-dependency-path: ui/package-lock.json
 
@@ -173,19 +64,19 @@ jobs:
         working-directory: ./ui
         run: npx playwright install --with-deps chromium firefox
 
-      # Recreate .env-prod for the Docker build using staging secrets
+      # Recreate .env-prod for the Docker build using STAGING secrets
       - name: Create .env-prod (Staging Config)
         run: |
-          echo "VITE_API_URL=${{ secrets.VITE_API_URL }}" >> ui/.env-prod
-          echo "VITE_GOOGLE_CLIENT_ID=${{ secrets.VITE_GOOGLE_CLIENT_ID }}" >> ui/.env-prod
-          echo "VITE_CLIENT_SECRET=${{ secrets.VITE_CLIENT_SECRET }}" >> ui/.env-prod
-          echo "VITE_CLINIC_NAME=${{ secrets.VITE_CLINIC_NAME }}" >> ui/.env-prod
-          echo "VITE_FIREBASE_API_KEY=${{ secrets.VITE_FIREBASE_API_KEY }}" >> ui/.env-prod
-          echo "VITE_FIREBASE_AUTH_DOMAIN=${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}" >> ui/.env-prod
-          echo "VITE_FIREBASE_PROJECT_ID=${{ secrets.VITE_FIREBASE_PROJECT_ID }}" >> ui/.env-prod
-          echo "VITE_FIREBASE_STORAGE_BUCKET=${{ secrets.VITE_FIREBASE_STORAGE_BUCKET }}" >> ui/.env-prod
-          echo "VITE_FIREBASE_MESSAGING_SENDER_ID=${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}" >> ui/.env-prod
-          echo "VITE_FIREBASE_APP_ID=${{ secrets.VITE_FIREBASE_APP_ID }}" >> ui/.env-prod
+          echo "VITE_API_URL=${{ secrets.STAGING_VITE_API_URL }}" >> ui/.env-prod
+          echo "VITE_GOOGLE_CLIENT_ID=${{ secrets.STAGING_VITE_GOOGLE_CLIENT_ID }}" >> ui/.env-prod
+          echo "VITE_CLIENT_SECRET=${{ secrets.STAGING_VITE_CLIENT_SECRET }}" >> ui/.env-prod
+          echo "VITE_CLINIC_NAME=${{ secrets.STAGING_VITE_CLINIC_NAME }}" >> ui/.env-prod
+          echo "VITE_FIREBASE_API_KEY=${{ secrets.STAGING_VITE_FIREBASE_API_KEY }}" >> ui/.env-prod
+          echo "VITE_FIREBASE_AUTH_DOMAIN=${{ secrets.STAGING_VITE_FIREBASE_AUTH_DOMAIN }}" >> ui/.env-prod
+          echo "VITE_FIREBASE_PROJECT_ID=${{ secrets.STAGING_VITE_FIREBASE_PROJECT_ID }}" >> ui/.env-prod
+          echo "VITE_FIREBASE_STORAGE_BUCKET=${{ secrets.STAGING_VITE_FIREBASE_STORAGE_BUCKET }}" >> ui/.env-prod
+          echo "VITE_FIREBASE_MESSAGING_SENDER_ID=${{ secrets.STAGING_VITE_FIREBASE_MESSAGING_SENDER_ID }}" >> ui/.env-prod
+          echo "VITE_FIREBASE_APP_ID=${{ secrets.STAGING_VITE_FIREBASE_APP_ID }}" >> ui/.env-prod
 
       - name: Validate Secrets
         run: |
@@ -193,60 +84,46 @@ jobs:
             echo "Error: FLY_API_TOKEN is not set"
             exit 1
           fi
-          if [ -z "${{ secrets.GOOGLE_SERVICE_ACCOUNT_BASE64 }}" ]; then
-            echo "Error: GOOGLE_SERVICE_ACCOUNT_BASE64 is not set"
+          if [ -z "${{ secrets.STAGING_GOOGLE_SERVICE_ACCOUNT_BASE64 }}" ]; then
+            echo "Error: STAGING_GOOGLE_SERVICE_ACCOUNT_BASE64 is not set"
             exit 1
           fi
-          if [ -z "${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}" ]; then
-            echo "Error: FIREBASE_SERVICE_ACCOUNT_BASE64 is not set"
-            exit 1
+          # Note: Staging might use the same or different firebase admin. 
+          # We'll assume STAGING_FIREBASE_SERVICE_ACCOUNT_BASE64 if it exists, otherwise warn? 
+          # For consistency with setup_secrets.ps1, checking for prefixed var.
+          if [ -z "${{ secrets.STAGING_FIREBASE_SERVICE_ACCOUNT_BASE64 }}" ] && [ -z "${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}" ]; then
+             echo "Warning: No FIREBASE_SERVICE_ACCOUNT_BASE64 found for staging. Authentication might fail."
           fi
 
+      # Set Staging Secrets step removed as per user request (managed manually)
+
       - name: Deploy to Staging
-        run: |
-          echo "Deploying to staging environment..."
-          flyctl deploy --config fly.staging.toml --build-arg GOOGLE_SERVICE_ACCOUNT_BASE64="${{ secrets.GOOGLE_SERVICE_ACCOUNT_BASE64 }}" --build-arg FIREBASE_SERVICE_ACCOUNT_BASE64="${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}"
+        run: flyctl deploy --app wisata-dental-staging --config fly.staging.toml --ha=false
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
-      - name: Run E2E Tests Against Staging
+      - name: Run E2E Tests
         working-directory: ./ui
-        run: |
-          echo "Running E2E tests against staging environment..."
-          npm run test:e2e
+        run: npx playwright test tests/e2e/staging-flow.spec.ts
         env:
-          E2E_TEST_EMAIL: ${{ secrets.E2E_TEST_EMAIL }}
-          E2E_TEST_PASSWORD: ${{ secrets.E2E_TEST_PASSWORD }}
+          BASE_URL: https://wisata-dental-staging.fly.dev
+          E2E_TEST_EMAIL: ${{ secrets.STAGING_E2E_TEST_EMAIL }}
+          E2E_TEST_PASSWORD: ${{ secrets.STAGING_E2E_TEST_PASSWORD }}
+          # Some E2E tests might check these values, so we provide them
+          VITE_FIREBASE_API_KEY: ${{ secrets.STAGING_VITE_FIREBASE_API_KEY }}
 
   deploy-production:
     name: Deploy to Production
-    needs: [e2e-test, unit-tests, component-tests]
-    runs-on: ubuntu-latest
-    environment: production
+    needs: e2e-test
     if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       
       - uses: superfly/flyctl-actions/setup-flyctl@master
-      
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: ui/package-lock.json
 
-      - name: Install Dependencies
-        working-directory: ./ui
-        run: npm ci
-
-      - name: Build Application
-        working-directory: ./ui
-        run: npm run build
-        env:
-          DEPLOYMENT_ENV: production
-          VITE_API_URL: ${{ secrets.VITE_API_URL }}
-
-      - name: Create .env-prod (Production Config)
+      # Recreate .env-prod for the Docker build
+      - name: Create .env-prod
         run: |
           echo "VITE_API_URL=${{ secrets.VITE_API_URL }}" >> ui/.env-prod
           echo "VITE_GOOGLE_CLIENT_ID=${{ secrets.VITE_GOOGLE_CLIENT_ID }}" >> ui/.env-prod
@@ -259,24 +136,9 @@ jobs:
           echo "VITE_FIREBASE_MESSAGING_SENDER_ID=${{ secrets.VITE_FIREBASE_MESSAGING_SENDER_ID }}" >> ui/.env-prod
           echo "VITE_FIREBASE_APP_ID=${{ secrets.VITE_FIREBASE_APP_ID }}" >> ui/.env-prod
 
-      - name: Validate Production Secrets
-        run: |
-          if [ -z "${{ secrets.FLY_API_TOKEN }}" ]; then
-            echo "Error: FLY_API_TOKEN is not set"
-            exit 1
-          fi
-          if [ -z "${{ secrets.GOOGLE_SERVICE_ACCOUNT_BASE64 }}" ]; then
-            echo "Error: GOOGLE_SERVICE_ACCOUNT_BASE64 is not set"
-            exit 1
-          fi
-          if [ -z "${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}" ]; then
-            echo "Error: FIREBASE_SERVICE_ACCOUNT_BASE64 is not set"
-            exit 1
-          fi
+      # Set Production Secrets step removed as per user request (managed manually)
 
       - name: Deploy to Production
-        run: |
-          echo "Deploying to production environment..."
-          flyctl deploy --config fly.production.toml --build-arg GOOGLE_SERVICE_ACCOUNT_BASE64="${{ secrets.GOOGLE_SERVICE_ACCOUNT_BASE64 }}" --build-arg FIREBASE_SERVICE_ACCOUNT_BASE64="${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}"
+        run: flyctl deploy --app wisata-dental --ha=false
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}

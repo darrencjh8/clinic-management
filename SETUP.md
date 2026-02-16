@@ -35,7 +35,6 @@ This document provides an overview of the project structure and guidelines for a
 - **Documentation:** Update relevant docs in `doc/` after every significant change or fix.
 - **Defects:** Document all defects in `doc/defects/` before fixing them.
 - **Cleanup:** Remove any temporary files (logs, screenshots) created during the task.
-- **Windows System:** This project is developed on Windows. Use PowerShell commands and Windows-specific paths. Refer to `rules.md` for detailed protocols.
 
 ## 4. Setup for Agents
 
@@ -49,29 +48,6 @@ When initializing a new agent session:
 - **Run UI Tests:** `cd ui && npm run test:ct -- --reporter=list`
 - **Build UI:** `cd ui && npm run build`
 - **Deploy:** `.\deploy.ps1` (Handles testing, building, and deployment)
-
-## 6. Pull Request Process
-
-After completing an implementation and ensuring all tests pass:
-
-1. **Stage and Commit Changes:**
-   ```powershell
-   git add .
-   git commit -m "feat: descriptive commit message"
-   git push origin feature-branch-name
-   ```
-
-2. **Create Pull Request:**
-   Use GitHub CLI to create a pull request:
-   ```powershell
-   gh pr create --title "Descriptive PR title" --body "Description of changes made"
-   ```
-
-3. **PR Requirements:**
-   - All component tests must pass (`npm run test:ct`)
-   - Build must succeed (`npm run build`)
-   - Documentation must be updated if applicable
-   - Reference `rules.md` for complete workflow requirements
 
 ---
 **Note:** Keep this file updated as the project evolves.

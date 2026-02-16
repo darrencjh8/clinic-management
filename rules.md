@@ -2,9 +2,6 @@
 
 These rules must be followed by all agents working on this project.
 
-> [!IMPORTANT]
-> **Windows System:** This project is developed on Windows. Use PowerShell commands and Windows-specific paths. All documentation references Windows conventions.
-
 ## 1. Information Retrieval Protocol
 - **Rules Check:** ALWAYS check `rules.md` for all commands and ensure compliance.
 - **Documentation Check:** continually check `.md` files under the `doc/` folder for learnings from other agents.

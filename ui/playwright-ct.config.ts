@@ -1,50 +1,55 @@
 import { defineConfig, devices } from '@playwright/experimental-ct-react';
+import { resolve, dirname } from 'path';
+import { fileURLToPath } from 'url';
 
-/**
- * @see https://playwright.dev/docs/test-component-testing
- */
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
 export default defineConfig({
-  testDir: './tests/components',
-  /* The base directory, in which component tests, snapshots, and other artifacts are stored. */
-  outputDir: './test-results',
-  /* Run tests in files in parallel */
-  fullyParallel: true,
-  /* Fail the build on CI if you accidentally left test.only in the source code. */
-  forbidOnly: !!process.env.CI,
-  /* Retry on CI only */
-  retries: process.env.CI ? 2 : 0,
-  /* Opt out of parallel tests on CI. */
-  workers: process.env.CI ? 1 : undefined,
-  /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: process.env.CI ? 'list' : 'html',
-  /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
-  use: {
-    /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-    trace: 'on-first-retry',
-    /* Port on which component server will listen for connections. */
-    ctPort: 3100,
-  },
-
-  /* Configure projects for major browsers */
-  projects: [
-    {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+    testDir: './tests',
+    testMatch: '**/*.spec.tsx',
+    snapshotDir: './__snapshots__',
+    timeout: 15 * 1000,
+    fullyParallel: true,
+    forbidOnly: !!process.env.CI,
+    retries: process.env.CI ? 2 : 0,
+    workers: process.env.CI ? 1 : undefined,
+    reporter: 'html',
+    use: {
+        trace: 'on-first-retry',
+        ctPort: 3100,
+        ctViteConfig: {
+            resolve: {
+                alias: {
+                    '@': resolve(__dirname, './src'),
+                }
+            },
+            define: {
+                // Mock Firebase environment variables for testing
+                'import.meta.env.VITE_FIREBASE_API_KEY': JSON.stringify('test-api-key'),
+                'import.meta.env.VITE_FIREBASE_AUTH_DOMAIN': JSON.stringify('test.firebaseapp.com'),
+                'import.meta.env.VITE_FIREBASE_PROJECT_ID': JSON.stringify('test-project'),
+                'import.meta.env.VITE_FIREBASE_STORAGE_BUCKET': JSON.stringify('test.appspot.com'),
+                'import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID': JSON.stringify('123456789'),
+                'import.meta.env.VITE_FIREBASE_APP_ID': JSON.stringify('1:123:web:abc'),
+                // Mock Google OAuth Client ID for testing
+                'import.meta.env.VITE_GOOGLE_CLIENT_ID': JSON.stringify('test-google-client-id'),
+                'import.meta.env.VITE_IS_CT': JSON.stringify('true'),
+            }
+        }
     },
-    {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
-    },
-    {
-      name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
-    },
-  ],
-
-  /* Run your local dev server before starting the tests */
-  webServer: {
-    command: 'npm run dev',
-    port: 5173,
-    reuseExistingServer: !process.env.CI,
-  },
+    projects: [
+        {
+            name: 'chromium',
+            use: { ...devices['Desktop Chrome'] },
+        },
+        {
+            name: 'firefox',
+            use: { ...devices['Desktop Firefox'] },
+        },
+        {
+            name: 'webkit',
+            use: { ...devices['Desktop Safari'] },
+        },
+    ],
 });
