@@ -6,10 +6,10 @@ RUN npm ci
 COPY ui/ ./
 # Environment handling for build:
 # 1. Remove any accidental .env file from COPY ui/. command
-# 2. Use ENV_FILE build arg to determine which env file to use (default: .env-prod)
+# 2. Use ENV_FILE build arg to determine which env file to use (default: .env)
 # 3. Copy specified env file to .env so Vite uses the correct values
 # 4. Vite bakes these values into the bundle at build time
-ARG ENV_FILE=.env-prod
+ARG ENV_FILE=.env
 RUN rm -f ./.env || true
 COPY ui/${ENV_FILE} ./.env
 RUN npm run build
