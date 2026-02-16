@@ -1,6 +1,9 @@
-# setting Up CI/CD Secrets
+# Setting Up CI/CD Secrets
 
 This guide explains how to configure the GitHub Secrets required for the CI/CD pipeline.
+
+> [!NOTE]
+> This project is developed on Windows. All commands use PowerShell syntax. Refer to `rules.md` for complete development protocols.
 
 ## Prerequisites
 

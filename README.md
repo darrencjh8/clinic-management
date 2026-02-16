@@ -2,6 +2,9 @@
 
 A web application for managing dental clinic operations, including patient records, treatment history, and financial reporting. Built with React, TypeScript, Vite, and Express.
 
+> [!NOTE]
+> This project is developed on Windows. All commands and instructions are optimized for Windows PowerShell. Refer to `rules.md` for complete development protocols.
+
 ## Pre-requisites (Google Apps Script Setup)
 
 Before you can fully utilize the application's backend functionalities, you need to set up the Google Apps Script as detailed in the [`gAppScripts/Readme.md`](gAppScripts/Readme.md) file. This involves configuring the script to interact with your Google Sheets for data storage and processing.
@@ -51,7 +54,6 @@ Before deploying, you must configure your Fly.io application and secrets.
     You must set the following environment variables in Fly.io for the app to work.
     
     *   **Prepare your keys:** Convert your JSON key files to Base64 strings.
-        *   Linux/Mac: `base64 -w 0 key-file.json`
         *   Windows (PowerShell): `[Convert]::ToBase64String([IO.File]::ReadAllBytes("path\to\key-file.json"))`
 
     *   **Set the secrets:**
@@ -104,19 +106,42 @@ fly deploy --image chongjinheng/wisata-dental:latest --ha=false
 To run the application locally:
 
 1.  **Backend:**
-    ```bash
+    ```powershell
     cd server
     npm install
     npm start
     ```
 
 2.  **Frontend:**
-    ```bash
+    ```powershell
     cd ui
     npm install
     npm run dev
     ```
     Access at `http://localhost:5173`.
+
+## Pull Request Process
+
+After completing your implementation and ensuring all tests pass:
+
+1. **Stage and Commit Changes:**
+   ```powershell
+   git add .
+   git commit -m "feat: descriptive commit message"
+   git push origin feature-branch-name
+   ```
+
+2. **Create Pull Request:**
+   Use GitHub CLI to create a pull request:
+   ```powershell
+   gh pr create --title "Descriptive PR title" --body "Description of changes made"
+   ```
+
+3. **Requirements:**
+   - All component tests must pass (`npm run test:ct`)
+   - Build must succeed (`npm run build`)
+   - Documentation updated if applicable
+   - Refer to `rules.md` for complete workflow
 
 ## 🧪 Testing Strategy
 
