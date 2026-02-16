@@ -9,18 +9,8 @@ test.describe('E2E Staging Flow', () => {
         const email = process.env.E2E_TEST_EMAIL;
         const password = process.env.E2E_TEST_PASSWORD;
 
-        // Debug: Log all relevant environment variables
-        console.log('=== E2E Test Environment ===');
-        console.log(`E2E_TEST_EMAIL: ${email}`);
-        console.log(`E2E_TEST_PASSWORD: ${password}`);
-        console.log(`BASE_URL: ${process.env.BASE_URL}`);
-        console.log(`VITE_FIREBASE_API_KEY: ${process.env.VITE_FIREBASE_API_KEY?.substring(0, 10)}...`);
-        console.log(`VITE_API_URL: ${process.env.VITE_API_URL}`);
-        console.log('============================');
-
-        if (!email || !password) {
-            throw new Error('E2E_TEST_EMAIL or E2E_TEST_PASSWORD not found in environment');
-        }
+        // Skip if credentials not provided
+        test.skip(!email || !password, 'E2E_TEST_EMAIL and E2E_TEST_PASSWORD environment variables required');
 
         console.log(`Starting E2E test against: ${process.env.BASE_URL || 'localhost'}`);
 
@@ -45,8 +35,8 @@ test.describe('E2E Staging Flow', () => {
         await expect(emailInput).toBeVisible({ timeout: 30000 });
         console.log('Login form visible, filling credentials...');
 
-        await emailInput.fill(email);
-        await page.fill('input[type="password"]', password);
+        await emailInput.fill(email!);
+        await page.fill('input[type="password"]', password!);
         
         // Take screenshot before login for debugging
         await page.screenshot({ path: 'e2e-before-login.png' });

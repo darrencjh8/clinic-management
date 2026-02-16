@@ -20,12 +20,8 @@ test.describe('Treatment Recording E2E', () => {
 
     // Helper to complete login flow
     async function loginIfNeeded(page: any) {
-        const email = process.env.E2E_TEST_EMAIL;
-        const password = process.env.E2E_TEST_PASSWORD;
-        
-        if (!email || !password) {
-            throw new Error('E2E_TEST_EMAIL and E2E_TEST_PASSWORD must be set');
-        }
+        const email = process.env.E2E_TEST_EMAIL!;
+        const password = process.env.E2E_TEST_PASSWORD!;
 
         await page.goto('/');
         await page.waitForLoadState('domcontentloaded');
@@ -82,6 +78,7 @@ test.describe('Treatment Recording E2E', () => {
     }
 
     test('should display treatment entry form', async ({ page }) => {
+        test.skip(!process.env.E2E_TEST_EMAIL || !process.env.E2E_TEST_PASSWORD, 'Credentials required');
         await loginIfNeeded(page);
         
         // Should see the treatment entry form
@@ -98,6 +95,7 @@ test.describe('Treatment Recording E2E', () => {
     });
 
     test('should add a new patient via autocomplete', async ({ page }) => {
+        test.skip(!process.env.E2E_TEST_EMAIL || !process.env.E2E_TEST_PASSWORD, 'Credentials required');
         await loginIfNeeded(page);
         
         // Generate unique patient name
@@ -122,6 +120,7 @@ test.describe('Treatment Recording E2E', () => {
     });
 
     test('should record a basic treatment', async ({ page }) => {
+        test.skip(!process.env.E2E_TEST_EMAIL || !process.env.E2E_TEST_PASSWORD, 'Credentials required');
         await loginIfNeeded(page);
         
         // Generate unique patient name
@@ -165,6 +164,7 @@ test.describe('Treatment Recording E2E', () => {
     });
 
     test('should navigate to treatment history', async ({ page }) => {
+        test.skip(!process.env.E2E_TEST_EMAIL || !process.env.E2E_TEST_PASSWORD, 'Credentials required');
         await loginIfNeeded(page);
         
         // Find and click History navigation
@@ -192,6 +192,7 @@ test.describe('Treatment Recording E2E', () => {
     });
 
     test('should navigate to patients list', async ({ page }) => {
+        test.skip(!process.env.E2E_TEST_EMAIL || !process.env.E2E_TEST_PASSWORD, 'Credentials required');
         await loginIfNeeded(page);
         
         // Find and click Patients navigation

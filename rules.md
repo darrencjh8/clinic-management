@@ -58,7 +58,25 @@ These rules must be followed by all agents working on this project.
     - **Component Tests (UI):** Written in `ui/tests/components/`. Cover core functionality, interactions, edge cases, and all new props/state.
     - **Unit Tests:** For complex business logic.
 
-## 8. Deployment
+## 8. Terminal Command Timeout Protocol
+**CRITICAL:** All terminal commands must be executed with timeout mechanisms to prevent agents from getting stuck waiting for commands that may never complete.
+
+1. **Timeout Implementation:**
+   - Always use the `WaitDurationSeconds` parameter when checking command status with `command_status`
+   - Set reasonable timeouts based on expected command duration (typically 30-60 seconds for most operations)
+   - For long-running processes, use `Background: true` and poll status periodically
+
+2. **Status Polling:**
+   - Use `command_status` to check if background commands have completed
+   - Implement polling loops with appropriate intervals (every 5-10 seconds)
+   - Handle timeout scenarios gracefully and provide user feedback
+
+3. **Process Management:**
+   - Prefer background execution for commands that may take extended time
+   - Monitor process status and be prepared to terminate stuck processes
+   - Always verify command completion before proceeding with dependent tasks
+
+## 9. Deployment
 The deployment script (`deploy.ps1`) automatically handling testing, building, tagging, pushing, deploying, and cleaning up local Docker images.
     - **Note:** The deployment will automatically abort if regression tests fail.
 

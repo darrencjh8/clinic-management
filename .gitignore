@@ -26,3 +26,18 @@ dist-ssr
 test-results/
 playwright-report/
 playwright/.cache/
+
+# Test outputs and logs
+test_*.txt
+*_results.txt
+*_err.txt
+error_log*.txt
+
+# Temporary debug files
+test_debug_output.txt
+service_account_temp.json
+create_jwt_temp.js
+
+# E2E test screenshots
+e2e-*.png
+
