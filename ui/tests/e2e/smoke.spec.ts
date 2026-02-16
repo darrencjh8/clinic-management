@@ -1,13 +1,13 @@
 import { test, expect } from '@playwright/test';
 
-test('smoke test - dev server is running', async ({ page }) => {
-    // Simple health check - verify server responds
-    const response = await page.goto('/');
+test('smoke test - staging server is running', async ({ page }) => {
+    // Simple health check - verify staging server responds
+    const response = await page.goto(process.env.BASE_URL || 'https://wisata-dental-staging.fly.dev');
     expect(response).not.toBeNull();
     expect(response!.status()).toBe(200);
 });
 
-test('smoke test - index.html loads without critical errors', async ({ page }) => {
+test('smoke test - staging app loads without critical errors', async ({ page }) => {
     // Listen for console errors
     const consoleErrors: string[] = [];
     page.on('console', msg => {
@@ -22,7 +22,7 @@ test('smoke test - index.html loads without critical errors', async ({ page }) =
         pageErrors.push(error);
     });
     
-    await page.goto('/');
+    await page.goto(process.env.BASE_URL || 'https://wisata-dental-staging.fly.dev');
     
     // Wait a moment for any errors to be logged
     await page.waitForTimeout(2000);
