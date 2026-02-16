@@ -1,4 +1,4 @@
-name: CI/CD Pipeline (Updated)
+name: CI/CD Pipeline
 
 on:
   push:
@@ -78,7 +78,7 @@ jobs:
         run: npm run test:ct -- --reporter=list
 
   test-staging-sanity:
-    name: Staging Environment Sanity Test
+    name: Verify Staging Environment Configuration
     needs: build
     runs-on: ubuntu-latest
     environment: staging
