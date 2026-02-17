@@ -9,11 +9,11 @@ export default defineConfig({
     testDir: './tests',
     testMatch: '**/*.spec.tsx',
     snapshotDir: './__snapshots__',
-    timeout: 15 * 1000,
+    timeout: 30 * 1000, // Increased from 15s to 30s for Firefox compatibility
     fullyParallel: true,
     forbidOnly: !!process.env.CI,
     retries: process.env.CI ? 2 : 0,
-    workers: process.env.CI ? 1 : undefined,
+    workers: undefined,
     reporter: 'html',
     use: {
         trace: 'on-first-retry',

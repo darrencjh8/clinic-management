@@ -527,7 +527,10 @@ export const LoginScreen = ({
                                 {availableSheets.map(sheet => (
                                     <button
                                         key={sheet.id}
-                                        onClick={() => onSpreadsheetIdSubmit && onSpreadsheetIdSubmit(sheet.id)}
+                                        onClick={() => {
+                                            console.log(`[LoginScreen] Spreadsheet clicked: ${sheet.id}`);
+                                            if (onSpreadsheetIdSubmit) onSpreadsheetIdSubmit(sheet.id);
+                                        }}
                                         className="w-full text-left px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-0 transition-colors flex items-center gap-2"
                                     >
                                         <div className="w-2 h-2 rounded-full bg-green-500"></div>

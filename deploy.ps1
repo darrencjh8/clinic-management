@@ -211,6 +211,45 @@ if (-not $SkipE2E) {
         $stagingUrl = "https://$stagingAppName.fly.dev"
         Write-Output "Staging App Deployed: $stagingUrl"
 
+        # 6.5. Verify Server Readiness
+        Write-Output "Step 6.5: Verifying staging server readiness..."
+        $serverReady = $false
+        $retryCount = 0
+        $maxRetries = 20
+
+        while (-not $serverReady -and $retryCount -lt $maxRetries) {
+            try {
+                $response = Invoke-WebRequest -Uri "$stagingUrl" -TimeoutSec 10 -UseBasicParsing
+                if ($response.StatusCode -eq 200) {
+                    $serverReady = $true
+                    Write-Output "✅ Server ready after $($retryCount + 1) attempts"
+                    
+                    # Additional check: Verify the app is actually serving our content
+                    $content = $response.Content
+                    if ($content -match 'wisata-dental|clinic|dental' -or $content -match '<!DOCTYPE html>' -and $content -match 'id="root"') {
+                        Write-Output "✅ Application content verified"
+                    } else {
+                        throw "Server returned 200 but content doesn't match expected application"
+                    }
+                } else {
+                    throw "Server returned status $($response.StatusCode)"
+                }
+            } catch {
+                $retryCount++
+                Write-Output "Server not ready (attempt $retryCount/$maxRetries), waiting 5 seconds..."
+                Write-Output "  Error: $($_.Exception.Message)"
+                Start-Sleep -Seconds 5
+            }
+        }
+
+        if (-not $serverReady) {
+            Write-Error "❌ Staging server failed to become ready after $maxRetries attempts"
+            Write-Output "Rolling back staging deployment..."
+            fly apps destroy $stagingAppName --yes
+            Write-Output "✅ Staging server rolled back due to readiness failure"
+            exit 1
+        }
+
         # 7. Run E2E Tests
         Write-Output "Step 7: Running E2E Tests..."
         
@@ -275,6 +314,9 @@ if (-not $SkipE2E) {
             
         } else {
             Write-Error "❌ E2E Tests FAILED!"
+            Write-Output "🔄 Immediate rollback of staging deployment..."
+            fly apps destroy $stagingAppName --yes
+            Write-Output "✅ Staging server rolled back due to test failure"
             
             # Run integration test to diagnose if issue is backend/API vs UI
             Write-Output "Running integration test to diagnose backend/API functionality..."
@@ -295,6 +337,9 @@ if (-not $SkipE2E) {
             } catch {
                 Write-Output "❌ Integration Test error: $_"
             }
+            
+            Write-Output "❌ Deployment aborted due to E2E test failures"
+            exit 1
         }
 
     } catch {
@@ -303,8 +348,19 @@ if (-not $SkipE2E) {
         # 10. Cleanup
         Write-Output "Step 10: Cleaning up..."
         
-        Write-Output "Destroying Staging App..."
-        fly apps destroy $stagingAppName --yes
+        # Only attempt to destroy staging app if it wasn't already rolled back
+        try {
+            $appInfo = fly apps info --app $stagingAppName 2>$null
+            if ($LASTEXITCODE -eq 0) {
+                Write-Output "Destroying Staging App..."
+                fly apps destroy $stagingAppName --yes
+                Write-Output "✅ Staging app cleaned up"
+            } else {
+                Write-Output "Staging app already destroyed or never created"
+            }
+        } catch {
+            Write-Output "Staging app cleanup not needed or already completed"
+        }
         
         Write-Output "✅ All tasks completed successfully!"
         Write-Output "Cleanup Complete."

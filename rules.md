@@ -63,6 +63,7 @@ These rules must be followed by all agents working on this project.
 1. **Read Documentation First:**
    - ALWAYS read `doc/tests/component_testing.md` for setup, configuration, and best practices
    - ALWAYS read `doc/tests/component_test_patterns.md` for comprehensive patterns, learnings, and troubleshooting
+   - ALWAYS read `doc/learnings/e2e_testing_guide.md` for E2E testing patterns, PIN handling, and sync logic
    - These documents contain critical information about mocking patterns, i18n considerations, and common pitfalls
 
 2. **When Stuck:**
