@@ -4,6 +4,7 @@ import { spawn } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
+import { maskEmail } from './utils/mask-email.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -42,7 +43,7 @@ if (fs.existsSync(envPath)) {
 const testEnv = {
     ...process.env,
     E2E_TEST_EMAIL: process.env.E2E_TEST_EMAIL || env.E2E_TEST_EMAIL || process.env.E2E_USERNAME || env.E2E_USERNAME,
-    E2E_TEST_PASSWORD: process.env.E2E_TEST_PASSWORD || env.E2E_PASSWORD,
+    E2E_TEST_PASSWORD: process.env.E2E_TEST_PASSWORD || env.E2E_TEST_PASSWORD || process.env.E2E_PASSWORD || env.E2E_PASSWORD,
     BASE_URL: process.env.BASE_URL || env.BASE_URL || 'https://wisata-dental-staging.fly.dev',
 };
 
@@ -55,15 +56,7 @@ if (!testEnv.E2E_TEST_EMAIL || !testEnv.E2E_TEST_PASSWORD) {
     process.exit(1);
 }
 
-// Helper to mask email for logging
-function maskEmail(email) {
-    if (!email) return 'MISSING';
-    const parts = email.split('@');
-    if (parts.length !== 2) return 'INVALID_FORMAT';
-    const [user, domain] = parts;
-    const maskedUser = user.length > 2 ? `${user.substring(0, 2)}***` : `${user}***`;
-    return `${maskedUser}@${domain}`;
-}
+
 
 console.log('🧪 Testing staging-flow.spec.ts against staging server...');
 console.log(`📧 Email: ${maskEmail(testEnv.E2E_TEST_EMAIL)}`);
@@ -89,14 +82,19 @@ const testProcess = spawn('npx', [
     shell: true
 });
 
-testProcess.on('close', (code) => {
+testProcess.on('close', (code, signal) => {
     if (code === 0) {
         console.log('\n✅ staging-flow.spec.ts completed successfully!');
         console.log('🎉 Your staging environment is working correctly!');
-    } else {
+    } else if (code !== null) {
         console.log(`\n❌ staging-flow.spec.ts failed with exit code: ${code}`);
         console.log('🔍 Check the test output above for details');
         process.exit(code);
+    } else {
+        // Process was killed by signal
+        console.log(`\n❌ staging-flow.spec.ts was terminated by signal: ${signal}`);
+        console.log('🔍 The test process was killed unexpectedly');
+        process.exit(1);
     }
 });
 

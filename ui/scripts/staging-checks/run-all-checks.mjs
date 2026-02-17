@@ -7,6 +7,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 import { chromium } from 'playwright';
+import { maskEmail } from '../utils/mask-email.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -67,22 +68,23 @@ function loadStagingCredentials(envFileName = '.env.e2e') {
     };
 }
 
-function maskEmail(email) {
-    if (!email) return 'MISSING';
-    const parts = email.split('@');
-    if (parts.length !== 2) return 'INVALID_FORMAT';
-    const [user, domain] = parts;
-    const maskedUser = user.length > 2 ? `${user.substring(0, 2)}***` : `${user}***`;
-    return `${maskedUser}@${domain}`;
-}
 
-// Helper function to make HTTPS requests
+
+// Helper function to make HTTPS requests with timeout
 function makeRequest(url, options, postData = null) {
     return new Promise((resolve, reject) => {
+        const TIMEOUT_MS = 30000; // 30 second timeout
+        let timeoutId = null;
+        let isResolved = false;
+
         const req = https.request(url, options, (res) => {
             let data = '';
             res.on('data', (chunk) => data += chunk);
             res.on('end', () => {
+                if (isResolved) return;
+                isResolved = true;
+                if (timeoutId) clearTimeout(timeoutId);
+
                 try {
                     const parsed = JSON.parse(data);
                     if (res.statusCode >= 200 && res.statusCode < 300) {
@@ -95,7 +97,22 @@ function makeRequest(url, options, postData = null) {
                 }
             });
         });
-        req.on('error', reject);
+
+        req.on('error', (err) => {
+            if (isResolved) return;
+            isResolved = true;
+            if (timeoutId) clearTimeout(timeoutId);
+            reject(err);
+        });
+
+        // Set timeout handler
+        timeoutId = setTimeout(() => {
+            if (isResolved) return;
+            isResolved = true;
+            req.destroy();
+            reject(new Error(`Request timeout after ${TIMEOUT_MS}ms`));
+        }, TIMEOUT_MS);
+
         if (postData) req.write(postData);
         req.end();
     });
@@ -188,8 +205,6 @@ async function testUIAuthenticationFlow(credentials) {
     try {
         const page = await context.newPage();
 
-        // ... (console logging setup)
-
         const targetUrl = credentials.frontendUrl;
         console.log('   Navigating to staging application...');
         console.log(`   Target URL: ${targetUrl}`);
@@ -199,14 +214,11 @@ async function testUIAuthenticationFlow(credentials) {
 
         await page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
 
-        // ... (rest of the test logic, using credentials.email/password)
-
         // Wait for and fill email input
         const emailInput = page.locator('input[type="email"]');
         await emailInput.waitFor({ state: 'visible', timeout: 15000 });
         await emailInput.fill(credentials.email);
 
-        // ... (rest of interactions)
         const passwordInput = page.locator('input[type="password"]');
         await passwordInput.waitFor({ state: 'visible' });
         await passwordInput.fill(credentials.password);
@@ -410,7 +422,7 @@ async function runStagingSecretChecks() {
 }
 
 // Run the staging secret checks if this file is executed directly
-if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
     runStagingSecretChecks()
         .then(result => {
             console.log('\n📊 Final Results:', JSON.stringify(result, null, 2));
