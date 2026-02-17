@@ -12,7 +12,8 @@
     "test:ct": "playwright test -c playwright-component.config.ts",
     "test:unit": "vitest run",
     "test:unit:watch": "vitest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test -c playwright-e2e.config.ts",
+    "check:staging": "node scripts/staging-checks/run-all-checks.mjs"
   },
   "dependencies": {
     "@react-oauth/google": "^0.12.2",
