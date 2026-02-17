@@ -12,7 +12,7 @@ This document provides an overview of the project structure and guidelines for a
     - **defects/**: Stores defect reports and RCA (Root Cause Analysis).
     - **requirements/**: Stores project requirements and feature summaries.
     - **tests/**: Stores testing guidelines (`component_testing.md`, etc.).
-    - **learnings/**: Stores knowledge and learnings for future agents.
+    - **learnings/**: Stores knowledge and learnings for future agents (e.g., `e2e_testing_guide.md`).
     - **architecture/**: System architecture documentation.
 - **ui/**: The frontend React application.
     - **src/**: Source code.

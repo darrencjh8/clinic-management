@@ -52,10 +52,12 @@ const uiDir = path.resolve(__dirname, 'ui');
 console.log('\n🚀 Running staging-flow.spec.ts...');
 
 const testProcess = spawn('npx', [
-    'playwright', 
-    'test', 
+    'playwright',
+    'test',
     'tests/e2e/staging-flow.spec.ts',
-    '--config=playwright-e2e.config.ts'
+    '--config=playwright-e2e.config.ts',
+    '--project=chromium',
+    '--workers=1'
 ], {
     cwd: uiDir,
     env: testEnv,

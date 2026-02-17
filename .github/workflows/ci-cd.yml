@@ -183,10 +183,14 @@ jobs:
       - name: Run E2E Tests
         working-directory: ./ui
         run: |
+          echo "🧪 Running E2E Test: Full User Journey"
+          
+          # Run comprehensive staging flow test
           if npx playwright test tests/e2e/staging-flow.spec.ts; then
-            echo "✅ E2E Tests PASSED!"
+            echo "✅ E2E Test PASSED!"
+            echo "🎉 Full user journey completed successfully!"
           else
-            echo "❌ E2E Tests FAILED!"
+            echo "❌ E2E Test FAILED!"
             echo "🔄 Rolling back staging deployment..."
             flyctl deploy rollback --app wisata-dental-staging
             echo "✅ Staging rolled back to previous version"
