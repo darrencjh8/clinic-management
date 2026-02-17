@@ -111,9 +111,10 @@ jobs:
           VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
 
       - name: Run Staging Secret Checks
+        working-directory: ./ui
         run: |
           echo "Running comprehensive staging environment validation..."
-          node tests/staging-secret-checks/run-all-checks.mjs
+          npm run check:staging
         env:
           E2E_TEST_EMAIL: ${{ secrets.E2E_TEST_EMAIL }}
           E2E_TEST_PASSWORD: ${{ secrets.E2E_TEST_PASSWORD }}
