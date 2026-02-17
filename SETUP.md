@@ -1,53 +1,74 @@
-# Project Setup and Agent Guidelines
+# Dental Clinic App - Quick Setup
 
-> [!IMPORTANT]
-> **CRITICAL:** The source of truth for all agent rules is `rules.md` in the root directory. You **MUST** read `rules.md` immediately after reading this file to understand the mandatory protocols for this project.
+## What Was Fixed
+- Created `.env` file from `.env.example` (was missing, causing the OAuth error)
+- The app now runs successfully on `http://localhost:5173/`
 
-This document provides an overview of the project structure and guidelines for agents and developers working on the Clinic Management App.
+## Required: Google OAuth Setup
 
-## 1. Project Structure
+To fully use the app, you need to set up Google OAuth credentials:
 
-- **root/**: Contains `rules.md`, `SETUP.md`, `package.json` for the main app.
-- **doc/**: The central repository for all project documentation.
-    - **defects/**: Stores defect reports and RCA (Root Cause Analysis).
-    - **requirements/**: Stores project requirements and feature summaries.
-    - **tests/**: Stores testing guidelines (`component_testing.md`, etc.).
-    - **learnings/**: Stores knowledge and learnings for future agents (e.g., `e2e_testing_guide.md`).
-    - **architecture/**: System architecture documentation.
-- **ui/**: The frontend React application.
-    - **src/**: Source code.
-    - **tests/components/**: Component tests (Playwright CT).
-- **server/**: Backend server code (if applicable).
-- **.agent/**: Agent-specific workflows and configurations.
+1. **Create OAuth Client ID:**
+   - Go to [Google Cloud Console](https://console.cloud.google.com/apis/credentials)
+   - Create or select a project
+   - Click "Create Credentials" → "OAuth 2.0 Client ID"
+   - Application type: "Web application"
+   - Add authorized redirect URIs:
+     - `http://localhost:5173`
+     - `http://localhost:5173/` 
+   - Copy the Client ID
 
-## 2. Agent Workflow
+2. **Update `.env` file:**
+   ```
+   VITE_GOOGLE_CLIENT_ID=your_actual_client_id_here
+   ```
 
-1.  **Start:** thoroughly read `rules.md` in the root directory.
-2.  **Learn:** Check `doc/learnings` and `doc/tests` for relevant context.
-3.  **Explore:** Use `list_dir` and `view_file` to understand the codebase structure.
-4.  **Task:** Follow the task assignments and rules strictly.
+3. **Restart the dev server:**
+   ```bash
+   npm run dev
+   ```
 
-## 3. Development Rules
+## Current Status
+✅ App builds successfully
+✅ Dev server runs without errors
+⚠️ Needs Google OAuth Client ID to enable login
 
-- **Testing:** Always run `npm run test:ct -- --reporter=list` in the `ui` directory before and after changes.
-- **Commits:** Make granular commits. Periodically commit working changes to the feature branch.
-- **Merging:** Merge to `main` ONLY when all component tests pass.
-- **Documentation:** Update relevant docs in `doc/` after every significant change or fix.
-- **Defects:** Document all defects in `doc/defects/` before fixing them.
-- **Cleanup:** Remove any temporary files (logs, screenshots) created during the task.
+## Environment Files
 
-## 4. Setup for Agents
+### Local Development
+- **`.env`** - Used for local development with localhost settings
+- Copy from `.env.example` and update with your local credentials
+- Contains `VITE_API_URL=http://localhost:3001` for local backend
 
-When initializing a new agent session:
-1.  **Read `rules.md`**: This is the source of truth.
-2.  **Check `task.md`**: If continuing work, check the task list.
-3.  **Review `implementation_plan.md`**: For active plans.
+### Production Deployment
+- **`.env-prod`** - Used for production deployments
+- Required for all deployment scripts (deploy.ps1, deploy_and_test.ps1)
+- Must contain production settings (no localhost URLs)
+- Deployment scripts will fail if this file is missing or incomplete
 
-## 5. Key Commands
+### E2E Testing
+- **`.env.e2e`** - Used for end-to-end testing
+- Contains test credentials for automated testing
+- Required for deploy_and_test.ps1 script
 
-- **Run UI Tests:** `cd ui && npm run test:ct -- --reporter=list`
-- **Build UI:** `cd ui && npm run build`
-- **Deploy:** `.\deploy.ps1` (Handles testing, building, and deployment)
+### Required Production Variables (.env-prod)
+```
+VITE_API_URL=https://your-production-url.com
+VITE_FIREBASE_API_KEY=your_production_firebase_key
+VITE_FIREBASE_PROJECT_ID=your_project_id
+VITE_GOOGLE_CLIENT_ID=your_production_oauth_client_id
+VITE_CLINIC_NAME=Your Clinic Name
+```
 
----
-**Note:** Keep this file updated as the project evolves.
+## Development Commands
+```bash
+npm run dev      # Start development server
+npm run build    # Build for production
+npm run preview  # Preview production build
+```
+
+## Notes
+- The old utility-splitter components have been removed
+- All UI is now for dental clinic patient management
+- LoginScreen component is working correctly
+- Just needs OAuth credentials to be fully functional
