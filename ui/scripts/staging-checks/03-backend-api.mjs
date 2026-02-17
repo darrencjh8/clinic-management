@@ -14,10 +14,15 @@ function makeRequest(url, options, postData = null) {
                     if (res.statusCode >= 200 && res.statusCode < 300) {
                         resolve(parsed);
                     } else {
-                        reject(new Error(`HTTP ${res.statusCode}: ${JSON.stringify(parsed)}`));
+                        const error = new Error(`HTTP ${res.statusCode}: ${JSON.stringify(parsed)}`);
+                        error.status = res.statusCode;
+                        error.response = { status: res.statusCode, data: parsed };
+                        reject(error);
                     }
                 } catch (e) {
-                    reject(new Error(`Parse error: ${data}`));
+                    const err = new Error(`Parse error: ${data}`);
+                    err.status = res.statusCode;
+                    reject(err);
                 }
             });
         });
@@ -30,7 +35,7 @@ function makeRequest(url, options, postData = null) {
 export async function testBackendAPI(credentials, firebaseAuth) {
     console.log('🌐 Staging Secret Check: Backend API Connectivity');
     console.log('   Purpose: Validate staging backend API endpoints and security');
-    
+
     try {
         // Test service account endpoint with proper authentication
         const serviceAccountUrl = `${credentials.backendUrl}/api/auth/service-account`;
@@ -41,18 +46,18 @@ export async function testBackendAPI(credentials, firebaseAuth) {
                 'Content-Type': 'application/json'
             }
         };
-        
+
         const serviceAccountResponse = await makeRequest(serviceAccountUrl, serviceAccountOptions);
-        
+
         // Validate service account response structure
         if (!serviceAccountResponse.serviceAccount || !serviceAccountResponse.serviceAccount.client_email) {
             throw new Error('Invalid service account response format');
         }
-        
+
         console.log('   ✅ Service account endpoint accessible');
         console.log('   ✅ Service account obtained:', serviceAccountResponse.serviceAccount.client_email);
         console.log('   ✅ Service account has valid structure');
-        
+
         // Test unauthorized access (should fail)
         try {
             const unauthorizedResponse = await makeRequest(serviceAccountUrl, {
@@ -63,13 +68,15 @@ export async function testBackendAPI(credentials, firebaseAuth) {
             });
             throw new Error('Unauthorized access should have failed');
         } catch (error) {
-            if (error.message.includes('Unauthorized') || error.message.includes('401')) {
+            const status = error.status || (error.response && error.response.status);
+            if (status === 401 || status === 403) {
                 console.log('   ✅ Unauthorized access properly rejected');
             } else {
-                console.log('   ⚠️  Unexpected unauthorized response:', error.message);
+                console.error('   ❌ Unexpected unauthorized response - Status:', status, 'Message:', error.message);
+                throw new Error(`Expected 401/403 for unauthorized access, got ${status}: ${error.message}`);
             }
         }
-        
+
         // Test health endpoint
         const healthUrl = `${credentials.backendUrl}/api/health`;
         const healthOptions = {
@@ -78,14 +85,14 @@ export async function testBackendAPI(credentials, firebaseAuth) {
                 'Content-Type': 'application/json'
             }
         };
-        
+
         try {
             await makeRequest(healthUrl, healthOptions);
             console.log('   ✅ Health endpoint accessible');
         } catch (error) {
             console.log('   ⚠️  Health endpoint not accessible (may be normal)');
         }
-        
+
         // Test API documentation endpoint
         const docsUrl = `${credentials.backendUrl}/api/docs`;
         try {
@@ -94,9 +101,9 @@ export async function testBackendAPI(credentials, firebaseAuth) {
         } catch (error) {
             console.log('   ⚠️  API documentation not accessible (may be normal)');
         }
-        
+
         return serviceAccountResponse.serviceAccount;
-        
+
     } catch (error) {
         throw new Error(`Backend API validation failed: ${error.message}`);
     }
@@ -105,17 +112,17 @@ export async function testBackendAPI(credentials, firebaseAuth) {
 export async function testBackendSecurity(credentials) {
     console.log('🔒 Staging Secret Check: Backend Security Validation');
     console.log('   Purpose: Validate backend security headers and configurations');
-    
+
     try {
         // Test HTTPS enforcement
         if (!credentials.backendUrl.startsWith('https://')) {
             throw new Error('Backend URL must use HTTPS');
         }
         console.log('   ✅ Backend uses HTTPS');
-        
+
         // Test CORS headers (basic check)
         const healthUrl = `${credentials.backendUrl}/api/health`;
-        
+
         return new Promise((resolve, reject) => {
             const req = https.request(healthUrl, { method: 'OPTIONS' }, (res) => {
                 const corsHeaders = {
@@ -123,19 +130,21 @@ export async function testBackendSecurity(credentials) {
                     'access-control-allow-methods': res.headers['access-control-allow-methods'],
                     'access-control-allow-headers': res.headers['access-control-allow-headers']
                 };
-                
-                console.log('   ✅ CORS headers present:', Object.keys(corsHeaders).length > 0);
-                resolve(true);
+
+                const requiredHeaders = ['access-control-allow-origin', 'access-control-allow-methods', 'access-control-allow-headers'];
+                const allCorsHeadersPresent = requiredHeaders.every(header => !!corsHeaders[header]);
+                console.log('   ✅ All required CORS headers present:', allCorsHeadersPresent);
+                resolve(allCorsHeadersPresent);
             });
-            
+
             req.on('error', (error) => {
                 console.log('   ⚠️  CORS check failed (may be normal):', error.message);
-                resolve(true); // Don't fail on CORS check
+                resolve(false); // Request error means CORS check inconclusive
             });
-            
+
             req.end();
         });
-        
+
     } catch (error) {
         throw new Error(`Backend security validation failed: ${error.message}`);
     }

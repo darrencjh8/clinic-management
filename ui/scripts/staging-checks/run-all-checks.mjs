@@ -27,13 +27,16 @@ function loadStagingCredentials(envFileName = '.env.e2e') {
             return value;
         };
 
+        // In CI, BASE_URL must be set - fail fast if missing
+        const frontendUrl = getEnvVar('BASE_URL');
+
         return {
             firebaseApiKey: getEnvVar('VITE_FIREBASE_API_KEY'),
             email: getEnvVar('E2E_TEST_EMAIL'),
             password: getEnvVar('E2E_TEST_PASSWORD'),
             backendUrl: getEnvVar('VITE_API_URL'),
             googleClientId: getEnvVar('VITE_GOOGLE_CLIENT_ID'),
-            frontendUrl: getEnvVar('BASE_URL') || 'http://localhost:4173' // Default to preview port in CI if not set, though BASE_URL should be set
+            frontendUrl
         };
     }
 
@@ -210,10 +213,12 @@ async function testUIAuthenticationFlow(credentials) {
 
         const submitButton = page.locator('button[type="submit"]');
         await submitButton.waitFor({ state: 'visible' });
-        await submitButton.click();
 
-        // ... (verification logic)
-        await page.waitForTimeout(5000); // Wait for navigation
+        // Wait for navigation after clicking submit
+        await Promise.all([
+            page.waitForLoadState('networkidle', { timeout: 15000 }),
+            submitButton.click()
+        ]);
 
         // Check for success indicators (PIN, Spreadsheet, or Main App)
         const pinScreen = page.locator('h2:has-text("Atur PIN")');
