@@ -9,7 +9,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Load environment variables from .env file (in root directory)
-const envPath = path.resolve(__dirname, '.env');
+const envPath = path.resolve(__dirname, '../../.env');
 const env = {};
 
 if (fs.existsSync(envPath)) {
@@ -46,7 +46,7 @@ console.log(`📧 Email: ${testEnv.E2E_TEST_EMAIL}`);
 console.log(`🌐 Target: ${testEnv.BASE_URL}`);
 
 // Change to UI directory
-const uiDir = path.resolve(__dirname, 'ui');
+const uiDir = path.resolve(__dirname, '../');
 
 // Run the staging flow test (exactly like CI/CD)
 console.log('\n🚀 Running staging-flow.spec.ts...');

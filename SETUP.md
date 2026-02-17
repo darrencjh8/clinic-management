@@ -49,5 +49,10 @@ When initializing a new agent session:
 - **Build UI:** `cd ui && npm run build`
 - **Deploy:** `.\deploy.ps1` (Handles testing, building, and deployment)
 
+## 6. Additional Guides
+- **UI Setup & OAuth:** See [`doc/guides/ui_setup.md`](doc/guides/ui_setup.md)
+- **Staging Checks:** `cd ui && npm run check:staging`
+- **Local Staging Test:** `cd ui && npm run test:staging:local`
+
 ---
 **Note:** Keep this file updated as the project evolves.
