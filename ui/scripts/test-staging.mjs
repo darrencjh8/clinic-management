@@ -50,9 +50,12 @@ const testEnv = {
 // Validate credentials
 if (!testEnv.E2E_TEST_EMAIL || !testEnv.E2E_TEST_PASSWORD) {
     console.error('❌ E2E credentials not found!');
-    console.error('Please ensure your .env file contains:');
-    console.error('E2E_USERNAME=your-email@example.com');
-    console.error('E2E_PASSWORD=your-password');
+    console.error('Please ensure your .env file contains one of the following:');
+    console.error('  E2E_TEST_EMAIL=your-email@example.com');
+    console.error('  E2E_TEST_PASSWORD=your-password');
+    console.error('Or (legacy names):');
+    console.error('  E2E_USERNAME=your-email@example.com');
+    console.error('  E2E_PASSWORD=your-password');
     process.exit(1);
 }
 

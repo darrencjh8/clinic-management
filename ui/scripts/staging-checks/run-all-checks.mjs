@@ -52,7 +52,17 @@ function loadStagingCredentials(envFileName = '.env.e2e') {
         if (process.env[name]) return process.env[name];
         if (envContent) {
             const match = envContent.match(new RegExp(`^${name}=(.*)$`, 'm'));
-            if (match) return match[1];
+            if (match) {
+                let value = match[1];
+                // Normalize: trim whitespace, strip CRLF, remove surrounding quotes
+                value = value.replace(/\r$/, '').trim();
+                // Strip surrounding quotes (single or double)
+                if ((value.startsWith('"') && value.endsWith('"')) ||
+                    (value.startsWith("'") && value.endsWith("'"))) {
+                    value = value.slice(1, -1);
+                }
+                return value;
+            }
         }
         if (defaultValue !== undefined) return defaultValue;
         throw new Error(`Environment variable ${name} not found in environment or ${envFileName}`);
@@ -180,8 +190,8 @@ async function testGoogleCloudServices(credentials, serviceAccount) {
 
         if (files.length > 0) {
             console.log('   ✅ Service account has spreadsheet access');
-            // Only log file details in debug mode to avoid leaking sensitive metadata
-            if (process.env.DEBUG) {
+            // Only log file details when DEBUG_STAGING_CHECKS is enabled to avoid leaking sensitive metadata
+            if (process.env.DEBUG_STAGING_CHECKS === 'true') {
                 files.slice(0, 3).forEach((file, idx) => {
                     console.log(`      ${idx + 1}. ${file.name} (ID: ${file.id})`);
                 });
@@ -233,23 +243,43 @@ async function testUIAuthenticationFlow(credentials) {
         ]);
 
         // Check for success indicators (PIN, Spreadsheet, or Main App)
+        // Use proper waits to avoid racing UI state changes
         const pinScreen = page.locator('h2:has-text("Atur PIN")');
         const spreadsheetSetup = page.locator('text=/Setup Database|Pengaturan Database/i');
         const mainApp = page.locator('text=/New Treatment|Perawatan Baru|Treatment Entry|Entri Perawatan/i');
 
-        if (await pinScreen.count() > 0) {
+        // Try each success indicator with a short timeout
+        let authenticated = false;
+
+        try {
+            await pinScreen.waitFor({ state: 'visible', timeout: 3000 });
             console.log('   ✅ PIN screen detected - authentication successful');
-        } else if (await spreadsheetSetup.count() > 0) {
-            console.log('   ✅ Spreadsheet setup screen detected - authentication successful');
-        } else if (await mainApp.count() > 0) {
-            console.log('   ✅ Main app detected - authentication successful');
-        } else {
-            // Fallback check
-            const isStillOnLogin = await emailInput.isVisible().catch(() => false);
-            if (isStillOnLogin) {
-                throw new Error('Still on login page - authentication failed');
+            authenticated = true;
+        } catch {
+            try {
+                await spreadsheetSetup.waitFor({ state: 'visible', timeout: 2000 });
+                console.log('   ✅ Spreadsheet setup screen detected - authentication successful');
+                authenticated = true;
+            } catch {
+                try {
+                    await mainApp.waitFor({ state: 'visible', timeout: 2000 });
+                    console.log('   ✅ Main app detected - authentication successful');
+                    authenticated = true;
+                } catch {
+                    // Fallback check - wait a bit then verify we're not still on login
+                    await page.waitForTimeout(1000);
+                    const isStillOnLogin = await emailInput.isVisible().catch(() => false);
+                    if (isStillOnLogin) {
+                        throw new Error('Still on login page - authentication failed');
+                    }
+                    console.log('   ✅ Authentication successful (unknown state)');
+                    authenticated = true;
+                }
             }
-            console.log('   ✅ Authentication successful (unknown state)');
+        }
+
+        if (!authenticated) {
+            throw new Error('Authentication state could not be verified');
         }
 
         return true;
@@ -346,7 +376,11 @@ async function runStagingSecretChecks() {
 
         console.log('   ✅ Firebase authentication successful');
         console.log('   ✅ ID token obtained (length:', firebaseAuth.idToken.length, ')');
-        console.log('   ✅ User ID:', firebaseAuth.localId);
+        if (process.env.DEBUG_STAGING_CHECKS === 'true') {
+            console.log('   ✅ User ID:', firebaseAuth.localId);
+        } else {
+            console.log('   ✅ User ID: <redacted>');
+        }
 
         // Test 2: Backend API - Service Account Retrieval
         console.log('\n🌐 Test 2: Backend API - Service Account Retrieval');
@@ -367,7 +401,13 @@ async function runStagingSecretChecks() {
 
         serviceAccount = serviceAccountResponse.serviceAccount;
         console.log('   ✅ Service account endpoint accessible');
-        console.log('   ✅ Service account obtained:', serviceAccount.client_email);
+        if (process.env.DEBUG_STAGING_CHECKS === 'true') {
+            console.log('   ✅ Service account obtained:', serviceAccount.client_email);
+        } else {
+            const email = serviceAccount.client_email;
+            const maskedEmail = email.length > 10 ? `${email.substring(0, 3)}...${email.substring(email.length - 7)}` : '<redacted>';
+            console.log('   ✅ Service account obtained:', maskedEmail);
+        }
 
         // Test 3: Token Refresh
         console.log('\n🔄 Test 3: Firebase Token Refresh');
@@ -407,8 +447,8 @@ async function runStagingSecretChecks() {
             success: true,
             summary: {
                 spreadsheetsFound: googleResult.fileCount,
-                userId: firebaseAuth.localId,
-                serviceAccountEmail: serviceAccount.client_email
+                userId: process.env.DEBUG_STAGING_CHECKS === 'true' ? firebaseAuth.localId : '<redacted>',
+                serviceAccountEmail: process.env.DEBUG_STAGING_CHECKS === 'true' ? serviceAccount.client_email : '<redacted>'
             }
         };
 
