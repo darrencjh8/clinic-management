@@ -95,6 +95,10 @@ jobs:
         working-directory: ./ui
         run: npm ci
 
+      - name: Install Playwright Browsers
+        working-directory: ./ui
+        run: npx playwright install --with-deps chromium firefox
+
       - name: Run Staging Environment Sanity Test
         working-directory: ./ui
         run: node tests/integration/test_login_flow.mjs
