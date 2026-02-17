@@ -17,9 +17,23 @@ if (fs.existsSync(envPath)) {
     envContent.split('\n').forEach(line => {
         // Handle Windows line endings (\r\n)
         const cleanLine = line.replace(/\r$/, '');
+
+        // Skip blank lines and comments
+        if (!cleanLine.trim() || cleanLine.trim().startsWith('#')) {
+            return;
+        }
+
         const match = cleanLine.match(/^([^=\s]+)\s*=\s*(.*)$/);
         if (match) {
-            env[match[1]] = match[2];
+            let value = match[2].trim();
+
+            // Strip surrounding quotes (single or double)
+            if ((value.startsWith('"') && value.endsWith('"')) ||
+                (value.startsWith("'") && value.endsWith("'"))) {
+                value = value.slice(1, -1);
+            }
+
+            env[match[1]] = value;
         }
     });
 }
@@ -27,7 +41,7 @@ if (fs.existsSync(envPath)) {
 // Set up environment variables for E2E testing (match CI/CD naming)
 const testEnv = {
     ...process.env,
-    E2E_TEST_EMAIL: env.E2E_USERNAME || process.env.E2E_USERNAME,
+    E2E_TEST_EMAIL: process.env.E2E_TEST_EMAIL || env.E2E_USERNAME || process.env.E2E_USERNAME,
     E2E_TEST_PASSWORD: env.E2E_PASSWORD || process.env.E2E_PASSWORD,
     BASE_URL: process.env.BASE_URL || 'https://wisata-dental-staging.fly.dev',
 };

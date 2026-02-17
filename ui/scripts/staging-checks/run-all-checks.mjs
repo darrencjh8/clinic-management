@@ -75,7 +75,30 @@ function maskEmail(email) {
     return `${maskedUser}@${domain}`;
 }
 
-// ... (makeRequest function remains the same)
+// Helper function to make HTTPS requests
+function makeRequest(url, options, postData = null) {
+    return new Promise((resolve, reject) => {
+        const req = https.request(url, options, (res) => {
+            let data = '';
+            res.on('data', (chunk) => data += chunk);
+            res.on('end', () => {
+                try {
+                    const parsed = JSON.parse(data);
+                    if (res.statusCode >= 200 && res.statusCode < 300) {
+                        resolve(parsed);
+                    } else {
+                        reject(new Error(`HTTP ${res.statusCode}: ${JSON.stringify(parsed)}`));
+                    }
+                } catch (e) {
+                    reject(new Error(`Parse error: ${data}`));
+                }
+            });
+        });
+        req.on('error', reject);
+        if (postData) req.write(postData);
+        req.end();
+    });
+}
 
 // Test 4: Google Cloud Services Integration
 async function testGoogleCloudServices(credentials, serviceAccount) {
@@ -257,17 +280,103 @@ async function testCSPConfiguration() {
 
 // Main test runner
 async function runStagingSecretChecks() {
-    // ...
-    // Using the values
+    console.log('🚀 Starting Comprehensive Staging Environment Validation');
+    console.log('='.repeat(60));
+
     let googleResult;
+    let credentials;
+    let serviceAccount;
+    let firebaseAuth;
 
     try {
-        // ...
+        // Load staging credentials
+        console.log('\n📋 Loading staging credentials...');
+        credentials = loadStagingCredentials();
+        console.log('   ✅ Credentials loaded successfully');
+        console.log(`   📧 Test Email: ${maskEmail(credentials.email)}`);
+        console.log(`   🌐 Backend URL: ${credentials.backendUrl}`);
+        console.log(`   🔥 Firebase API Key: ${credentials.firebaseApiKey.substring(0, 10)}...`);
+
+        // Test 1: Firebase Authentication
+        console.log('\n🔥 Test 1: Firebase Authentication');
+        const url = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${credentials.firebaseApiKey}`;
+        const postData = JSON.stringify({
+            email: credentials.email,
+            password: credentials.password,
+            returnSecureToken: true
+        });
+        const options = {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Content-Length': Buffer.byteLength(postData)
+            }
+        };
+
+        firebaseAuth = await makeRequest(url, options, postData);
+
+        if (!firebaseAuth.idToken || !firebaseAuth.refreshToken || !firebaseAuth.localId) {
+            throw new Error('Missing required authentication tokens');
+        }
+
+        console.log('   ✅ Firebase authentication successful');
+        console.log('   ✅ ID token obtained (length:', firebaseAuth.idToken.length, ')');
+        console.log('   ✅ User ID:', firebaseAuth.localId);
+
+        // Test 2: Backend API - Service Account Retrieval
+        console.log('\n🌐 Test 2: Backend API - Service Account Retrieval');
+        const serviceAccountUrl = `${credentials.backendUrl}/api/auth/service-account`;
+        const serviceAccountOptions = {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${firebaseAuth.idToken}`,
+                'Content-Type': 'application/json'
+            }
+        };
+
+        const serviceAccountResponse = await makeRequest(serviceAccountUrl, serviceAccountOptions);
+
+        if (!serviceAccountResponse.serviceAccount || !serviceAccountResponse.serviceAccount.client_email) {
+            throw new Error('Invalid service account response format');
+        }
+
+        serviceAccount = serviceAccountResponse.serviceAccount;
+        console.log('   ✅ Service account endpoint accessible');
+        console.log('   ✅ Service account obtained:', serviceAccount.client_email);
+
+        // Test 3: Token Refresh
+        console.log('\n🔄 Test 3: Firebase Token Refresh');
+        const refreshUrl = `https://securetoken.googleapis.com/v1/token?key=${credentials.firebaseApiKey}`;
+        const refreshPostData = `grant_type=refresh_token&refresh_token=${encodeURIComponent(firebaseAuth.refreshToken)}`;
+        const refreshOptions = {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Content-Length': Buffer.byteLength(refreshPostData)
+            }
+        };
+
+        const refreshResponse = await makeRequest(refreshUrl, refreshOptions, refreshPostData);
+
+        if (!refreshResponse.id_token || !refreshResponse.refresh_token) {
+            throw new Error('Missing tokens in refresh response');
+        }
+
+        console.log('   ✅ Token refresh successful');
+        console.log('   ✅ New ID token obtained');
+
+        // Test 4: Google Cloud Services
         googleResult = await testGoogleCloudServices(credentials, serviceAccount);
+
+        // Test 5: UI Authentication Flow
         await testUIAuthenticationFlow(credentials);
+
+        // Test 6: CSP Configuration
         await testCSPConfiguration();
 
-        // ...
+        console.log('\n' + '='.repeat(60));
+        console.log('✅ All Staging Secret Checks Passed!');
+        console.log('='.repeat(60));
 
         return {
             success: true,
@@ -279,7 +388,10 @@ async function runStagingSecretChecks() {
         };
 
     } catch (error) {
-        // ... (error handling)
+        console.error('\n' + '='.repeat(60));
+        console.error('❌ Staging Secret Checks Failed!');
+        console.error('='.repeat(60));
+        console.error('Error:', error.message);
         throw error;
     }
 }
