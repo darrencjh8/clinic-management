@@ -41,9 +41,9 @@ if (fs.existsSync(envPath)) {
 // Set up environment variables for E2E testing (match CI/CD naming)
 const testEnv = {
     ...process.env,
-    E2E_TEST_EMAIL: process.env.E2E_TEST_EMAIL || env.E2E_USERNAME || process.env.E2E_USERNAME,
-    E2E_TEST_PASSWORD: env.E2E_PASSWORD || process.env.E2E_PASSWORD,
-    BASE_URL: process.env.BASE_URL || 'https://wisata-dental-staging.fly.dev',
+    E2E_TEST_EMAIL: process.env.E2E_TEST_EMAIL || env.E2E_TEST_EMAIL || process.env.E2E_USERNAME || env.E2E_USERNAME,
+    E2E_TEST_PASSWORD: process.env.E2E_TEST_PASSWORD || env.E2E_PASSWORD,
+    BASE_URL: process.env.BASE_URL || env.BASE_URL || 'https://wisata-dental-staging.fly.dev',
 };
 
 // Validate credentials
@@ -55,8 +55,18 @@ if (!testEnv.E2E_TEST_EMAIL || !testEnv.E2E_TEST_PASSWORD) {
     process.exit(1);
 }
 
+// Helper to mask email for logging
+function maskEmail(email) {
+    if (!email) return 'MISSING';
+    const parts = email.split('@');
+    if (parts.length !== 2) return 'INVALID_FORMAT';
+    const [user, domain] = parts;
+    const maskedUser = user.length > 2 ? `${user.substring(0, 2)}***` : `${user}***`;
+    return `${maskedUser}@${domain}`;
+}
+
 console.log('🧪 Testing staging-flow.spec.ts against staging server...');
-console.log(`📧 Email: ${testEnv.E2E_TEST_EMAIL}`);
+console.log(`📧 Email: ${maskEmail(testEnv.E2E_TEST_EMAIL)}`);
 console.log(`🌐 Target: ${testEnv.BASE_URL}`);
 
 // Change to UI directory

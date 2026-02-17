@@ -5,13 +5,11 @@ import https from 'https';
 import * as jose from 'jose';
 import fs from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
+import { fileURLToPath, pathToFileURL } from 'url';
 import { chromium } from 'playwright';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-// ... (imports remain)
 
 // Load staging environment credentials
 function loadStagingCredentials(envFileName = '.env.e2e') {
@@ -109,7 +107,6 @@ async function testGoogleCloudServices(credentials, serviceAccount) {
     console.log('   Purpose: Validate Google Cloud service account access and permissions');
 
     try {
-        // ... (JWT creation logic remains the same)
         const alg = 'RS256';
         const privateKeyString = serviceAccount.private_key.includes('\\n')
             ? serviceAccount.private_key.replace(/\\n/g, '\n')
@@ -166,9 +163,12 @@ async function testGoogleCloudServices(credentials, serviceAccount) {
 
         if (files.length > 0) {
             console.log('   ✅ Service account has spreadsheet access');
-            files.slice(0, 3).forEach((file, idx) => {
-                console.log(`      ${idx + 1}. ${file.name} (ID: ${file.id})`);
-            });
+            // Only log file details in debug mode to avoid leaking sensitive metadata
+            if (process.env.DEBUG) {
+                files.slice(0, 3).forEach((file, idx) => {
+                    console.log(`      ${idx + 1}. ${file.name} (ID: ${file.id})`);
+                });
+            }
         }
 
         return { accessToken: tokenResponse.access_token, fileCount: files.length };
@@ -269,7 +269,15 @@ async function testCSPConfiguration() {
         console.log('   ✅ Staging CSP configuration validated');
 
         // Verify staging-specific content
-        const connectSrc = config.directives['connect-src'] || [];
+        let connectSrc = config.directives['connect-src'] || [];
+        // Normalize to array if it's a string
+        if (!Array.isArray(connectSrc)) {
+            if (typeof connectSrc === 'string') {
+                connectSrc = connectSrc.split(/\s+/).filter(s => s.length > 0);
+            } else {
+                connectSrc = [];
+            }
+        }
         const hasStagingBackend = connectSrc.some(src => src.includes('wisata-dental-staging.fly.dev'));
 
         if (!hasStagingBackend) {
@@ -402,7 +410,7 @@ async function runStagingSecretChecks() {
 }
 
 // Run the staging secret checks if this file is executed directly
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
     runStagingSecretChecks()
         .then(result => {
             console.log('\n📊 Final Results:', JSON.stringify(result, null, 2));
