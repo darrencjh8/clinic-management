@@ -350,7 +350,7 @@ async function runStagingSecretChecks() {
         console.log('   ✅ Credentials loaded successfully');
         console.log(`   📧 Test Email: ${maskEmail(credentials.email)}`);
         console.log(`   🌐 Backend URL: ${credentials.backendUrl}`);
-        console.log(`   🔥 Firebase API Key: ${credentials.firebaseApiKey.substring(0, 10)}...`);
+        console.log('   🔥 Firebase API Key: [REDACTED]');
 
         // Test 1: Firebase Authentication
         console.log('\n🔥 Test 1: Firebase Authentication');
@@ -404,9 +404,7 @@ async function runStagingSecretChecks() {
         if (process.env.DEBUG_STAGING_CHECKS === 'true') {
             console.log('   ✅ Service account obtained:', serviceAccount.client_email);
         } else {
-            const email = serviceAccount.client_email;
-            const maskedEmail = email.length > 10 ? `${email.substring(0, 3)}...${email.substring(email.length - 7)}` : '<redacted>';
-            console.log('   ✅ Service account obtained:', maskedEmail);
+            console.log('   ✅ Service account obtained:', maskEmail(serviceAccount.client_email));
         }
 
         // Test 3: Token Refresh
