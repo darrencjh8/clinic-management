@@ -1,58 +1,46 @@
 # Project Setup and Agent Guidelines
 
 > [!IMPORTANT]
-> **CRITICAL:** The source of truth for all agent rules is `rules.md` in the root directory. You **MUST** read `rules.md` immediately after reading this file to understand the mandatory protocols for this project.
-
-This document provides an overview of the project structure and guidelines for agents and developers working on the Clinic Management App.
+> **CRITICAL:** The source of truth for all agent rules is `rules.md`. You **MUST** read it immediately.
 
 ## 1. Project Structure
 
-- **root/**: Contains `rules.md`, `SETUP.md`, `package.json` for the main app.
-- **doc/**: The central repository for all project documentation.
-    - **defects/**: Stores defect reports and RCA (Root Cause Analysis).
-    - **requirements/**: Stores project requirements and feature summaries.
-    - **tests/**: Stores testing guidelines (`component_testing.md`, etc.).
-    - **learnings/**: Stores knowledge and learnings for future agents (e.g., `e2e_testing_guide.md`).
-    - **architecture/**: System architecture documentation.
-- **ui/**: The frontend React application.
+- **root/**: `rules.md`, `SETUP.md`, `package.json`.
+- **doc/**: Central documentation.
+    - **defects/**: Defect reports & RCA.
+    - **learnings/**: Knowledge base (e.g., `ui_configuration.md`, `e2e_testing_guide.md`).
+    - **tests/**: Testing guidelines.
+- **ui/**: Frontend React app.
     - **src/**: Source code.
-    - **tests/components/**: Component tests (Playwright CT).
-- **server/**: Backend server code (if applicable).
-- **.agent/**: Agent-specific workflows and configurations.
+    - **tests/e2e/**: Playwright E2E tests.
+    - **scripts/**: Utility strings (e.g., `test-staging.mjs`, `staging-checks`).
 
 ## 2. Agent Workflow
 
-1.  **Start:** thoroughly read `rules.md` in the root directory.
-2.  **Learn:** Check `doc/learnings` and `doc/tests` for relevant context.
-3.  **Explore:** Use `list_dir` and `view_file` to understand the codebase structure.
-4.  **Task:** Follow the task assignments and rules strictly.
+1.  **Start:** Read `rules.md`.
+2.  **Learn:** Check `doc/learnings` and `doc/tests`.
+3.  **Explore:** Understand codebase structure.
+4.  **Task:** Follow assignments and rules.
 
-## 3. Development Rules
-
-- **Testing:** Always run `npm run test:ct -- --reporter=list` in the `ui` directory before and after changes.
-- **Commits:** Make granular commits. Periodically commit working changes to the feature branch.
-- **Merging:** Merge to `main` ONLY when all component tests pass.
-- **Documentation:** Update relevant docs in `doc/` after every significant change or fix.
-- **Defects:** Document all defects in `doc/defects/` before fixing them.
-- **Cleanup:** Remove any temporary files (logs, screenshots) created during the task.
-
-## 4. Setup for Agents
-
-When initializing a new agent session:
-1.  **Read `rules.md`**: This is the source of truth.
-2.  **Check `task.md`**: If continuing work, check the task list.
-3.  **Review `implementation_plan.md`**: For active plans.
-
-## 5. Key Commands
+## 3. Scripts & Tools
 
 - **Run UI Tests:** `cd ui && npm run test:ct -- --reporter=list`
+- **Run E2E Staging (Local):** `cd ui && npm run test:staging:local`
+- **Run Staging Checks:** `cd ui && npm run check:staging`
 - **Build UI:** `cd ui && npm run build`
-- **Deploy:** `.\deploy.ps1` (Handles testing, building, and deployment)
+- **Deploy:** `.\deploy.ps1`
 
-## 6. Additional Guides
-- **UI Setup & OAuth:** See [`doc/guides/ui_setup.md`](doc/guides/ui_setup.md)
-- **Staging Checks:** `cd ui && npm run check:staging`
-- **Local Staging Test:** `cd ui && npm run test:staging:local`
+## 4. Development Rules
 
----
-**Note:** Keep this file updated as the project evolves.
+- **Testing:** Run component tests before/after changes.
+- **Commits:** Granular commits; merge to `main` ONLY on green tests.
+- **Documentation:** Update `doc/` after changes.
+- **Cleanup:** Remove temporary files (`ui/test-results`, `ui/playwright-report`, `*.log`, `*.png`) before finishing.
+
+## 5. Setup for Agents
+
+1.  **Read `rules.md`**.
+2.  **Check `task.md`**.
+3.  **Review `implementation_plan.md`**.
+
+For detailed UI setup and OAuth, see [`doc/learnings/ui_configuration.md`](doc/learnings/ui_configuration.md).
