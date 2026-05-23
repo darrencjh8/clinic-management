@@ -51,7 +51,7 @@ For running end-to-end tests locally against staging or production, create `ui/.
 ```env
 E2E_TEST_EMAIL=<your_test_email>
 E2E_TEST_PASSWORD=<your_test_password>
-BASE_URL=https://wisata-dental-staging.fly.dev
+BASE_URL=<your_staging_or_production_url>
 ```
 
 ---

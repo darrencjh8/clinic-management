@@ -74,7 +74,7 @@ describe('Layout Viewport Reset Logic', () => {
         expect(scrollToSpy).not.toHaveBeenCalled();
     });
 
-    it('should NOT scroll to (0,0) if a non-input element gains focus', async () => {
+    it('should scroll to (0,0) if a non-input element gains focus', async () => {
         renderLayout(
             <>
                 <input data-testid="test-input" />

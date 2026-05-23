@@ -34,5 +34,5 @@ Provide a high-level verification of the production environment:
 
 ## 4. Success Criteria
 - All tests (Unit, CT, E2E) pass in the local environment and CI pipeline.
-- No modifications are made to production code outside of the existing [Layout.tsx](../../ui/src/components/Layout.tsx) and [index.html](../../ui/index.html).
+- No modifications are made to production code outside the existing [Layout.tsx](../../ui/src/components/Layout.tsx) and [index.html](../../ui/index.html).
 - The "blank screen" issue is non-reproducible on tablets (verified via behavioral simulation in tests).

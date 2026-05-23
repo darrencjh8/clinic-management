@@ -26,17 +26,26 @@ Mobile and tablet browsers (especially WebKit/iOS Safari, and some configuration
 To completely resolve this issue and prevent future occurrences, we propose a two-pronged solution:
 
 1. **Global Scroll Reset on Focus Out (Input Blur)**:
-   Add a global event listener for `focusout` (which bubbles) on the `document` in `ui/src/main.tsx`. When any input element (e.g. `input`, `select`, `textarea`) loses focus, we explicitly reset the layout viewport scroll to `(0, 0)`.
+   Add a global event listener for `focusout` (which bubbles) on the `document` via a `useEffect` hook in [Layout.tsx](../../ui/src/components/Layout.tsx). When an input element (`input`, `select`, `textarea`) loses focus, the handler waits approximately 100ms (using `setTimeout`) and then resets the layout viewport scroll to `(0, 0)` if the new `document.activeElement` is not another input element. This prevents the viewport from jumping when navigating between adjacent fields while ensuring the scroll is restored when the keyboard is dismissed.
    ```typescript
-   document.addEventListener('focusout', (e) => {
-     if (
-       e.target instanceof HTMLInputElement ||
-       e.target instanceof HTMLSelectElement ||
-       e.target instanceof HTMLTextAreaElement
-     ) {
-       window.scrollTo(0, 0);
-     }
-   });
+   React.useEffect(() => {
+       const handleFocusOut = (e: FocusEvent) => {
+           setTimeout(() => {
+               if (
+                   (e.target instanceof HTMLInputElement ||
+                   e.target instanceof HTMLSelectElement ||
+                   e.target instanceof HTMLTextAreaElement) &&
+                   !(document.activeElement instanceof HTMLInputElement ||
+                     document.activeElement instanceof HTMLSelectElement ||
+                     document.activeElement instanceof HTMLTextAreaElement)
+               ) {
+                   window.scrollTo(0, 0);
+               }
+           }, 100);
+       };
+       document.addEventListener('focusout', handleFocusOut);
+       return () => document.removeEventListener('focusout', handleFocusOut);
+   }, []);
    ```
    This ensures that any time the virtual keyboard blurs an input and closes, the viewport scroll position is restored to `0`.
 
@@ -48,12 +57,20 @@ To completely resolve this issue and prevent future occurrences, we propose a tw
    This signals to modern mobile browsers (especially Chrome/Android) to resize the visual viewport instead of shifting the layout viewport when the keyboard opens/closes, preventing layout misalignment.
 
 ## Verification Plan
+For detailed automated and manual test cases, refer to the [DEF-009 Viewport and Keyboard Reset Test Plan](../requirements/DEF-009_Viewport_Keyboard_Test_Plan.md).
 
 ### Automated Tests
-- Run existing component tests (`npm run test:ct -- --reporter=list`) to ensure no regressions in layout or input handling.
+- Run the comprehensive testing suite as defined in the test plan:
+  ```bash
+  # Run unit tests
+  npx vitest run src/components/__tests__/Layout.test.tsx
+  
+  # Run component tests
+  npx playwright test tests/components/Layout.spec.tsx --config playwright-component.config.ts
+  
+  # Run E2E tests
+  npx playwright test tests/e2e/viewport-keyboard.spec.ts --config playwright-e2e.config.ts
+  ```
 
 ### Manual Verification
-- Deploy to the staging/local environment.
-- Access the **Add Treatment** page on a tablet/mobile viewport.
-- Focus on the input fields and verify that the virtual keyboard opens.
-- Dismiss the keyboard and verify that the viewport scrolls back correctly and no blank screen is visible.
+- Follow the manual verification steps and scenarios outlined in the [companion test plan](../requirements/DEF-009_Viewport_Keyboard_Test_Plan.md) to ensure consistency across devices.

@@ -16,9 +16,13 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigat
     const [isSidebarCollapsed, setIsSidebarCollapsed] = React.useState(true);
 
     React.useEffect(() => {
+        let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
         const handleFocusOut = (e: FocusEvent) => {
+            if (timeoutId) clearTimeout(timeoutId);
+
             // Delay the scroll to see if focus moved to another input
-            setTimeout(() => {
+            timeoutId = setTimeout(() => {
                 if (
                     (e.target instanceof HTMLInputElement ||
                     e.target instanceof HTMLSelectElement ||
@@ -31,8 +35,10 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigat
                 }
             }, 100);
         };
+
         document.addEventListener('focusout', handleFocusOut);
         return () => {
+            if (timeoutId) clearTimeout(timeoutId);
             document.removeEventListener('focusout', handleFocusOut);
         };
     }, []);
