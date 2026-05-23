@@ -17,13 +17,19 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigat
 
     React.useEffect(() => {
         const handleFocusOut = (e: FocusEvent) => {
-            if (
-                e.target instanceof HTMLInputElement ||
-                e.target instanceof HTMLSelectElement ||
-                e.target instanceof HTMLTextAreaElement
-            ) {
-                window.scrollTo(0, 0);
-            }
+            // Delay the scroll to see if focus moved to another input
+            setTimeout(() => {
+                if (
+                    (e.target instanceof HTMLInputElement ||
+                    e.target instanceof HTMLSelectElement ||
+                    e.target instanceof HTMLTextAreaElement) &&
+                    !(document.activeElement instanceof HTMLInputElement ||
+                      document.activeElement instanceof HTMLSelectElement ||
+                      document.activeElement instanceof HTMLTextAreaElement)
+                ) {
+                    window.scrollTo(0, 0);
+                }
+            }, 100);
         };
         document.addEventListener('focusout', handleFocusOut);
         return () => {

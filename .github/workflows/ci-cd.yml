@@ -144,11 +144,11 @@ jobs:
 
       - name: Install Playwright Browsers
         working-directory: ./ui
-        run: npx playwright install --with-deps chromium firefox
+        run: npx playwright install --with-deps chromium firefox webkit
 
       - name: Deploy to Staging
         run: |
-          flyctl deploy --app wisata-dental-staging --config fly.staging.toml --ha=false \
+          flyctl deploy --app wisata-dental-staging --config fly.staging.toml --ha=false --remote-only \
             --build-arg VITE_API_URL="${{ secrets.VITE_API_URL }}" \
             --build-arg VITE_GOOGLE_CLIENT_ID="${{ secrets.VITE_GOOGLE_CLIENT_ID }}" \
             --build-arg VITE_CLIENT_SECRET="${{ secrets.VITE_CLIENT_SECRET }}" \
@@ -195,9 +195,9 @@ jobs:
         run: |
           echo "🧪 Running E2E Test: Full User Journey"
           
-          # Run comprehensive staging flow test
-          if npx playwright test tests/e2e/staging-flow.spec.ts; then
-            echo "✅ E2E Test PASSED!"
+          # Run comprehensive staging flow test using the E2E config
+           if npx playwright test tests/e2e/staging-flow.spec.ts --config playwright-e2e.config.ts; then
+             echo "✅ E2E Test PASSED!"
             echo "🎉 Full user journey completed successfully!"
           else
             echo "❌ E2E Test FAILED!"

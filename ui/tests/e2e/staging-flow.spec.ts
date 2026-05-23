@@ -343,7 +343,6 @@ test.describe('E2E Staging Flow', () => {
         await form.locator('select').nth(1).selectOption({ index: 1 });
 
         // Select Treatment Type - click on a checkbox/label
-        // Select Treatment Type - click on a checkbox/label
         // EN: "Cleaning" / "Checkup" / ID: "Scaling" / "Konsultasi"
         await page.locator('label').filter({ hasText: /Cleaning|Checkup|Scaling|Konsultasi/i }).first().click();
 
@@ -361,7 +360,7 @@ test.describe('E2E Staging Flow', () => {
             console.log('Page content after adding treatment (snippet):', pageContent.substring(0, 500));
 
             // Check for potential error messages
-            const errorMsg = await page.locator('.error-message, .alert-danger, text=/Error|Gagal/i').first();
+            const errorMsg = page.locator('.error-message, .alert-danger, .text-red-500').or(page.locator('text=/Error|Gagal/i')).first();
             if (await errorMsg.isVisible()) {
                 console.log('❌ Error message found after adding treatment:', await errorMsg.textContent());
             }
