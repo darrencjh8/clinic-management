@@ -2,6 +2,15 @@
 
 This document contains onboarding instructions and solutions to common environment setup errors for agents working on this codebase.
 
+> [!IMPORTANT]
+> **Requirement & Defect Discovery**: Before starting any new task, feature, or bug fix, agents **MUST** check the `doc/requirements/` and `doc/defects/` folders to understand the context, constraints, and previous implementation decisions.
+>
+> **TDD Workflow**: For any new implementation or bug fix:
+> 1. **Baseline**: Run all existing tests to ensure a clean starting state.
+> 2. **Red**: Write a failing test that reproduces the bug or defines the new feature.
+> 3. **Green**: Implement the minimal code necessary to make the test pass.
+> 4. **Refactor**: Clean up the code while ensuring tests remain green.
+
 ## 1. Local Environment Config Setup
 
 > [!IMPORTANT]
@@ -57,6 +66,11 @@ BASE_URL=https://wisata-dental-staging.fly.dev
   ```bash
   npx playwright test --config playwright-e2e.config.ts
   ```
+
+### Environment Constraints
+* **Operating System**: Windows.
+* **Terminal**: PowerShell 5.
+* **Tooling**: Standard Unix commands like `grep` are not available by default. Use `Select-String` in PowerShell or use the internal search tools provided by the IDE/agent.
 
 ---
 

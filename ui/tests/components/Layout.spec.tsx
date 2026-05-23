@@ -54,6 +54,42 @@ test.describe('Layout', () => {
             return await page.evaluate(() => (window as any).scrollToCalledWith);
         }).toContainEqual([0, 0]);
     });
+
+    test('should NOT reset window scroll when focus moves to another input', async ({ mount, page }) => {
+        const component = await mount(
+            <TestWrapper storeValues={{ accessToken: 'token', spreadsheetId: 'sheet', userRole: 'admin' }}>
+                <Layout currentView="treatments" onNavigate={() => { }}>
+                    <input data-testid="input-1" type="text" />
+                    <input data-testid="input-2" type="text" />
+                </Layout>
+            </TestWrapper>
+        );
+
+        // Spy on window.scrollTo
+        await page.evaluate(() => {
+            (window as any).scrollToCalledWith = [];
+            const originalScrollTo = window.scrollTo.bind(window);
+            window.scrollTo = function (x: any, y?: any) {
+                if (typeof x === 'number' && typeof y === 'number') {
+                    (window as any).scrollToCalledWith.push([x, y]);
+                }
+                originalScrollTo(x, y);
+            } as any;
+        });
+
+        // Focus the first input
+        await component.getByTestId('input-1').focus();
+
+        // Focus the second input (this triggers blur on the first)
+        await component.getByTestId('input-2').focus();
+
+        // Wait a bit to ensure the timeout would have fired
+        await page.waitForTimeout(200);
+
+        // Check that scrollTo(0, 0) was NOT called
+        const scrollToCalls = await page.evaluate(() => (window as any).scrollToCalledWith);
+        expect(scrollToCalls).not.toContainEqual([0, 0]);
+    });
 });
 
 test.describe('Layout Mobile', () => {
