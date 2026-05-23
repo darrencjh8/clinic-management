@@ -37,9 +37,30 @@ FIREBASE_SERVICE_ACCOUNT_BASE64=<base64_encoded_service_account_keys>
 GOOGLE_SERVICE_ACCOUNT_BASE64=<base64_encoded_sheets_api_keys>
 ```
 
+### E2E Testing Config: `ui/.env.e2e`
+For running end-to-end tests locally against staging or production, create `ui/.env.e2e`:
+```env
+E2E_TEST_EMAIL=<your_test_email>
+E2E_TEST_PASSWORD=<your_test_password>
+BASE_URL=https://wisata-dental-staging.fly.dev
+```
+
 ---
 
-## 2. Common Errors and Resolutions
+## 2. Testing Guidelines
+
+### Running E2E Tests
+* **Config Selection**: Always use the correct configuration file.
+  * `playwright-e2e.config.ts`: For full flow tests against a live server.
+  * `playwright-component.config.ts`: For individual React component tests.
+* **Execution**: Use the following command format:
+  ```bash
+  npx playwright test --config playwright-e2e.config.ts
+  ```
+
+---
+
+## 3. Common Errors and Resolutions
 
 ### Error: `_.zd` in browser console (Blank Screen on Load)
 * **Cause**: `VITE_GOOGLE_CLIENT_ID` in `ui/.env` is empty, undefined, or invalid. This causes the `GoogleOAuthProvider` wrapper component in `ui/src/main.tsx` to crash during initialization.
