@@ -1,0 +1,107 @@
+#!/usr/bin/env node
+
+import { spawn } from 'child_process';
+import * as fs from 'fs';
+import * as path from 'path';
+import { fileURLToPath } from 'url';
+import { maskEmail } from './utils/mask-email.mjs';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Load environment variables from .env file (in root directory)
+const envPath = path.resolve(__dirname, '../../.env');
+const env = {};
+
+if (fs.existsSync(envPath)) {
+    const envContent = fs.readFileSync(envPath, 'utf8');
+    envContent.split('\n').forEach(line => {
+        // Handle Windows line endings (\r\n)
+        const cleanLine = line.replace(/\r$/, '');
+
+        // Skip blank lines and comments
+        if (!cleanLine.trim() || cleanLine.trim().startsWith('#')) {
+            return;
+        }
+
+        const match = cleanLine.match(/^([^=\s]+)\s*=\s*(.*)$/);
+        if (match) {
+            let value = match[2].trim();
+
+            // Strip surrounding quotes (single or double)
+            if ((value.startsWith('"') && value.endsWith('"')) ||
+                (value.startsWith("'") && value.endsWith("'"))) {
+                value = value.slice(1, -1);
+            }
+
+            env[match[1]] = value;
+        }
+    });
+}
+
+// Set up environment variables for E2E testing (match CI/CD naming)
+const testEnv = {
+    ...process.env,
+    E2E_TEST_EMAIL: process.env.E2E_TEST_EMAIL || env.E2E_TEST_EMAIL || process.env.E2E_USERNAME || env.E2E_USERNAME,
+    E2E_TEST_PASSWORD: process.env.E2E_TEST_PASSWORD || env.E2E_TEST_PASSWORD || process.env.E2E_PASSWORD || env.E2E_PASSWORD,
+    BASE_URL: process.env.BASE_URL || env.BASE_URL || 'https://wisata-dental-staging.fly.dev',
+};
+
+// Validate credentials
+if (!testEnv.E2E_TEST_EMAIL || !testEnv.E2E_TEST_PASSWORD) {
+    console.error('❌ E2E credentials not found!');
+    console.error('Please ensure your .env file contains one of the following:');
+    console.error('  E2E_TEST_EMAIL=your-email@example.com');
+    console.error('  E2E_TEST_PASSWORD=your-password');
+    console.error('Or (legacy names):');
+    console.error('  E2E_USERNAME=your-email@example.com');
+    console.error('  E2E_PASSWORD=your-password');
+    process.exit(1);
+}
+
+
+
+console.log('🧪 Testing staging-flow.spec.ts against staging server...');
+console.log(`📧 Email: ${maskEmail(testEnv.E2E_TEST_EMAIL)}`);
+console.log(`🌐 Target: ${testEnv.BASE_URL}`);
+
+// Change to UI directory
+const uiDir = path.resolve(__dirname, '../');
+
+// Run the staging flow test (exactly like CI/CD)
+console.log('\n🚀 Running staging-flow.spec.ts...');
+
+const testProcess = spawn('npx', [
+    'playwright',
+    'test',
+    'tests/e2e/staging-flow.spec.ts',
+    '--config=playwright-e2e.config.ts',
+    '--project=chromium',
+    '--workers=1'
+], {
+    cwd: uiDir,
+    env: testEnv,
+    stdio: 'inherit',
+    shell: true
+});
+
+testProcess.on('close', (code, signal) => {
+    if (code === 0) {
+        console.log('\n✅ staging-flow.spec.ts completed successfully!');
+        console.log('🎉 Your staging environment is working correctly!');
+    } else if (code !== null) {
+        console.log(`\n❌ staging-flow.spec.ts failed with exit code: ${code}`);
+        console.log('🔍 Check the test output above for details');
+        process.exit(code);
+    } else {
+        // Process was killed by signal
+        console.log(`\n❌ staging-flow.spec.ts was terminated by signal: ${signal}`);
+        console.log('🔍 The test process was killed unexpectedly');
+        process.exit(1);
+    }
+});
+
+testProcess.on('error', (error) => {
+    console.error('❌ Failed to start test process:', error);
+    process.exit(1);
+});

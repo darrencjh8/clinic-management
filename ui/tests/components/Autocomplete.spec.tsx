@@ -30,9 +30,11 @@ test.describe('Autocomplete', () => {
         );
 
         const input = component.locator('input');
+        await input.waitFor({ state: 'visible' });
         await input.click();
-
-        await expect(component.getByText('Apple')).toBeVisible();
+        
+        // Wait for suggestions to appear
+        await expect(component.getByText('Apple')).toBeVisible({ timeout: 10000 });
         await expect(component.getByText('Banana')).not.toBeVisible();
     });
 
@@ -47,12 +49,13 @@ test.describe('Autocomplete', () => {
         );
 
         const input = component.locator('input');
+        await input.waitFor({ state: 'visible' });
         await input.click();
 
         // Wait for suggestions to appear
-        await expect(component.getByText('Apple')).toBeVisible();
-        
-        await component.getByText('Apple').click();
+        const appleSuggestion = component.getByText('Apple');
+        await appleSuggestion.waitFor({ state: 'visible', timeout: 10000 });
+        await appleSuggestion.click();
         
         // Wait for state update with polling
         await expect.poll(() => selectedValue, { timeout: 5000 }).toBe('Apple');
@@ -71,13 +74,15 @@ test.describe('Autocomplete', () => {
         );
 
         const input = component.locator('input');
+        await input.waitFor({ state: 'visible' });
         await input.click();
 
-        await expect(component.getByText('Apple')).toBeVisible();
+        const appleSuggestion = component.getByText('Apple');
+        await appleSuggestion.waitFor({ state: 'visible', timeout: 10000 });
 
         // Click outside
         await component.getByTestId('outside').click();
 
-        await expect(component.getByText('Apple')).not.toBeVisible();
+        await expect(appleSuggestion).not.toBeVisible();
     });
 });

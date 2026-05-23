@@ -493,6 +493,35 @@ During development, Vite's HMR can reload modules, clearing static properties. T
 
 **Reference**: See `GoogleSheetsService.ts` initialization IIFE for implementation pattern.
 
+## Mobile Component Testing
+
+### Fixed vs Absolute Positioning
+
+**Problem**: Mobile components often use `fixed bottom-0` positioning for bottom navigation, but fixed positioning doesn't work well in component test containers.
+
+**Solution**: Use conditional positioning based on test environment:
+
+```typescript
+// In Component (BottomTabs.tsx)
+<div className={`md:hidden ${import.meta.env.VITE_IS_CT === 'true' ? 'absolute bottom-0 left-0 right-0' : 'fixed bottom-0 left-0 right-0'} bg-white...`}>
+
+// In TestWrapper.tsx
+<div className={import.meta.env.VITE_IS_CT === 'true' ? 'relative min-h-screen' : ''}>
+    {children}
+</div>
+```
+
+**Why This Works**:
+- Fixed positioning: Relative to viewport (problematic in CT containers)
+- Absolute positioning: Relative to nearest positioned ancestor (works in CT)
+- TestWrapper provides `relative min-h-screen` container for absolute positioning
+
+### Mobile Viewport Testing
+
+```typescript
+test.use({ viewport: { width: 375, height: 667 } }); // Mobile viewport
+```
+
 ## Areas for Improvement
 
 If you're enhancing the test suite, consider:

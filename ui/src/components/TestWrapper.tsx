@@ -18,7 +18,9 @@ export const TestWrapper = ({ children, storeValues }: { children: React.ReactNo
         <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || 'test-client-id'}>
             <MockStoreProvider value={storeValues}>
                 <ToastProvider>
-                    {children}
+                    <div className={import.meta.env.VITE_IS_CT === 'true' ? 'relative min-h-screen' : ''}>
+                        {children}
+                    </div>
                 </ToastProvider>
             </MockStoreProvider>
         </GoogleOAuthProvider>

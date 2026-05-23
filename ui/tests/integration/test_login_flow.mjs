@@ -5,27 +5,59 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-// Get env file from command line argument or default to .env.e2e
-const envFileName = process.argv[2] || '.env.e2e';
+// Check if running in CI/CD environment
+const isCI = process.env.CI || process.env.GITHUB_ACTIONS;
 
-// Load credentials from specified env file
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const envPath = path.resolve(__dirname, '../../', envFileName);
-const envContent = fs.readFileSync(envPath, 'utf8');
+// Load credentials from environment variables in CI/CD, otherwise from .env.e2e file
+let FIREBASE_API_KEY, EMAIL, PASSWORD, BACKEND_API_URL;
 
-function getEnvVar(name) {
-    const match = envContent.match(new RegExp(`^${name}=(.*)$`, 'm'));
-    if (!match) {
-        throw new Error(`Environment variable ${name} not found in ${envFileName}`);
+if (isCI) {
+    // In CI/CD, use environment variables (GitHub secrets)
+    console.log('🔄 Running in CI/CD mode - using environment variables');
+    
+    FIREBASE_API_KEY = process.env.VITE_FIREBASE_API_KEY;
+    EMAIL = process.env.E2E_TEST_EMAIL;
+    PASSWORD = process.env.E2E_TEST_PASSWORD;
+    BACKEND_API_URL = process.env.VITE_API_URL;
+    
+    // Validate required environment variables
+    const requiredVars = [
+        { name: 'VITE_FIREBASE_API_KEY', value: FIREBASE_API_KEY },
+        { name: 'E2E_TEST_EMAIL', value: EMAIL },
+        { name: 'E2E_TEST_PASSWORD', value: PASSWORD },
+        { name: 'VITE_API_URL', value: BACKEND_API_URL }
+    ];
+    
+    const missingVars = requiredVars.filter(var_ => !var_.value);
+    if (missingVars.length > 0) {
+        throw new Error(`Missing required environment variables in CI/CD: ${missingVars.map(v => v.name).join(', ')}`);
     }
-    return match[1];
+} else {
+    // Local development - read from .env.e2e file
+    console.log('🔄 Running in local mode - using .env.e2e file');
+    
+    // Get env file from command line argument or default to .env.e2e
+    const envFileName = process.argv[2] || '.env.e2e';
+    
+    // Load credentials from specified env file
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = path.dirname(__filename);
+    const envPath = path.resolve(__dirname, '../../', envFileName);
+    const envContent = fs.readFileSync(envPath, 'utf8');
+    
+    function getEnvVar(name) {
+        const match = envContent.match(new RegExp(`^${name}=(.*)$`, 'm'));
+        if (!match) {
+            throw new Error(`Environment variable ${name} not found in ${envFileName}`);
+        }
+        return match[1];
+    }
+    
+    FIREBASE_API_KEY = getEnvVar('VITE_FIREBASE_API_KEY');
+    EMAIL = getEnvVar('E2E_TEST_EMAIL');
+    PASSWORD = getEnvVar('E2E_TEST_PASSWORD');
+    BACKEND_API_URL = getEnvVar('VITE_API_URL');
 }
-
-const FIREBASE_API_KEY = getEnvVar('VITE_FIREBASE_API_KEY');
-const EMAIL = getEnvVar('E2E_TEST_EMAIL');
-const PASSWORD = getEnvVar('E2E_TEST_PASSWORD');
-const BACKEND_API_URL = getEnvVar('VITE_API_URL');
 
 function makeRequest(url, options, postData = null) {
     return new Promise((resolve, reject) => {
