@@ -44,3 +44,4 @@ create_jwt_temp.js
 # E2E test screenshots
 e2e-*.png
 
+node_modules

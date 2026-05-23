@@ -26,11 +26,16 @@ Mobile and tablet browsers (especially WebKit/iOS Safari, and some configuration
 To completely resolve this issue and prevent future occurrences, we propose a two-pronged solution:
 
 1. **Global Scroll Reset on Focus Out (Input Blur)**:
-   Add a global event listener for `focusout` (which bubbles) on the `document` via a `useEffect` hook in [Layout.tsx](../../ui/src/components/Layout.tsx). When an input element (`input`, `select`, `textarea`) loses focus, the handler waits approximately 100ms (using `setTimeout`) and then resets the layout viewport scroll to `(0, 0)` if the new `document.activeElement` is not another input element. This prevents the viewport from jumping when navigating between adjacent fields while ensuring the scroll is restored when the keyboard is dismissed.
+   In [Layout.tsx](../../ui/src/components/Layout.tsx), a `useEffect` hook registers a bubbling `focusout` listener on `document`. The `handleFocusOut` handler clears any pending timeout, then schedules `setTimeout(..., 100)`. After the delay, it calls `window.scrollTo(0, 0)` only when `e.target` is an `HTMLInputElement`, `HTMLSelectElement`, or `HTMLTextAreaElement` and `document.activeElement` is not another such element—so focus moving between fields does not reset scroll. The effect cleanup removes the listener and calls `clearTimeout` on any pending timeout so scroll cannot run after unmount.
    ```typescript
    React.useEffect(() => {
+       let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
        const handleFocusOut = (e: FocusEvent) => {
-           setTimeout(() => {
+           if (timeoutId) clearTimeout(timeoutId);
+
+           // Delay the scroll to see if focus moved to another input
+           timeoutId = setTimeout(() => {
                if (
                    (e.target instanceof HTMLInputElement ||
                    e.target instanceof HTMLSelectElement ||
@@ -43,8 +48,12 @@ To completely resolve this issue and prevent future occurrences, we propose a tw
                }
            }, 100);
        };
+
        document.addEventListener('focusout', handleFocusOut);
-       return () => document.removeEventListener('focusout', handleFocusOut);
+       return () => {
+           if (timeoutId) clearTimeout(timeoutId);
+           document.removeEventListener('focusout', handleFocusOut);
+       };
    }, []);
    ```
    This ensures that any time the virtual keyboard blurs an input and closes, the viewport scroll position is restored to `0`.
