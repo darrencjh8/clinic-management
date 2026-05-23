@@ -33,11 +33,13 @@ test.describe('Layout', () => {
         // Spy on window.scrollTo
         await page.evaluate(() => {
             (window as any).scrollToCalledWith = [];
-            const originalScrollTo = window.scrollTo;
-            window.scrollTo = function(x, y) {
-                (window as any).scrollToCalledWith.push([x, y]);
-                originalScrollTo.apply(this, arguments as any);
-            };
+            const originalScrollTo = window.scrollTo.bind(window);
+            window.scrollTo = function(x: any, y?: any) {
+                if (typeof x === 'number' && typeof y === 'number') {
+                    (window as any).scrollToCalledWith.push([x, y]);
+                }
+                originalScrollTo(x, y);
+            } as any;
         });
 
         // Focus the input
@@ -47,14 +49,10 @@ test.describe('Layout', () => {
         // Blur the input
         await input.blur();
 
-        // Check if window.scrollTo(0, 0) was called
-        const scrollToCalls = await page.evaluate(() => (window as any).scrollToCalledWith);
-        expect(scrollToCalls).toContainEqual([0, 0]);
-    });
-
-    test('should render bottom tabs on mobile', async ({ mount }) => {
-        // Override viewport for this test? Playwright CT might not support per-test usage easily if already mounted?
-        // Actually it acts as a separate worker/fixture setup usually.
+        // Check if window.scrollTo(0, 0) was called (with polling for the 100ms timeout)
+        await expect.poll(async () => {
+            return await page.evaluate(() => (window as any).scrollToCalledWith);
+        }).toContainEqual([0, 0]);
     });
 });
 
