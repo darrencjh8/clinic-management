@@ -21,6 +21,37 @@ test.describe('Layout', () => {
         await expect(component.locator('aside')).toBeVisible();
     });
 
+    test('should reset window scroll on input blur', async ({ mount, page }) => {
+        const component = await mount(
+            <TestWrapper storeValues={{ accessToken: 'token', spreadsheetId: 'sheet', userRole: 'admin' }}>
+                <Layout currentView="treatments" onNavigate={() => { }}>
+                    <input data-testid="test-input" type="text" />
+                </Layout>
+            </TestWrapper>
+        );
+
+        // Spy on window.scrollTo
+        await page.evaluate(() => {
+            (window as any).scrollToCalledWith = [];
+            const originalScrollTo = window.scrollTo;
+            window.scrollTo = function(x, y) {
+                (window as any).scrollToCalledWith.push([x, y]);
+                originalScrollTo.apply(this, arguments as any);
+            };
+        });
+
+        // Focus the input
+        const input = component.getByTestId('test-input');
+        await input.focus();
+
+        // Blur the input
+        await input.blur();
+
+        // Check if window.scrollTo(0, 0) was called
+        const scrollToCalls = await page.evaluate(() => (window as any).scrollToCalledWith);
+        expect(scrollToCalls).toContainEqual([0, 0]);
+    });
+
     test('should render bottom tabs on mobile', async ({ mount }) => {
         // Override viewport for this test? Playwright CT might not support per-test usage easily if already mounted?
         // Actually it acts as a separate worker/fixture setup usually.

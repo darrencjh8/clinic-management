@@ -15,6 +15,22 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigat
     const { isDarkMode, toggleDarkMode } = useStore();
     const [isSidebarCollapsed, setIsSidebarCollapsed] = React.useState(true);
 
+    React.useEffect(() => {
+        const handleFocusOut = (e: FocusEvent) => {
+            if (
+                e.target instanceof HTMLInputElement ||
+                e.target instanceof HTMLSelectElement ||
+                e.target instanceof HTMLTextAreaElement
+            ) {
+                window.scrollTo(0, 0);
+            }
+        };
+        document.addEventListener('focusout', handleFocusOut);
+        return () => {
+            document.removeEventListener('focusout', handleFocusOut);
+        };
+    }, []);
+
     return (
         <div className="h-[100dvh] bg-white flex transition-colors duration-200 overflow-hidden">
             {/* Sidebar (Desktop Only) */}
